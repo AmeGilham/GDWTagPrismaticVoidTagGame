@@ -1,4 +1,5 @@
 #include "CollisionCallback.h"
+#include "Input.h"
 
 
 void myListener::BeginContact(b2Contact* contact){
@@ -8,8 +9,7 @@ void myListener::BeginContact(b2Contact* contact){
 
 }
 
-void myListener::PreSolve(b2Contact* contact, const b2Manifold* oldManifold)
-{
+void myListener::PreSolve(b2Contact* contact, const b2Manifold* oldManifold){
 	std::cout << "Begin pre collide\n";
 
 	b2Fixture* fixa = contact->GetFixtureA();
@@ -17,22 +17,17 @@ void myListener::PreSolve(b2Contact* contact, const b2Manifold* oldManifold)
 
 	b2Vec2 vel = fixa->GetBody()->GetLinearVelocity();
 
-	//if (vel.y > 0) {
-	//	contact->SetEnabled(false);
-	//	std::cout << "Begin HELPPPPPP\n";
-
-	//}
-	/*if (vel2.y > 0) {
-		contact->SetEnabled(false);
-	}*/
 	//(((fixa->GetBody()->GetPosition().x >= 22 && fixa->GetBody()->GetPosition().x <= 115) && fixa->GetBody()->GetPosition().y <= 30)) && 
+	
+	fixa->GetBody()->SetFixedRotation(true);
 	if (vel.y > 0.0) {
 		contact->SetEnabled(false);
-		std::cout << contact->IsEnabled();
-
+		//std::cout << contact->IsEnabled();
 		std::cout << "Begin pre HELPPPPPP\n";}
+
 	else{
-		contact->SetEnabled(true);}
+		//contact->SetEnabled(true);
+	}
 
 
 }

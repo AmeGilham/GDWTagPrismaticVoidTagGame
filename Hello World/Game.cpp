@@ -165,13 +165,25 @@ void Game::KeyboardHold(){
 
 }
 
-void Game::KeyboardDown(){
+void Game::KeyboardDown() {
 	vec3 force2 = vec3(0.f, 150000.f, 0.f);
 
 	if (Input::GetKeyDown(Key::W)) {
-		m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).ApplyForce(force2);}
+		numPress++;
+		std::cout << m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).GetForce().y<<"What???????????????\n";
 
 
+		if (numPress <= 2 && m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).GetVelocity().y == 0 ) {
+			m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).ApplyForce(force2);
+			//std::cout << numPress;
+		}
+		else if (m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).GetVelocity().y == 0){
+			numPress = 0;
+			std::cout << numPress;
+			std::cout << m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).GetVelocity().y;}
+		else {
+			std::cout << "Help"<<numPress;}
+	}
 
 	if (Input::GetKeyDown(Key::D))
 	{

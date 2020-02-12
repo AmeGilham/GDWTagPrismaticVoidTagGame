@@ -81,6 +81,7 @@ private:
 	bool m_motion = false;
 	bool m_click = false;
 	bool m_wheel = false;
+	int numPress;
 	//vec2 m_velocity = vec2(0.f, 0.f);
 	//vec2 acceleration = vec2(0.f, 0.f);
 

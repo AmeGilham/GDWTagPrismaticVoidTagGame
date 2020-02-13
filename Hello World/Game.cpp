@@ -96,6 +96,32 @@ void Game::Update()
 
 	//Update Physics System
 	PhysicsSystem::Update(m_register, m_activeScene->GetPhysicsWorld());
+
+	//grab blue's physics body info
+	auto& bluetempPhysBod = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
+	b2Body* bluebody = bluetempPhysBod.GetBody();
+
+	//if Blue has run off the right of the screen, make her appear on the left
+	if (bluetempPhysBod.GetPosition().x > 202) {
+		bluetempPhysBod.GetBody()->SetTransform(b2Vec2(-202, bluebody->GetPosition().y), float32(0));
+	}
+	//if Blue has run off the left of the screen, make her appear on the right
+	else if (bluetempPhysBod.GetPosition().x < -202) {
+		bluetempPhysBod.GetBody()->SetTransform(b2Vec2(202, bluebody->GetPosition().y), float32(0));
+	}
+
+	//grab orange's physics body info
+	auto& orangetempPhysBod = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
+	b2Body* orangebody = orangetempPhysBod.GetBody();
+
+	//if Orange has run off the right of the screen, make him appear on the left 
+	if (orangetempPhysBod.GetPosition().x > 202) {
+		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(-202, orangebody->GetPosition().y), float32(0));
+	}
+	//if Orange has run off the left of the screen, make him appear on the right
+	else if (orangetempPhysBod.GetPosition().x < -202) {
+		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(202, orangebody->GetPosition().y), float32(0));
+	}
 }
 
 void Game::GUI()
@@ -142,62 +168,110 @@ void Game::AcceptInput()
 }
 
 void Game::KeyboardHold(){
-	vec3 force = vec3(1200.f, 0.f, 0.f);
+	vec3 force = vec3(8000.f, 0.f, 0.f);
 	vec3 force2 = vec3(0.f, 3000.f, 0.f);
+
+	//blue 
+	auto& tempPhysBod = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
+	b2Body* body = tempPhysBod.GetBody();
 
 	b2Vec2 position = m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).GetPosition();
 
-	if (Input::GetKey(Key::A)) {
+	if (Input::GetKey(Key::A) && body->GetLinearVelocity().x > float32(-80.f)) {
 		m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).ApplyForce(-force);}
 
-	 if (Input::GetKey(Key::D)) {
+
+	 else if (Input::GetKey(Key::D) && body->GetLinearVelocity().x < float32(80.f)) {
 		m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).ApplyForce(force);}
 
-	 //if (Input::GetKey(Key::W)) {
-		//m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).ApplyForce(force2);}
+	 else {
+		if (body->GetLinearVelocity().x > float32(0.f))
+		{
+			tempPhysBod.ApplyForce(vec3(-6000.f, 0.f, 0.f));
+		}
+		else if (body->GetLinearVelocity().x < float32(0.f))
+		{
+			tempPhysBod.ApplyForce(vec3(6000.f, 0.f, 0.f));
+		}
+	}
 
-	 if (Input::GetKey(Key::S)) {
-		m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).ApplyForce(-force2);}
+	if (Input::GetKey(Key::S)) m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).ApplyForce(vec3(tempPhysBod.GetForce().x, -200000.8f, 0.f));
+	else m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).ApplyForce(vec3(tempPhysBod.GetForce().x, -3000.8f, 0.f));
+
+	//orange
+	auto& tempPhysBodO = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
+	b2Body* bodyO = tempPhysBodO.GetBody();
+
+	b2Vec2 positionO = m_register->get<PhysicsBody>(EntityIdentifier::SecondPlayer()).GetPosition();
+
+	if (Input::GetKey(Key::LeftArrow) && bodyO->GetLinearVelocity().x > float32(-80.f)) {
+		m_register->get<PhysicsBody>(EntityIdentifier::SecondPlayer()).ApplyForce(-force);
+	}
+
+
+	else if (Input::GetKey(Key::RightArrow) && bodyO->GetLinearVelocity().x < float32(80.f)) {
+		m_register->get<PhysicsBody>(EntityIdentifier::SecondPlayer()).ApplyForce(force);
+	}
 
 	else {
-		force= vec3(0.f, 0.f, 0.f);
-		m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).ApplyForce(vec3(0.f, -909.8f, 0.f));}
+		if (bodyO->GetLinearVelocity().x > float32(0.f))
+		{
+			tempPhysBodO.ApplyForce(vec3(-6000.f, 0.f, 0.f));
+		}
+		else if (bodyO->GetLinearVelocity().x < float32(0.f))
+		{
+			tempPhysBodO.ApplyForce(vec3(6000.f, 0.f, 0.f));
+		}
+	}
 
+	if (Input::GetKey(Key::DownArrow)) m_register->get<PhysicsBody>(EntityIdentifier::SecondPlayer()).ApplyForce(vec3(tempPhysBodO.GetForce().x, -200000.8f, 0.f));
+	else m_register->get<PhysicsBody>(EntityIdentifier::SecondPlayer()).ApplyForce(vec3(tempPhysBodO.GetForce().x, -3000.8f, 0.f));
 }
 
 void Game::KeyboardDown() {
-	vec3 force2 = vec3(0.f, 150000.f, 0.f);
+	vec3 force2 = vec3(0.f, 300000.f, 0.f);
 
 	if (Input::GetKeyDown(Key::W)) {
-		numPress++;
-		std::cout << m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).GetForce().y<<"What???????????????\n";
 
-
-		if (numPress <= 2 && m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).GetVelocity().y == 0 ) {
+		//Check if Blue can jump 
+		if (m_activeScene->GetListener()->getJumpB()) {
+			//if she can, set it so she can't 
+			m_activeScene->GetListener()->setJumpB(false);
+			//and apply the upward force of the jump
 			m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).ApplyForce(force2);
-			//std::cout << numPress;
 		}
-		else if (m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).GetVelocity().y == 0){
-			numPress = 0;
-			std::cout << numPress;
-			std::cout << m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).GetVelocity().y;}
-		else {
-			std::cout << "Help"<<numPress;}
+	}
+
+	//Check if Orange can jump
+	if (Input::GetKeyDown(Key::UpArrow)) {
+		if (m_activeScene->GetListener()->getJumpO()) {
+			//if he can, set it so he can't 
+			m_activeScene->GetListener()->setJumpO(false);
+			//and apply the upward force of the jump
+			m_register->get<PhysicsBody>(EntityIdentifier::SecondPlayer()).ApplyForce(force2);
+		}
 	}
 
 	if (Input::GetKeyDown(Key::D))
 	{
-		HelloWorld* scene = (HelloWorld*)m_activeScene;
-		auto entity = scene->GetPlayer();
-		auto &animController = ECS::GetComponent<AnimationController>(entity);
+		auto &animController = ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer());
 		//Sets active animation
 		animController.SetActiveAnim(2);
 	}
 	if (Input::GetKeyDown(Key::A))
 	{
-		HelloWorld* scene = (HelloWorld*)m_activeScene;
-		auto entity = scene->GetPlayer();
-		auto &animController = ECS::GetComponent<AnimationController>(entity);
+		auto& animController = ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer());
+		//Sets active animation
+		animController.SetActiveAnim(1);
+	}
+
+	if (Input::GetKeyDown(Key::RightArrow)) {
+		auto& animController = ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer());
+		//Sets active animation
+		animController.SetActiveAnim(2);
+	}
+	if (Input::GetKeyDown(Key::LeftArrow)) {
+		auto& animController = ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer());
 		//Sets active animation
 		animController.SetActiveAnim(1);
 	}

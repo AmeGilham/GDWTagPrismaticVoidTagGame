@@ -44,6 +44,7 @@ public:
 	//Physics world
 	b2World& GetPhysicsWorld();
 	
+	myListener * GetListener();
 	//Set window size (makes sure the camera aspect is proper)
 	void SetWindowSize(float windowWidth, float windowHeight);
 protected:

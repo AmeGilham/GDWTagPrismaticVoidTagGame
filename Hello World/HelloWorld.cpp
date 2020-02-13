@@ -28,466 +28,92 @@ void HelloWorld::InitScene(float windowWidth, float windowHeight)
 
 		//Creates new orthographic camera
 		ECS::AttachComponent<Camera>(entity);
-		ECS::AttachComponent<HorizontalScroll>(entity);
 		vec4 temp = ECS::GetComponent<Camera>(entity).GetOrthoSize();
 		ECS::GetComponent<Camera>(entity).SetWindowSize(vec2(float(windowWidth), float(windowHeight)));
 		ECS::GetComponent<Camera>(entity).Orthographic(aspectRatio, temp.x, temp.y, temp.z, temp.w, -100.f, 100.f);
 
 		//Sets up the Identifier
-		unsigned int bitHolder = EntityIdentifier::HoriScrollCameraBit() | EntityIdentifier::CameraBit();
-		ECS::SetUpIdentifier(entity, bitHolder, "Horizontal Scrolling Cam");
+		unsigned int bitHolder = EntityIdentifier::CameraBit();
+		ECS::SetUpIdentifier(entity, bitHolder, "Main Cam");
 		ECS::SetIsMainCamera(entity, true);
-
-		//Attaches the camera to the vertical scroll
-		ECS::GetComponent<HorizontalScroll>(entity).SetCam(&ECS::GetComponent<Camera>(entity));
-		ECS::GetComponent<HorizontalScroll>(entity).SetOffest(15.f);
 	}
 
-	//Setup player sprite entity
-	{
-		//Our JSON animation file
-		auto moving = File::LoadJSON("PikachuMain.json");
-
-		//Creates entity
-		auto entity = ECS::CreateEntity();
-		EntityIdentifier::MainPlayer(entity);
-
-		//Add components
-		ECS::AttachComponent<Sprite>(entity);
-		ECS::AttachComponent<Transform>(entity);
-		ECS::AttachComponent<AnimationController>(entity);
-		ECS::AttachComponent<PhysicsBody>(entity);
-
-		//Sets up components
-		std::string fileName = "pikachu.png";
-		auto &animController = ECS::GetComponent<AnimationController>(entity);
-		animController.InitUVs(fileName);		
-
-	   ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 36, 32, true, &animController);
-	   ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 10.f, 100.f));
-
-	   auto& tempSpr = ECS::GetComponent<Sprite>(entity);
-	   auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
-
-	   float shrinkX = tempSpr.GetWidth() / 3.f;
-	   float shrinkY = tempSpr.GetWidth() / 3.f;
-
-	   b2Body* tempBody;
-	   b2BodyDef tempDef;
-	   tempDef.type = b2_dynamicBody;
-	   tempDef.position.Set(float32(0.f), float32(5.f));
-
-	   tempBody = m_physicsWorld->CreateBody(&tempDef);
-
-	   tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY),
-		   vec2(0.f, 0.f), false);
-		   
-	   tempPhsBody.SetFriction(0.15f);
-	   tempPhsBody.SetMaxVelo(0.10f);
-	   tempPhsBody.SetGravity(true);
-	   tempPhsBody.SetGravityAcceleration(vec3(1000.f, -9990.f, 0.f));
-	   
-	   animController.AddAnimation(moving["PikachuStand"]);
-	   animController.GetAnimation(0).SetRepeating(true);
-	   animController.AddAnimation(moving["PikachuJump"]);
-	   animController.GetAnimation(1).SetRepeating(true);
-	   animController.AddAnimation(moving["PikachuJump2"]);
-	   animController.GetAnimation(2).SetRepeating(true);
-
-	   animController.SetActiveAnim(1);
-
-	   //Sets up the Identifier
-	   unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::AnimationBit();
-	   ECS::SetUpIdentifier(entity, bitHolder, "Pikachu");
-	   ECS::SetIsMainPlayer(entity, true);
-
-	   m_player = entity;
-	}
-
-//
-//#pragma region Boxes
-//	//Setup Box Entity 1
-//	{
-//		//Creates entity
-//		auto entity = ECS::CreateEntity();
-//		//Add components
-//		ECS::AttachComponent<Sprite>(entity);
-//		ECS::AttachComponent<Transform>(entity);
-//		ECS::AttachComponent<PhysicsBody>(entity);
-//		//Sets up components
-//		std::string fileName = "Eiscue2.png";
-//		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 27, 20);
-//		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 1.f));
-//		auto& tempSpr = ECS::GetComponent<Sprite>(entity);
-//		auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
-//
-//		float shrinkX = tempSpr.GetWidth() / 11.f;
-//		float shrinkY = tempSpr.GetWidth() / 11.f;
-//		b2Body* tempBody;
-//		b2BodyDef tempDef;
-//		tempDef.type = b2_dynamicBody;
-//
-//		tempDef.position.Set(float32(0.f), float32(200.f));
-//
-//		tempBody = m_physicsWorld->CreateBody(&tempDef);
-//		tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY),
-//			vec2(0.f, 0.f), false);
-//		tempPhsBody.SetFriction(0.20f);
-//		tempPhsBody.SetMaxVelo(0.50f);
-//		tempPhsBody.SetGravity(true);
-//
-//		//Sets up the Identifier
-//		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
-//		ECS::SetUpIdentifier(entity, bitHolder, "Pingu1");
-//	}
-//
-//	//Setup Box Entity 2
-//	{
-//		//Creates entity
-//		auto entity = ECS::CreateEntity();
-//		//Add components
-//		ECS::AttachComponent<Sprite>(entity);
-//		ECS::AttachComponent<Transform>(entity);
-//		ECS::AttachComponent<PhysicsBody>(entity);
-//		//Sets up components
-//		std::string fileName = "Eiscue2.png";
-//		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 27, 20);
-//		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 1.f));
-//		auto& tempSpr = ECS::GetComponent<Sprite>(entity);
-//		auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
-//
-//		float shrinkX = tempSpr.GetWidth() / 11.f;
-//		float shrinkY = tempSpr.GetWidth() / 11.f;
-//		b2Body* tempBody;
-//		b2BodyDef tempDef;
-//		tempDef.type = b2_dynamicBody;
-//
-//		tempDef.position.Set(float32(18.f), float32(175.f));
-//
-//		tempBody = m_physicsWorld->CreateBody(&tempDef);
-//		tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY),
-//			vec2(0.f, 0.f), false);
-//		tempPhsBody.SetFriction(0.20f);
-//		tempPhsBody.SetMaxVelo(0.50f);
-//		tempPhsBody.SetGravity(true);
-//
-//		//Sets up the Identifier
-//		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
-//		ECS::SetUpIdentifier(entity, bitHolder, "Pingu2");
-//	}
-//
-//	//Setup Box Entity 3
-//	{
-//		//Creates entity
-//		auto entity = ECS::CreateEntity();
-//		//Add components
-//		ECS::AttachComponent<Sprite>(entity);
-//		ECS::AttachComponent<Transform>(entity);
-//		ECS::AttachComponent<PhysicsBody>(entity);
-//		//Sets up components
-//		std::string fileName = "Eiscue2.png";
-//		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 27, 20);
-//		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 1.f));
-//		auto& tempSpr = ECS::GetComponent<Sprite>(entity);
-//		auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
-//
-//		float shrinkX = tempSpr.GetWidth() / 11.f;
-//		float shrinkY = tempSpr.GetWidth() / 11.f;
-//		b2Body* tempBody;
-//		b2BodyDef tempDef;
-//		tempDef.type = b2_dynamicBody;
-//
-//		tempDef.position.Set(float32(-18.f), float32(175.f));
-//
-//		tempBody = m_physicsWorld->CreateBody(&tempDef);
-//		tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY),
-//			vec2(0.f, 0.f), false);
-//		tempPhsBody.SetFriction(0.20f);
-//		tempPhsBody.SetMaxVelo(0.50f);
-//		tempPhsBody.SetGravity(true);
-//
-//		//Sets up the Identifier
-//		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
-//		ECS::SetUpIdentifier(entity, bitHolder, "Pingu3");
-//	}
-//
-//	//Setup Box Entity 4
-//	{
-//		//Creates entity
-//		auto entity = ECS::CreateEntity();
-//		//Add components
-//		ECS::AttachComponent<Sprite>(entity);
-//		ECS::AttachComponent<Transform>(entity);
-//		ECS::AttachComponent<PhysicsBody>(entity);
-//		//Sets up components
-//		std::string fileName = "Eiscue2.png";
-//		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 27, 20);
-//		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 1.f));
-//		auto& tempSpr = ECS::GetComponent<Sprite>(entity);
-//		auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
-//
-//		float shrinkX = tempSpr.GetWidth() / 11.f;
-//		float shrinkY = tempSpr.GetWidth() / 11.f;
-//		b2Body* tempBody;
-//		b2BodyDef tempDef;
-//		tempDef.type = b2_dynamicBody;
-//
-//		tempDef.position.Set(float32(-36.f), float32(150.f));
-//
-//		tempBody = m_physicsWorld->CreateBody(&tempDef);
-//		tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY),
-//			vec2(0.f, 0.f), false);
-//		tempPhsBody.SetFriction(0.20f);
-//		tempPhsBody.SetMaxVelo(0.50f);
-//		tempPhsBody.SetGravity(true);
-//
-//		//Sets up the Identifier
-//		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
-//		ECS::SetUpIdentifier(entity, bitHolder, "Pingu4");
-//	}
-//
-//	//Setup Box Entity 5
-//	{
-//		//Creates entity
-//		auto entity = ECS::CreateEntity();
-//		//Add components
-//		ECS::AttachComponent<Sprite>(entity);
-//		ECS::AttachComponent<Transform>(entity);
-//		ECS::AttachComponent<PhysicsBody>(entity);
-//		//Sets up components
-//		std::string fileName = "Eiscue2.png";
-//		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 27, 20);
-//		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 1.f));
-//		auto& tempSpr = ECS::GetComponent<Sprite>(entity);
-//		auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
-//
-//		float shrinkX = tempSpr.GetWidth() / 11.f;
-//		float shrinkY = tempSpr.GetWidth() / 11.f;
-//		b2Body* tempBody;
-//		b2BodyDef tempDef;
-//		tempDef.type = b2_dynamicBody;
-//
-//		tempDef.position.Set(float32(0.f), float32(150.f));
-//
-//		tempBody = m_physicsWorld->CreateBody(&tempDef);
-//		tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY),
-//			vec2(0.f, 0.f), false);
-//		tempPhsBody.SetFriction(0.20f);
-//		tempPhsBody.SetMaxVelo(0.50f);
-//		tempPhsBody.SetGravity(true);
-//
-//		//Sets up the Identifier
-//		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
-//		ECS::SetUpIdentifier(entity, bitHolder, "Pingu5");
-//	}
-//
-//	//Setup Box Entity 6
-//	{
-//		//Creates entity
-//		auto entity = ECS::CreateEntity();
-//		//Add components
-//		ECS::AttachComponent<Sprite>(entity);
-//		ECS::AttachComponent<Transform>(entity);
-//		ECS::AttachComponent<PhysicsBody>(entity);
-//		//Sets up components
-//		std::string fileName = "Eiscue2.png";
-//		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 27, 20);
-//		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 1.f));
-//		auto& tempSpr = ECS::GetComponent<Sprite>(entity);
-//		auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
-//
-//		float shrinkX = tempSpr.GetWidth() / 11.f;
-//		float shrinkY = tempSpr.GetWidth() / 11.f;
-//		b2Body* tempBody;
-//		b2BodyDef tempDef;
-//		tempDef.type = b2_dynamicBody;
-//
-//		tempDef.position.Set(float32(36.f), float32(150.f));
-//
-//		tempBody = m_physicsWorld->CreateBody(&tempDef);
-//		tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY),
-//			vec2(0.f, 0.f), false);
-//		tempPhsBody.SetFriction(0.20f);
-//		tempPhsBody.SetMaxVelo(0.50f);
-//		tempPhsBody.SetGravity(true);
-//
-//		//Sets up the Identifier
-//		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
-//		ECS::SetUpIdentifier(entity, bitHolder, "Pingu6");
-//	}
-//
-//	//Setup Box Entity 7
-//	{
-//		//Creates entity
-//		auto entity = ECS::CreateEntity();
-//		//Add components
-//		ECS::AttachComponent<Sprite>(entity);
-//		ECS::AttachComponent<Transform>(entity);
-//		ECS::AttachComponent<PhysicsBody>(entity);
-//		//Sets up components
-//		std::string fileName = "Eiscue2.png";
-//		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 27, 20);
-//		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 1.f));
-//		auto& tempSpr = ECS::GetComponent<Sprite>(entity);
-//		auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
-//
-//		float shrinkX = tempSpr.GetWidth() / 11.f;
-//		float shrinkY = tempSpr.GetWidth() / 11.f;
-//		b2Body* tempBody;
-//		b2BodyDef tempDef;
-//		tempDef.type = b2_dynamicBody;
-//
-//		tempDef.position.Set(float32(-54.f), float32(125.f));
-//
-//		tempBody = m_physicsWorld->CreateBody(&tempDef);
-//		tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY),
-//			vec2(0.f, 0.f), false);
-//		tempPhsBody.SetFriction(0.20f);
-//		tempPhsBody.SetMaxVelo(0.50f);
-//		tempPhsBody.SetGravity(true);
-//
-//		//Sets up the Identifier
-//		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
-//		ECS::SetUpIdentifier(entity, bitHolder, "Pingu7");
-//	}
-//
-//	//Setup Box Entity 8
-//	{
-//		//Creates entity
-//		auto entity = ECS::CreateEntity();
-//		//Add components
-//		ECS::AttachComponent<Sprite>(entity);
-//		ECS::AttachComponent<Transform>(entity);
-//		ECS::AttachComponent<PhysicsBody>(entity);
-//		//Sets up components
-//		std::string fileName = "Eiscue2.png";
-//		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 27, 20);
-//		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 1.f));
-//		auto& tempSpr = ECS::GetComponent<Sprite>(entity);
-//		auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
-//
-//		float shrinkX = tempSpr.GetWidth() / 11.f;
-//		float shrinkY = tempSpr.GetWidth() / 11.f;
-//		b2Body* tempBody;
-//		b2BodyDef tempDef;
-//		tempDef.type = b2_dynamicBody;
-//
-//		tempDef.position.Set(float32(-18.f), float32(125.f));
-//
-//		tempBody = m_physicsWorld->CreateBody(&tempDef);
-//		tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY),
-//			vec2(0.f, 0.f), false);
-//		tempPhsBody.SetFriction(0.20f);
-//		tempPhsBody.SetMaxVelo(0.50f);
-//		tempPhsBody.SetGravity(true);
-//
-//		//Sets up the Identifier
-//		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
-//		ECS::SetUpIdentifier(entity, bitHolder, "Pingu8");
-//	}
-//
-//	//Setup Box Entity 9
-//	{
-//		//Creates entity
-//		auto entity = ECS::CreateEntity();
-//		//Add components
-//		ECS::AttachComponent<Sprite>(entity);
-//		ECS::AttachComponent<Transform>(entity);
-//		ECS::AttachComponent<PhysicsBody>(entity);
-//		//Sets up components
-//		std::string fileName = "Eiscue2.png";
-//		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 27, 20);
-//		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 1.f));
-//		auto& tempSpr = ECS::GetComponent<Sprite>(entity);
-//		auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
-//
-//		float shrinkX = tempSpr.GetWidth() / 11.f;
-//		float shrinkY = tempSpr.GetWidth() / 11.f;
-//		b2Body* tempBody;
-//		b2BodyDef tempDef;
-//		tempDef.type = b2_dynamicBody;
-//
-//		tempDef.position.Set(float32(18.f), float32(125.f));
-//
-//		tempBody = m_physicsWorld->CreateBody(&tempDef);
-//		tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY),
-//			vec2(0.f, 0.f), false);
-//		tempPhsBody.SetFriction(0.20f);
-//		tempPhsBody.SetMaxVelo(0.50f);
-//		tempPhsBody.SetGravity(true);
-//
-//		//Sets up the Identifier
-//		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
-//		ECS::SetUpIdentifier(entity, bitHolder, "Pingu9");
-//	}
-//
-//	//Setup Box Entity 10
-//	{
-//		//Creates entity
-//		auto entity = ECS::CreateEntity();
-//		//Add components
-//		ECS::AttachComponent<Sprite>(entity);
-//		ECS::AttachComponent<Transform>(entity);
-//		ECS::AttachComponent<PhysicsBody>(entity);
-//		//Sets up components
-//		std::string fileName = "Eiscue2.png";
-//		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 27, 20);
-//		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 1.f));
-//		auto& tempSpr = ECS::GetComponent<Sprite>(entity);
-//		auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
-//
-//		float shrinkX = tempSpr.GetWidth() / 11.f;
-//		float shrinkY = tempSpr.GetWidth() / 11.f;
-//		b2Body* tempBody;
-//		b2BodyDef tempDef;
-//		tempDef.type = b2_dynamicBody;
-//
-//		tempDef.position.Set(float32(54.f), float32(125.f));
-//
-//		tempBody = m_physicsWorld->CreateBody(&tempDef);
-//		tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY),
-//			vec2(0.f, 0.f), false);
-//		tempPhsBody.SetFriction(0.20f);
-//		tempPhsBody.SetMaxVelo(0.50f);
-//		tempPhsBody.SetGravity(true);
-//
-//		//Sets up the Identifier
-//		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
-//		ECS::SetUpIdentifier(entity, bitHolder, "Pingu10");
-//	}
-//#pragma endregion
-//	
-//	
-	//Set up ground entity
 	
-	{  //platform entity
-		auto entity = ECS::CreateEntity();
 
-		ECS::AttachComponent<Sprite>(entity);
-		ECS::AttachComponent<Transform>(entity);
-		ECS::AttachComponent<PhysicsBody>(entity);
+	
+	//Setup player sprite entity
+	for (int i = 0; i < 2; i++) {
+		{
+			//Our JSON animation file
+			auto moving = File::LoadJSON("Player.json");
 
-		std::string fileName = "BG.png";
-		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 90, 30);
-		ECS::GetComponent<Transform>(entity).SetPosition(vec3(10.f, 0.f, -10.f));
+			//Creates entity
+			auto entity = ECS::CreateEntity();
 
-		auto& tempSpr = ECS::GetComponent<Sprite>(entity);
-		auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+			//Add components
+			ECS::AttachComponent<Sprite>(entity);
+			ECS::AttachComponent<Transform>(entity);
+			ECS::AttachComponent<AnimationController>(entity);
+			ECS::AttachComponent<PhysicsBody>(entity);
 
-		float shrinkX = 0.f;
-		float shrinkY = (tempSpr.GetHeight() / 2.f);
+			//Sets up components
+			std::string fileName = "orange.png";
+			if (i == 0) fileName = "Blue.png";
+			auto& animController = ECS::GetComponent<AnimationController>(entity);
+			animController.InitUVs(fileName);
 
-		b2Body* tempBody;
-		b2BodyDef tempDef;
-		tempDef.type = b2_staticBody;
-		tempDef.position.Set(float32(80.f), float32(20.f));
+			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 24, 21, true, &animController);
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 10.f, 100.f));
 
-		tempBody = m_physicsWorld->CreateBody(&tempDef);
+			auto& tempSpr = ECS::GetComponent<Sprite>(entity);
+			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
 
-		tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, (-tempSpr.GetHeight() / 16.f) * 6.f), false);
+			float shrinkX = tempSpr.GetWidth() / 3.f;
+			float shrinkY = tempSpr.GetWidth() / 6.f;
 
-		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
-		ECS::SetUpIdentifier(entity, bitHolder, "Platform");
+			b2Body* tempBody;
+			b2BodyDef tempDef;
+			tempDef.type = b2_dynamicBody;
+			if (i == 0) tempDef.position.Set(float32(-72.f), float32(-30.f));
+			else tempDef.position.Set(float32(72), float32(-30.f));
+
+			tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY),
+				vec2(0.f, 0.f), false);
+
+			//tempPhsBody.SetFriction(0.15f);
+			//tempPhsBody.SetMaxVelo(0.10f);
+			tempPhsBody.SetGravity(true);
+			tempPhsBody.SetGravityAcceleration(vec3(1000.f, -9990.f, 0.f));
+
+			if (i == 0) tempBody->SetUserData(&blue);
+			else tempBody->SetUserData(&orange);
+
+			animController.AddAnimation(moving["runLeft"]);
+			animController.GetAnimation(0).SetRepeating(true);
+			animController.AddAnimation(moving["runLeft"]);
+			animController.GetAnimation(1).SetRepeating(true);
+			animController.AddAnimation(moving["runRight"]);
+			animController.GetAnimation(2).SetRepeating(true);
+
+			if (i == 0) animController.SetActiveAnim(2);
+			else animController.SetActiveAnim(1);
+
+			//Sets up the Identifier
+			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::AnimationBit();
+			ECS::SetUpIdentifier(entity, bitHolder, "Player " + std::to_string(i+1));
+			if (i == 0)
+			{
+				ECS::SetIsMainPlayer(entity, true);
+			}
+			else if (i == 1) 
+			{
+				ECS::SetIsSecondPlayer(entity, true);
+			}
+
+			m_player = entity;
+		}
 	}
 
 	{  //ground entity
@@ -510,22 +136,62 @@ void HelloWorld::InitScene(float windowWidth, float windowHeight)
 		b2Body* tempBody;
 		b2BodyDef tempDef;
 		tempDef.type = b2_staticBody;
-		tempDef.position.Set(float32(0.f), float32(0.f));
+		tempDef.position.Set(float32(0.f), float32(-30.f));
 
 		tempBody = m_physicsWorld->CreateBody(&tempDef);
 
 		tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, (-tempSpr.GetHeight() / 16.f) * 6.f), false);
 
+		tempBody->SetUserData(&border);
+
 		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
 		ECS::SetUpIdentifier(entity, bitHolder, "Ground");
 	}
 
-	//Makes the camera focus on the main player
-	//We do this at the very bottom so we get the most accurate pointer to our Transform
-	ECS::GetComponent<HorizontalScroll>(EntityIdentifier::MainCamera()).SetFocus(&ECS::GetComponent<Transform>(EntityIdentifier::MainPlayer()));
+	
+	for (int i = 0; i < 8; i++) {
+		{  //platform  entity
+			auto entity = ECS::CreateEntity();
+
+			ECS::AttachComponent<Sprite>(entity);
+			ECS::AttachComponent<Transform>(entity);
+			ECS::AttachComponent<PhysicsBody>(entity);
+
+			std::string fileName = "BG.png";
+			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 30, 15);
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(10.f, 0.f, -10.f));
+
+			auto& tempSpr = ECS::GetComponent<Sprite>(entity);
+			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+
+			float shrinkX = 0.f;
+			float shrinkY = (tempSpr.GetHeight() / 2.f);
+
+			b2Body* tempBody;
+			b2BodyDef tempDef;
+			tempDef.type = b2_staticBody;
+			if(i ==0 )tempDef.position.Set(float32(-145.f), float32(-20.f));
+			else if(i == 1)tempDef.position.Set(float32(0.f), float32(-20.f));
+			else if (i == 2)tempDef.position.Set(float32(145.f), float32(-20.f));
+			else if (i == 3)tempDef.position.Set(float32(72.f), float32(20.f));
+			else if (i == 4)tempDef.position.Set(float32(-72.f), float32(20.f));
+			else if (i == 5)tempDef.position.Set(float32(-145.f), float32(50.f));
+			else if (i == 6)tempDef.position.Set(float32(0.f), float32(50.f));
+			else if (i == 7)tempDef.position.Set(float32(145.f), float32(50.f));
+
+			tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, (-tempSpr.GetHeight() / 16.f) * 6.f), false);
+
+			tempBody->SetUserData(&platform);
+
+			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
+			ECS::SetUpIdentifier(entity, bitHolder, "Platform " + std::to_string(i+1));
+		}
+	}
+
+
 }
-
-
 
 int HelloWorld::GetPlayer()
 {

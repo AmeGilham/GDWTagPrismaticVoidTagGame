@@ -47,6 +47,7 @@ public:
 	//Side stuff for entity identifier
 	static void SetIsMainCamera(unsigned entity, bool mainCamera);
 	static void SetIsMainPlayer(unsigned entity, bool mainPlayer);
+	static void SetIsSecondPlayer(unsigned entity, bool secondPlayer);
 
 private:
 	static entt::registry* m_reg;

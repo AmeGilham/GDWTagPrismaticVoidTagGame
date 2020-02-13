@@ -16,8 +16,8 @@ void BackEnd::InitBackEnd(std::string name)
 	InitSDL();
 
 	//Sets the backend window width, height, and aspect ratio
-	m_windowWidth = 700;
-	m_windowHeight = 700;
+	m_windowWidth = 1920;
+	m_windowHeight = 1080;
 	m_aspectRatio = float(m_windowWidth) / float(m_windowHeight);
 	//Creates new window with name of the scene as a caption
 	m_window = new Window(name, BackEnd::GetWindowWidth(), BackEnd::GetWindowHeight());

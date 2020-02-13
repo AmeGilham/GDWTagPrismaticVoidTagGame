@@ -1,43 +1,127 @@
 #include "CollisionCallback.h"
 #include "Input.h"
 
-
-void myListener::BeginContact(b2Contact* contact){
-	std::cout << "Begin collide\n";
-
-
-
+myListener::myListener()
+	:b2ContactListener(), canJumpB(false) ,canJumpO(false)
+{
 }
 
-void myListener::PreSolve(b2Contact* contact, const b2Manifold* oldManifold){
-	std::cout << "Begin pre collide\n";
-
+//called by Box2D when two things begin colliding
+void myListener::BeginContact(b2Contact* contact){
+	//begin contact code
+		//grab pointers to the fixtures
 	b2Fixture* fixa = contact->GetFixtureA();
 	b2Fixture* fixb = contact->GetFixtureB();
 
-	b2Vec2 vel = fixa->GetBody()->GetLinearVelocity();
+	//grab the userdata in each fixture 
+	int* uda = reinterpret_cast<int*>(fixa->GetBody()->GetUserData());
+	int* udb = reinterpret_cast<int*>(fixb->GetBody()->GetUserData());
 
-	//(((fixa->GetBody()->GetPosition().x >= 22 && fixa->GetBody()->GetPosition().x <= 115) && fixa->GetBody()->GetPosition().y <= 30)) && 
-	
-	fixa->GetBody()->SetFixedRotation(true);
-	if (vel.y > 0.0) {
-		contact->SetEnabled(false);
-		//std::cout << contact->IsEnabled();
-		std::cout << "Begin pre HELPPPPPP\n";}
-
-	else{
-		//contact->SetEnabled(true);
+	//if fixature a is a player and colliding with a platform or border in b
+	if ((*uda == 0 || *uda == 1) && (*udb == 2 || *udb == 3)) {
+		//send a's user data and velocity to see if we need to reset the jump
+		b2Vec2 vel = fixa->GetBody()->GetLinearVelocity();
+		jumpReset(uda, vel);
+	}
+	//else if fixature b is a player and colliding with a platform or border in a
+	else if ((*udb == 0 || *udb == 1) && (*uda == 2 || *uda == 3)) {
+		//send b's user data and velocity to see if we need to reset the jump
+		b2Vec2 vel = fixb->GetBody()->GetLinearVelocity();
+		jumpReset(uda, vel);
 	}
 
 
 }
 
-void myListener::EndContact (b2Contact* contact){
-	std::cout << contact->IsEnabled();
-	std::cout << "End collide\n";
-	contact->SetEnabled(false);
+//called by Box2D just before the code for a collision is run, continues throughout the entire time it's colliding
+void myListener::PreSolve(b2Contact* contact, const b2Manifold* oldManifold){
+	//grab pointers to the fixtures
+	b2Fixture* fixa = contact->GetFixtureA();
+	b2Fixture* fixb = contact->GetFixtureB();
 
+	//grab the user data in each fixture 
+	int* uda = reinterpret_cast<int*>(fixa->GetBody()->GetUserData()); 
+	int* udb = reinterpret_cast<int*>(fixb->GetBody()->GetUserData());
+	
+	//check if a player in a is colliding with a platform in b
+	if ((*uda == 0 || *uda == 1) && *udb == 2) {
+		//if so see if it needs to jump through
+		jumpThrough(contact, fixa);
+	}
+	//check if a player in b is colliding with a platform in a
+	else if ((*udb == 0 || *udb == 1) && *uda == 2) {
+		//if so see if it needs to jump through
+		jumpThrough(contact, fixb);
+	}
+
+	//check if the players are colliding with each other 
+	if ((*uda == 0 && *udb == 1) || (*uda == 1 && *udb == 0)) {
+		//if they are, let them pass through each other 
+		contact->SetEnabled(false);
+	}
+	
 }
+
+void myListener::PostSolve(b2Contact* contact, b2ContactImpulse* impulse)
+{
+}
+
+//set the status of wheter or not Blue can jump
+void myListener::setJumpB(bool status)
+{
+	canJumpB = status;
+}
+
+//set the status of whether or not Orange can jump
+void myListener::setJumpO(bool status)
+{
+	canJumpO = status;
+}
+
+//return the status of whether or not Blue can jump
+bool myListener::getJumpB()
+{
+	return canJumpB;
+}
+
+//return the status of wheter or not Orange can jump
+bool myListener::getJumpO()
+{
+	return canJumpO;
+}
+
+//called by Box2D when two objects stop colliding
+void myListener::EndContact (b2Contact* contact){
+	//end contact code
+}
+
+void myListener::jumpThrough(b2Contact* contact, b2Fixture* playFix)
+{
+	//grab the velocity of the fixture
+	b2Vec2 vel = playFix->GetBody()->GetLinearVelocity();
+
+	//stop the player's hitbox from rotating  
+	playFix->GetBody()->SetFixedRotation(true);
+
+	//if the player is jumping
+	if (vel.y > 0.0) {
+		//stop the collision
+		contact->SetEnabled(false);
+	}
+}
+
+void myListener::jumpReset(int* ud, b2Vec2 velo)
+{
+	//if the player is landing 
+	if (*ud == 0 && velo.y <= 0.0) {
+		canJumpB = true;
+	}
+	else if (*ud == 1 && velo.y <= 0.0) {
+		canJumpO = true;
+	}
+}
+
+
 
 
 

@@ -58,4 +58,14 @@ void ECS::SetIsMainPlayer(unsigned entity, bool mainPlayer)
 	auto& id = GetComponent<EntityIdentifier>(entity);
 	//Sets whether this entity is the main player
 	id.SetIsMainPlayer(mainPlayer);
+	id.MainPlayer(entity);
+}
+
+void ECS::SetIsSecondPlayer(unsigned entity, bool secondPlayer)
+{
+	//Gets reference to the component
+	auto& id = GetComponent<EntityIdentifier>(entity);
+	//Sets whether this entity is the main player
+	id.SetIsSecondPlayer(secondPlayer);
+	id.SecondPlayer(entity);
 }

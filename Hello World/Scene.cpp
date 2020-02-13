@@ -65,6 +65,12 @@ b2World & Scene::GetPhysicsWorld()
 	return *m_physicsWorld;
 }
 
+myListener * Scene::GetListener()
+{
+	// TODO: insert return statement here
+	return &listener;
+}
+
 void Scene::SetWindowSize(float windowWidth, float windowHeight)
 {
 	auto& tempCam = m_sceneReg->get<Camera>(EntityIdentifier::MainCamera());

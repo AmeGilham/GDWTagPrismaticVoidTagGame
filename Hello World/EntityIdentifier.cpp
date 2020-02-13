@@ -2,6 +2,7 @@
 
 unsigned int EntityIdentifier::m_mainCamera = 0;
 unsigned int EntityIdentifier::m_mainPlayer = 0;
+unsigned int EntityIdentifier::m_secondPlayer = 0;
 
 unsigned int EntityIdentifier::m_cameraBit			= 0x1;
 unsigned int EntityIdentifier::m_spriteBit			= 0x10;
@@ -32,6 +33,16 @@ bool EntityIdentifier::GetIsMainPlayer() const
 {
 	//Gets if this component IS attached to the main player
 	return m_isMainPlayer;
+}
+
+unsigned int EntityIdentifier::SecondPlayer()
+{
+	return m_secondPlayer;
+}
+
+bool EntityIdentifier::GetIsSecondPlayer() const
+{
+	return m_isSecondPlayer;
 }
 
 unsigned int EntityIdentifier::MainCamera()
@@ -129,6 +140,18 @@ void EntityIdentifier::SetIsMainPlayer(bool main)
 {
 	//Sets whether or not the entity that has this component, is the main player
 	m_isMainPlayer = main;
+}
+
+void EntityIdentifier::SecondPlayer(unsigned int entity)
+{
+	//Sets the second player entity
+	m_secondPlayer = entity;
+}
+
+void EntityIdentifier::SetIsSecondPlayer(bool second)
+{
+	//Sets whether or not the entity that has this component, is the second player 
+	m_isSecondPlayer = second;
 }
 
 void EntityIdentifier::MainCamera(unsigned int entity)

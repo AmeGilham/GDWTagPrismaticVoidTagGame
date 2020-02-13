@@ -13,6 +13,9 @@ public:
 	//Gets main player entity
 	static unsigned int MainPlayer();
 	bool GetIsMainPlayer() const;
+	//Gets second player entity
+	static unsigned int SecondPlayer();
+	bool GetIsSecondPlayer() const;
 	//Gets main camera entity
 	static unsigned int MainCamera();
 	bool GetIsMainCamera() const;
@@ -38,6 +41,9 @@ public:
 	//Sets main player entity
 	static void MainPlayer(unsigned int entity);
 	void SetIsMainPlayer(bool main);
+	//Sets second player entity
+	static void SecondPlayer(unsigned int entity);
+	void SetIsSecondPlayer(bool second);
 	//Sets main camera entity
 	static void MainCamera(unsigned int entity);
 	void SetIsMainCamera(bool main);
@@ -54,6 +60,9 @@ private:
 	//Main player
 	static unsigned int m_mainPlayer;
 	bool m_isMainPlayer = false;
+	//Second player
+	static unsigned int m_secondPlayer;
+	bool m_isSecondPlayer = false;
 	//Main camera
 	static unsigned int m_mainCamera;
 	bool m_isMainCamera = false;

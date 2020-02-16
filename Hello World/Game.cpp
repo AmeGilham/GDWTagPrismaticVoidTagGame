@@ -187,11 +187,23 @@ void Game::KeyboardHold(){
 	 else {
 		if (body->GetLinearVelocity().x > float32(0.f))
 		{
-			tempPhysBod.ApplyForce(vec3(-6000.f, 0.f, 0.f));
+			if (body->GetLinearVelocity().x > float32(20.f)) {
+
+				body->SetLinearVelocity(b2Vec2(body->GetLinearVelocity().x - 20, body->GetLinearVelocity().y));
+			}
+			else {
+				body->SetLinearVelocity(b2Vec2(0, body->GetLinearVelocity().y));
+			}
 		}
 		else if (body->GetLinearVelocity().x < float32(0.f))
 		{
-			tempPhysBod.ApplyForce(vec3(6000.f, 0.f, 0.f));
+			if (body->GetLinearVelocity().x < float32(-20.f)) {
+
+				body->SetLinearVelocity(b2Vec2(body->GetLinearVelocity().x + 20, body->GetLinearVelocity().y));
+			}
+			else {
+				body->SetLinearVelocity(b2Vec2(0, body->GetLinearVelocity().y));
+			}
 		}
 	}
 
@@ -216,11 +228,23 @@ void Game::KeyboardHold(){
 	else {
 		if (bodyO->GetLinearVelocity().x > float32(0.f))
 		{
-			tempPhysBodO.ApplyForce(vec3(-6000.f, 0.f, 0.f));
+			if (bodyO->GetLinearVelocity().x > float32(20.f)) {
+
+				bodyO->SetLinearVelocity(b2Vec2(bodyO->GetLinearVelocity().x - 20, bodyO->GetLinearVelocity().y));
+			}
+			else {
+				bodyO->SetLinearVelocity(b2Vec2(0, bodyO->GetLinearVelocity().y));
+			}
 		}
 		else if (bodyO->GetLinearVelocity().x < float32(0.f))
 		{
-			tempPhysBodO.ApplyForce(vec3(6000.f, 0.f, 0.f));
+			if (bodyO->GetLinearVelocity().x < float32(-20.f)) {
+
+				bodyO->SetLinearVelocity(b2Vec2(bodyO->GetLinearVelocity().x + 20, bodyO->GetLinearVelocity().y));
+			}
+			else {
+				bodyO->SetLinearVelocity(b2Vec2(0, bodyO->GetLinearVelocity().y));
+			}
 		}
 	}
 

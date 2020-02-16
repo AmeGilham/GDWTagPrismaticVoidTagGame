@@ -58,11 +58,11 @@ void HelloWorld::InitScene(float windowWidth, float windowHeight)
 
 			//Sets up components
 			std::string fileName = "orange.png";
-			if (i == 0) fileName = "Blue.png";
+			if (i == 0) fileName = "blue.png";
 			auto& animController = ECS::GetComponent<AnimationController>(entity);
 			animController.InitUVs(fileName);
 
-			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 24, 21, true, &animController);
+			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 24, 24, true, &animController);
 			ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 10.f, 100.f));
 
 			auto& tempSpr = ECS::GetComponent<Sprite>(entity);

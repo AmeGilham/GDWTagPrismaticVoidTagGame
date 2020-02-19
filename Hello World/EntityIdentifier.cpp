@@ -12,6 +12,7 @@ unsigned int EntityIdentifier::m_linkBit			= 0x10000;
 unsigned int EntityIdentifier::m_physicsBit			= 0x100000;
 unsigned int EntityIdentifier::m_healthBarBit	    = 0x1000000;
 unsigned int EntityIdentifier::m_horiScrollCameraBit= 0x10000000;
+unsigned int EntityIdentifier::m_powerBit           = 0x2;
 
 //(having just camera means the bit = 1)
 //(having sprite, animation and transform)
@@ -130,6 +131,11 @@ unsigned int EntityIdentifier::HoriScrollCameraBit()
 	return m_horiScrollCameraBit;
 }
 
+unsigned int EntityIdentifier::powerBit()
+{
+	return m_powerBit;
+}
+
 void EntityIdentifier::MainPlayer(unsigned int entity)
 {
 	//Sets the main player entity
@@ -166,8 +172,7 @@ void EntityIdentifier::SetIsMainCamera(bool main)
 	m_isMainCamera = main;
 }
 
-void EntityIdentifier::SetEntity(unsigned int entity)
-{
+void EntityIdentifier::SetEntity(unsigned int entity){
 	//Sets the entity number
 	m_entity = entity;
 }

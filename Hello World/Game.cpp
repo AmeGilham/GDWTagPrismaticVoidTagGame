@@ -37,8 +37,7 @@ void Game::InitGame()
 
 	//Creates a new HelloWorld scene
 	m_scenes.push_back(new HelloWorld("Hello World"));
-	m_scenes.push_back(new Scene("First Loaded Scene"));
-	m_scenes.push_back(new HelloWorld("Second Loaded Scene"));
+	
 	//Sets active scene reference to our HelloWorld scene
 	m_activeScene = m_scenes[0];
 
@@ -122,6 +121,10 @@ void Game::Update()
 	else if (orangetempPhysBod.GetPosition().x < -202) {
 		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(202, orangebody->GetPosition().y), float32(0));
 	}
+
+
+
+
 }
 
 void Game::GUI()
@@ -250,6 +253,15 @@ void Game::KeyboardHold(){
 
 	if (Input::GetKey(Key::DownArrow)) m_register->get<PhysicsBody>(EntityIdentifier::SecondPlayer()).ApplyForce(vec3(tempPhysBodO.GetForce().x, -200000.8f, 0.f));
 	else m_register->get<PhysicsBody>(EntityIdentifier::SecondPlayer()).ApplyForce(vec3(tempPhysBodO.GetForce().x, -3000.8f, 0.f));
+
+
+	if (Input::GetKey(Key::Z)) {    //zoom in
+		m_register->get<Camera>(EntityIdentifier::MainCamera()).Zoom(1);
+	}
+	if (Input::GetKey(Key::X)) {    //zoom out
+		m_register->get<Camera>(EntityIdentifier::MainCamera()).Zoom(-1);
+	}
+
 }
 
 void Game::KeyboardDown() {

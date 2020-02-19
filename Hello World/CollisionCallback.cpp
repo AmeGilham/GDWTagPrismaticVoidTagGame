@@ -1,5 +1,6 @@
 #include "CollisionCallback.h"
 #include "Input.h"
+#include <time.h>
 
 myListener::myListener()
 	:b2ContactListener(), canJumpB(false) ,canJumpO(false)
@@ -46,19 +47,28 @@ void myListener::PreSolve(b2Contact* contact, const b2Manifold* oldManifold){
 	//check if a player in a is colliding with a platform in b
 	if ((*uda == 0 || *uda == 1) && *udb == 2) {
 		//if so see if it needs to jump through
-		jumpThrough(contact, fixa);
-	}
+		jumpThrough(contact, fixa);}
 	//check if a player in b is colliding with a platform in a
 	else if ((*udb == 0 || *udb == 1) && *uda == 2) {
 		//if so see if it needs to jump through
-		jumpThrough(contact, fixb);
-	}
+		jumpThrough(contact, fixb);}
 
 	//check if the players are colliding with each other 
 	if ((*uda == 0 && *udb == 1) || (*uda == 1 && *udb == 0)) {
 		//if they are, let them pass through each other 
-		contact->SetEnabled(false);
-	}
+		contact->SetEnabled(false);}
+
+	////check if a player in a is colliding with a powerUP in b
+	//if ((*uda == 0 || *uda == 1) && *udb == 4) {
+	//	//auto& entity = EntityIdentifier::GetName("Power");
+
+	//	//auto& id = ECS::GetComponent<EntityIdentifier>(EntityIdentifier::GetIdentifier());
+
+	//}
+	////check if a player in b is colliding with a power up in a
+	//else if ((*udb == 0 || *udb == 1) && *uda == 4) {
+	//	std::cout << "Collide" << std::endl;
+	//}
 	
 }
 
@@ -93,10 +103,47 @@ bool myListener::getJumpO()
 //called by Box2D when two objects stop colliding
 void myListener::EndContact (b2Contact* contact){
 	//end contact code
+	int a = Timer::time;
+
+	/*std::cout << Timer::deltaTime << std::endl;
+	std::cout << Timer::time << std::endl;
+
+	std::cout <<Timer::deltaTime/Timer::time << "Combine" << std::endl;
+	std::cout << Timer::currentClock - Timer::lastClock<< " Combine 2 " << std::endl;
+
+	std::cout << Timer::currentClock << std::endl;
+	std::cout << Timer::lastClock << std::endl;
+	Timer::Update;
+	Timer::Reset;
+
+	std::cout << Timer::currentClock << std::endl;
+	std::cout << Timer::lastClock << std::endl;
+
+	std::cout << Timer::deltaTime << std::endl;
+	std::cout << Timer::time << std::endl;*/
+
+
+
+	//std::cout <<"Current TIme: " << Timer::time << std::endl;
+
+	//if (Timer::time >= 10.0f) {
+	//	Timer::Reset();
+	//	Timer::Update();
+	//}
+
+	//std::cout << Timer::time << std::endl;
+
+
 }
 
-void myListener::jumpThrough(b2Contact* contact, b2Fixture* playFix)
-{
+void myListener::jumpThrough(b2Contact* contact, b2Fixture* playFix){
+	b2Fixture* fixa = contact->GetFixtureA();
+	b2Fixture* fixb = contact->GetFixtureB();
+
+	//grab the userdata in each fixture 
+	int* uda = reinterpret_cast<int*>(fixa->GetBody()->GetUserData());
+	int* udb = reinterpret_cast<int*>(fixb->GetBody()->GetUserData());
+
 	//grab the velocity of the fixture
 	b2Vec2 vel = playFix->GetBody()->GetLinearVelocity();
 
@@ -104,7 +151,7 @@ void myListener::jumpThrough(b2Contact* contact, b2Fixture* playFix)
 	playFix->GetBody()->SetFixedRotation(true);
 
 	//if the player is jumping
-	if (vel.y > 0.0) {
+	if (vel.y > 0.0 && *uda != 3) {
 		//stop the collision
 		contact->SetEnabled(false);
 	}
@@ -120,8 +167,6 @@ void myListener::jumpReset(int* ud, b2Vec2 velo)
 		canJumpO = true;
 	}
 }
-
-
 
 
 

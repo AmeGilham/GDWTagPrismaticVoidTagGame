@@ -187,7 +187,7 @@ void HelloWorld::InitScene(float windowWidth, float windowHeight)
 		ECS::SetUpIdentifier(entity, bitHolder, "Ground");
 	}
 
-	
+	//setup platform entities
 	for (int i = 0; i < 8; i++) {
 		{  //platform  entity
 			auto entity = ECS::CreateEntity();
@@ -234,55 +234,109 @@ void HelloWorld::InitScene(float windowWidth, float windowHeight)
 
 void HelloWorld::Update()
 {
-	{
-		float rx1= rand() % (199 - (-199)) + (-199); //x coord between 199 and -199  [rand() % (high - low) + low;]
+		float powern = rand() % (3 - (1)) + (1);
+
+
+		float rx1 = rand() % (199 - (-199)) + (-199); //x coord between 199 and -199  [rand() % (high - low) + low;]
 		//float ry1 = rand() % (-11 - (-48)) + (-48); 
 		float ry1 = -35.f, ry2 = 30.f, ry3 = 78.f;
 		float ry = rand() % (4 - (1)) + (1);
 
-		if (Timer::time >= 2.0f) {
-			Timer::Reset();
-			Timer::Update();
-
-			auto entity = ECS::CreateEntity();
-
-			ECS::AttachComponent<Sprite>(entity);
-			ECS::AttachComponent<Transform>(entity);
-			ECS::AttachComponent<PhysicsBody>(entity);
-
-			std::string fileName = "power.png";
-			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 15, 20);
-			ECS::GetComponent<Transform>(entity).SetPosition(vec3(10.f, 0.f, -10.f));
-
-			auto& tempSpr = ECS::GetComponent<Sprite>(entity);
-			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
-
-			float shrinkX = 5.f;
-			float shrinkY = (tempSpr.GetHeight() / 2.5f);
-
-			b2Body* tempBody;
-			b2BodyDef tempDef;
-			tempDef.type = b2_dynamicBody;
-			if (ry == 1) { tempDef.position.Set(float32(rx1), float32(ry1));	}
-			else if (ry == 2) { tempDef.position.Set(float32(rx1), float32(ry2));  }
-			else if (ry == 3) { tempDef.position.Set(float32(rx1), float32(ry3)); 	}
-			tempDef.fixedRotation = true;
-
-			tempBody = m_physicsWorld->CreateBody(&tempDef);
-
-			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, (-tempSpr.GetHeight() / 45.f) * 0.1f), false);
-
-			tempBody->SetUserData(&power);
-			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
-			ECS::SetUpIdentifier(entity, bitHolder, "Power ");
-			count++;
-			if (Timer::time >= 5.0f && count >= 1) {
-				ECS::DestroyEntity(entity);
+		if (powern == 1) {
+			if (Timer::time >= 2.0f) {
 				Timer::Reset();
 				Timer::Update();
-				std::cout << Timer::time << "Time(destroy): " << std::endl;}
+
+				auto entity = ECS::CreateEntity();
+
+				ECS::AttachComponent<Sprite>(entity);
+				ECS::AttachComponent<Transform>(entity);
+				ECS::AttachComponent<PhysicsBody>(entity);
+
+				std::string fileName = "power.png";
+				ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 15, 20);
+				ECS::GetComponent<Transform>(entity).SetPosition(vec3(10.f, 0.f, -10.f));
+
+				auto& tempSpr = ECS::GetComponent<Sprite>(entity);
+				auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+
+				float shrinkX = 5.f;
+				float shrinkY = (tempSpr.GetHeight() / 2.5f);
+
+				b2Body* tempBody;
+				b2BodyDef tempDef;
+				tempDef.type = b2_dynamicBody;
+				if (ry == 1) { tempDef.position.Set(float32(rx1), float32(ry1)); }
+				else if (ry == 2) { tempDef.position.Set(float32(rx1), float32(ry2)); }
+				else if (ry == 3) { tempDef.position.Set(float32(rx1), float32(ry3)); }
+				tempDef.fixedRotation = true;
+
+				tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+				tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, (-tempSpr.GetHeight() / 45.f) * 0.1f), false);
+
+				tempBody->SetUserData(&power);
+				unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
+				ECS::SetUpIdentifier(entity, bitHolder, "Power ");
+				/*count++;
+				if (Timer::time >= 5.0f && count >= 1) {
+					ECS::DestroyEntity(entity);
+					Timer::Reset();
+					Timer::Update();
+					std::cout << Timer::time << "Time(destroy): " << std::endl;
+				}*/
+			}
 		}
-	}
+		
+		if (powern == 2) {
+			if (Timer::time >= 2.0f) {
+				Timer::Reset();
+				Timer::Update();
+				std::cout << "Power up 2";
+				auto entity = ECS::CreateEntity();
+
+				ECS::AttachComponent<Sprite>(entity);
+				ECS::AttachComponent<Transform>(entity);
+				ECS::AttachComponent<PhysicsBody>(entity);
+
+				std::string fileName = "power2.png";
+				ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 15, 20);
+				ECS::GetComponent<Transform>(entity).SetPosition(vec3(10.f, 0.f, -10.f));
+
+				auto& tempSpr = ECS::GetComponent<Sprite>(entity);
+				auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+
+				float shrinkX = 5.f;
+				float shrinkY = (tempSpr.GetHeight() / 2.5f);
+
+				b2Body* tempBody;
+				b2BodyDef tempDef;
+				tempDef.type = b2_dynamicBody;
+				if (ry == 1) { tempDef.position.Set(float32(rx1), float32(ry1)); }
+				else if (ry == 2) { tempDef.position.Set(float32(rx1), float32(ry2)); }
+				else if (ry == 3) { tempDef.position.Set(float32(rx1), float32(ry3)); }
+				tempDef.fixedRotation = true;
+
+				tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+				tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, (-tempSpr.GetHeight() / 45.f) * 0.1f), false);
+
+				tempBody->SetUserData(&power);
+				unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
+				ECS::SetUpIdentifier(entity, bitHolder, "Power 2 ");
+				//ECS::DestroyEntity(entity);
+				/*count++;
+				if (Timer::time >= 5.0f && count >= 1) {
+					ECS::DestroyEntity(entity);
+					Timer::Reset();
+					Timer::Update();
+					std::cout << Timer::time << "Time(destroy): " << std::endl;
+				}*/
+			}
+		}
+
+
+		
 
 
 

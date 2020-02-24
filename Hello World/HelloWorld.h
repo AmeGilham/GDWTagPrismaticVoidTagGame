@@ -18,4 +18,5 @@ private:
 	int orange = 1;
 	int platform = 2;
 	int border = 3;
+	int tag = 4;
 };

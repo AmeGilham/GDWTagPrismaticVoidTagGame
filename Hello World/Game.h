@@ -88,6 +88,10 @@ private:
 	//int m_maxHeight = -28.f;
 	//int m_currentGround = -10.f;
 	//bool jump = false;
+
+	//time since jump timers
+	float blueTimeSinceLastJump = 0.0f;
+	float orangeTimeSinceLastJump = 0.f;
 };
 
 

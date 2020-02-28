@@ -173,11 +173,11 @@ void HelloWorld::InitScene(float windowWidth, float windowHeight)
 			if(i ==0 )tempDef.position.Set(float32(-145.f), float32(-20.f));
 			else if(i == 1)tempDef.position.Set(float32(0.f), float32(-20.f));
 			else if (i == 2)tempDef.position.Set(float32(145.f), float32(-20.f));
-			else if (i == 3)tempDef.position.Set(float32(72.f), float32(20.f));
-			else if (i == 4)tempDef.position.Set(float32(-72.f), float32(20.f));
-			else if (i == 5)tempDef.position.Set(float32(-145.f), float32(50.f));
-			else if (i == 6)tempDef.position.Set(float32(0.f), float32(50.f));
-			else if (i == 7)tempDef.position.Set(float32(145.f), float32(50.f));
+			else if (i == 3)tempDef.position.Set(float32(72.f), float32(22.f));
+			else if (i == 4)tempDef.position.Set(float32(-72.f), float32(22.f));
+			else if (i == 5)tempDef.position.Set(float32(-145.f), float32(60.f));
+			else if (i == 6)tempDef.position.Set(float32(0.f), float32(60.f));
+			else if (i == 7)tempDef.position.Set(float32(145.f), float32(60.f));
 
 			tempBody = m_physicsWorld->CreateBody(&tempDef);
 

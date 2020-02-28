@@ -9,6 +9,7 @@ public:
 	myListener(); 
 
 	void BeginContact(b2Contact* contact);
+	void EndContact(b2Contact* contact);
 	void PreSolve(b2Contact* contact, const b2Manifold* oldManifold);
 	void PostSolve(b2Contact* contact, b2ContactImpulse* impulse);
 
@@ -18,10 +19,9 @@ public:
 	bool getJumpB();
 	bool getJumpO();
 
-	void EndContact(b2Contact* contact);
 
 	void jumpThrough(b2Contact* contact, b2Fixture* playFix);
-	void jumpReset(int* ud, b2Vec2 velo);
+	void jumpReset(int* ud);
 private:
 	bool canJumpB;
 	bool canJumpO; 

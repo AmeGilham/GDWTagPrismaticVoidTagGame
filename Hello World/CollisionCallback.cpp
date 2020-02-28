@@ -9,26 +9,7 @@ myListener::myListener()
 //called by Box2D when two things begin colliding
 void myListener::BeginContact(b2Contact* contact){
 	//begin contact code
-		//grab pointers to the fixtures
-	b2Fixture* fixa = contact->GetFixtureA();
-	b2Fixture* fixb = contact->GetFixtureB();
 
-	//grab the userdata in each fixture 
-	int* uda = reinterpret_cast<int*>(fixa->GetBody()->GetUserData());
-	int* udb = reinterpret_cast<int*>(fixb->GetBody()->GetUserData());
-
-	//if fixature a is a player and colliding with a platform or border in b
-	if ((*uda == 0 || *uda == 1) && (*udb == 2 || *udb == 3)) {
-		//send a's user data and velocity to see if we need to reset the jump
-		b2Vec2 vel = fixa->GetBody()->GetLinearVelocity();
-		jumpReset(uda, vel);
-	}
-	//else if fixature b is a player and colliding with a platform or border in a
-	else if ((*udb == 0 || *udb == 1) && (*uda == 2 || *uda == 3)) {
-		//send b's user data and velocity to see if we need to reset the jump
-		b2Vec2 vel = fixb->GetBody()->GetLinearVelocity();
-		jumpReset(uda, vel);
-	}
 
 
 }
@@ -59,7 +40,20 @@ void myListener::PreSolve(b2Contact* contact, const b2Manifold* oldManifold){
 		//if they are, let them pass through each other 
 		contact->SetEnabled(false);
 	}
-	
+
+
+	//if fixature a is a player and colliding with a platform or border in b
+	if ((*uda == 0 || *uda == 1) && (*udb == 2 || *udb == 3)) {
+		//send a's user data and velocity to see if we need to reset the jump
+		b2Vec2 vel = fixa->GetBody()->GetLinearVelocity();
+		jumpReset(uda);
+	}
+	//else if fixature b is a player and colliding with a platform or border in a
+	else if ((*udb == 0 || *udb == 1) && (*uda == 2 || *uda == 3)) {
+		//send b's user data and velocity to see if we need to reset the jump
+		b2Vec2 vel = fixb->GetBody()->GetLinearVelocity();
+		jumpReset(uda);
+	}
 }
 
 void myListener::PostSolve(b2Contact* contact, b2ContactImpulse* impulse)
@@ -93,6 +87,24 @@ bool myListener::getJumpO()
 //called by Box2D when two objects stop colliding
 void myListener::EndContact (b2Contact* contact){
 	//end contact code
+	//grab pointers to the fixtures
+	b2Fixture* fixa = contact->GetFixtureA();
+	b2Fixture* fixb = contact->GetFixtureB();
+
+	//grab the userdata in each fixture 
+	int* uda = reinterpret_cast<int*>(fixa->GetBody()->GetUserData());
+	int* udb = reinterpret_cast<int*>(fixb->GetBody()->GetUserData());
+
+	//if fixature a is a player and colliding with a platform or border in b
+	if ((*uda == 0 || *uda == 1) && (*udb == 2 || *udb == 3)) {
+		if (*uda == 0) canJumpB = false;
+		else canJumpO = false;
+	}
+	//else if fixature b is a player and colliding with a platform or border in a
+	else if ((*udb == 0 || *udb == 1) && (*uda == 2 || *uda == 3)) {
+		if (*udb == 0) canJumpB = false;
+		else canJumpO = false;
+	}
 }
 
 void myListener::jumpThrough(b2Contact* contact, b2Fixture* playFix)
@@ -110,13 +122,13 @@ void myListener::jumpThrough(b2Contact* contact, b2Fixture* playFix)
 	}
 }
 
-void myListener::jumpReset(int* ud, b2Vec2 velo)
+void myListener::jumpReset(int* ud)
 {
 	//if the player is landing 
-	if (*ud == 0 && velo.y <= 0.0) {
+	if (*ud == 0) {
 		canJumpB = true;
 	}
-	else if (*ud == 1 && velo.y <= 0.0) {
+	else if (*ud == 1) {
 		canJumpO = true;
 	}
 }

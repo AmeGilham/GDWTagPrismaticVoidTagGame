@@ -97,6 +97,9 @@ void Game::Update()
 	//Update Physics System
 	PhysicsSystem::Update(m_register, m_activeScene->GetPhysicsWorld());
 
+	blueTimeSinceLastJump += Timer::deltaTime;
+	orangeTimeSinceLastJump += Timer::deltaTime;
+
 	//grab blue's physics body info
 	auto& bluetempPhysBod = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
 	b2Body* bluebody = bluetempPhysBod.GetBody();
@@ -250,21 +253,24 @@ void Game::KeyboardHold(){
 
 	if (Input::GetKey(Key::DownArrow)) m_register->get<PhysicsBody>(EntityIdentifier::SecondPlayer()).ApplyForce(vec3(tempPhysBodO.GetForce().x, -200000.8f, 0.f));
 	else m_register->get<PhysicsBody>(EntityIdentifier::SecondPlayer()).ApplyForce(vec3(tempPhysBodO.GetForce().x, -3000.8f, 0.f));
+
+	vec3 jump = vec3(0.f, 300000.f, 0.f);
+
+	
+	if (Input::GetKey(Key::W)) {
+		//Check if Blue can jump 
+		if (m_activeScene->GetListener()->getJumpB() && blueTimeSinceLastJump > 0.4f) {
+			//if she can, set it so she can't 
+			m_activeScene->GetListener()->setJumpB(false);
+			blueTimeSinceLastJump = 0.f;
+			//and apply the upward force of the jump
+			m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).ApplyForce(jump);
+		}
+	}
 }
 
 void Game::KeyboardDown() {
 	vec3 force2 = vec3(0.f, 300000.f, 0.f);
-
-	if (Input::GetKeyDown(Key::W)) {
-
-		//Check if Blue can jump 
-		if (m_activeScene->GetListener()->getJumpB()) {
-			//if she can, set it so she can't 
-			m_activeScene->GetListener()->setJumpB(false);
-			//and apply the upward force of the jump
-			m_register->get<PhysicsBody>(EntityIdentifier::MainPlayer()).ApplyForce(force2);
-		}
-	}
 
 	//Check if Orange can jump
 	if (Input::GetKeyDown(Key::UpArrow)) {

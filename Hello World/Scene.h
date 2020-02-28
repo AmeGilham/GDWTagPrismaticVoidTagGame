@@ -51,7 +51,9 @@ protected:
 	b2World* m_physicsWorld = nullptr;
 	b2Vec2 m_gravity = b2Vec2(float32(0.f), float32(0.f));
 	myListener listener;
-	entt::registry* m_sceneReg = nullptr;	
+	entt::registry* m_sceneReg = nullptr;
+	entt::registry* m_power = nullptr;
+
 	std::string m_name = "Default Name";
 };
 

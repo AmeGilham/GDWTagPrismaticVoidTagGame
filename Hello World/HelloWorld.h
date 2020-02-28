@@ -14,7 +14,9 @@ public:
 
 private:
 	int m_player;
-	int count = 0;
+	int count = 1;
+	int powc = 12;
+
 	//Box2D user data
 	int blue = 0;
 	int orange = 1;

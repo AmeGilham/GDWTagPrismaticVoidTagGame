@@ -38,7 +38,6 @@ public:
 	static unsigned int HoriScrollCameraBit();
 	static unsigned int powerBit();
 
-
 	//Setters
 	//Sets main player entity
 	static void MainPlayer(unsigned int entity);
@@ -68,7 +67,6 @@ private:
 	//Main camera
 	static unsigned int m_mainCamera;
 	bool m_isMainCamera = false;
-
 
 	//Stores the entity number
 	unsigned int m_entity;

@@ -10,6 +10,7 @@
 #include "EntityIdentifier.h"
 #include "HorizontalScroll.h"
 #include "HealthBar.h"
+#include "PowerNum.h"
 
 class ECS abstract
 {
@@ -25,7 +26,8 @@ public:
 	static unsigned CreateEntity();
 	//remove entities
 	static void DestroyEntity(unsigned entity);
-
+	//remove pwoer entittes
+	static void Check(unsigned entity);
 	//Attach component 
 	//*You can simply attach the component or
 	template<typename T>

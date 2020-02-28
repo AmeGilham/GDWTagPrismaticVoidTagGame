@@ -1,7 +1,7 @@
 #include "EntityIdentifier.h"
 
-unsigned int EntityIdentifier::m_mainCamera = 0;
-unsigned int EntityIdentifier::m_mainPlayer = 0;
+unsigned int EntityIdentifier::m_mainCamera   = 0;
+unsigned int EntityIdentifier::m_mainPlayer   = 0;
 unsigned int EntityIdentifier::m_secondPlayer = 0;
 
 unsigned int EntityIdentifier::m_cameraBit			= 0x1;
@@ -60,8 +60,7 @@ bool EntityIdentifier::GetIsMainCamera() const
 	return m_isMainCamera;
 }
 
-unsigned int EntityIdentifier::GetEntity() const
-{
+unsigned int EntityIdentifier::GetEntity() const{
 	//Gets the entity number
 	return m_entity;
 }

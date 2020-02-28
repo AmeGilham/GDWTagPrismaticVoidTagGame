@@ -315,20 +315,15 @@ void Game::KeyboardDown() {
 
 void Game::KeyboardUp()
 {
-	if (Input::GetKeyUp(Key::P))
-	{
-		PhysicsBody::SetDraw(!PhysicsBody::GetDraw());
-	}
+	if (Input::GetKeyUp(Key::P)){
+		PhysicsBody::SetDraw(!PhysicsBody::GetDraw());}
 
 	if (Input::GetKeyUp(Key::F1)){
-		if (!UI::m_isInit)
-		{
-			UI::InitImGUI();
-		}
+		if (!UI::m_isInit){
+			UI::InitImGUI();}
 		m_guiActive = !m_guiActive;
 	}
 }
-
 
 void Game::MouseMotion(SDL_MouseMotionEvent evnt)
 {

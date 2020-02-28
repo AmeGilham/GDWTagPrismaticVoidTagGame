@@ -39,7 +39,7 @@ class PhysicsBody
 {
 public:
 	PhysicsBody() { };
-
+	~PhysicsBody();
 	//Update physics stuff
 	void Update(Transform* trans);
 
@@ -165,6 +165,8 @@ public:
 	//Does the object not move?
 	void SetDynamic(bool isDynamic);
 
+	void DeleteBody();
+
 private:
 	static bool m_drawBodies;
 
@@ -190,7 +192,7 @@ private:
 
 	//Coefficient of friction
 	float m_friction = 0.35f;
-
+	
 	//The acceleration due to gravity * mass
 	static vec3 m_gravityAcceleration;
 	//Is gravity being applied to this body?

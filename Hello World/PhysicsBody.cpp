@@ -261,6 +261,11 @@ void PhysicsBody::SetDynamic(bool isDynamic)
 	m_dynamic = isDynamic;
 }
 
+void PhysicsBody::DeleteBody(){
+	m_body->GetWorld()->DestroyBody(m_body);
+
+}
+
 PhysicsBody::PhysicsBody(b2Body * body, float radius, vec2 centerOffset, bool isDynamic)
 {
 	b2CircleShape tempShape;
@@ -331,6 +336,11 @@ void PhysicsBody::ApplyForce(vec3 force)
 {
 	//Add a force to the applied force
 	m_body-> ApplyForce ( b2Vec2(float32(force.x), float32(force.y)), b2Vec2(float32(m_body->GetPosition().x), float32(m_body->GetPosition().y)), true);
+}
+
+PhysicsBody::~PhysicsBody(){
+	//m_body->GetWorld()->DestroyBody(m_body);
+//	m_body->GetWorld()->DestroyBody(m_body);
 }
 
 void PhysicsBody::Update(Transform * trans)

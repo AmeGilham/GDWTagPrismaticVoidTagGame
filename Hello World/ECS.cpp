@@ -1,4 +1,5 @@
 #include "ECS.h"
+#include "PhysicsBody.h"
 
 entt::registry* ECS::m_reg = nullptr;
 
@@ -28,8 +29,22 @@ unsigned ECS::CreateEntity()
 
 void ECS::DestroyEntity(unsigned entity)
 {
+	if (m_reg->has<PhysicsBody>(entity)) {
+		m_reg->get<PhysicsBody>(entity).DeleteBody();
+	}
 	//Destroys the entity
 	m_reg->destroy(entity);
+}
+
+void ECS::Check(unsigned entity)
+{
+	if (m_reg->has<PowerNum>(entity)) {
+		if (m_reg->has<PowerNum>(entity) < 6) {
+			DestroyEntity(entity);
+		}
+
+	}
+
 }
 
 void ECS::SetUpIdentifier(unsigned entity, unsigned componentID, std::string name)

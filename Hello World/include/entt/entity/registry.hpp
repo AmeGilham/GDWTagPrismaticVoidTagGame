@@ -28,14 +28,12 @@
 
 namespace entt {
 
-
 /**
  * @brief Alias for exclusion lists.
  * @tparam Type List of types.
  */
 template<typename... Type>
 struct exclude_t: type_list<Type...> {};
-
 
 /**
  * @brief Variable template for exclusion lists.

@@ -4,8 +4,11 @@
 MainGame::MainGame(std::string name)
 	: Scene(name)
 {
+	//create the gravity vector for the scene's dynamic objects
 	m_gravity = b2Vec2(float32(0.f), float32(-150.f));
+	//set the gravity vector to be active for the scene
 	m_physicsWorld->SetGravity(m_gravity);
+	//setup the box2d contact listener 
 	m_physicsWorld->SetContactListener(&listener);
 }
 
@@ -123,7 +126,6 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 				//set them as the second player
 				ECS::SetIsSecondPlayer(entity, true);
 			}
-			m_player = entity;
 		}
 	}
 
@@ -228,12 +230,6 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 
 }
 
-//returns the player entity number (not used, players are identified through other methods)
-int MainGame::GetPlayer()
-{
-	return m_player;
-}
-
 //Update the scene, every frame
 void MainGame::Update()
 {
@@ -266,7 +262,35 @@ void MainGame::Update()
 	else if (orangetempPhysBod.GetPosition().x < -50.5) {
 		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(50.5, orangebody->GetPosition().y), float32(0));
 	}
-	
+
+	//if the person whose it has changed
+	if (listener.GetItChange()) {
+		//check if it was through the not it objective 
+		if (listener.GetNotItObjExists()) {
+			//if it was, set the not it objective to not exist
+			listener.SetNotItObjExists(false);
+			/*fill rest of code about destroying not it objective later*/
+		}
+		//check if blue is now it 
+		if (listener.GetIt() == 1) {
+			/*fill rest of code about showing that blue is now it*/
+		}
+		//if not, then orange must now be it 
+		else {
+			/*fill rest of code about showing that orange is now it*/
+		}
+	}
+
+	//if Blue is currently it
+	if (listener.GetIt() == 1) {
+		/*fill in code about showing blue is it, and having her bomb fuse burn*/
+		blueFuseTimeRemaining -= Timer::deltaTime;
+	}
+	//Or if Orange is currently it 
+	else if (listener.GetIt() == 2) {
+		/*fill in code about showing Orange is it, and having his bomb fuse burn*/
+		orangeFuseTimeRemaining -= Timer::deltaTime;
+	}
 }
 
 //Stroke of the gamepad input

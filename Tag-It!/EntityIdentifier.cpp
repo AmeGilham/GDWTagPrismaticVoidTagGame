@@ -3,6 +3,7 @@
 unsigned int EntityIdentifier::m_mainCamera = 0;
 unsigned int EntityIdentifier::m_mainPlayer = 0;
 unsigned int EntityIdentifier::m_secondPlayer = 0;
+unsigned int EntityIdentifier::m_notItObejctive = 0;
 
 unsigned int EntityIdentifier::m_cameraBit			= 0x1;
 unsigned int EntityIdentifier::m_spriteBit			= 0x10;
@@ -57,6 +58,16 @@ bool EntityIdentifier::GetIsMainCamera() const
 {
 	//Gets if this component IS attached to the main camera
 	return m_isMainCamera;
+}
+
+unsigned int EntityIdentifier::NotItObejective()
+{
+	return m_notItObejctive;
+}
+
+bool EntityIdentifier::GetIsNotItObjective()
+{
+	return m_isNotItObejctive;
 }
 
 unsigned int EntityIdentifier::GetEntity() const
@@ -164,6 +175,18 @@ void EntityIdentifier::SetIsMainCamera(bool main)
 {
 	//Sets whether or not the entity that has this component, is the main camera
 	m_isMainCamera = main;
+}
+
+void EntityIdentifier::NotItObjective(unsigned int entity)
+{
+	//Sets the notitobjective eneity
+	m_notItObejctive = entity;
+}
+
+void EntityIdentifier::SetIsNotItObjective(bool notIt)
+{
+	//sets wheter or not the entity that has this component, is the not it objective 
+	m_isNotItObejctive = notIt;
 }
 
 void EntityIdentifier::SetEntity(unsigned int entity)

@@ -48,6 +48,7 @@ public:
 	static void SetIsMainCamera(unsigned entity, bool mainCamera);
 	static void SetIsMainPlayer(unsigned entity, bool mainPlayer);
 	static void SetIsSecondPlayer(unsigned entity, bool secondPlayer);
+	static void SetIsNotItObjective(unsigned entity, bool notItObj);
 
 private:
 	static entt::registry* m_reg;

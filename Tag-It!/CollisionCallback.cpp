@@ -9,8 +9,33 @@ myListener::myListener()
 //called by Box2D when two things begin colliding
 void myListener::BeginContact(b2Contact* contact){
 	//begin contact code
+	
+	//check if it's the first phase of the game and noone is it yet
+	if (it == 0) {
+		//if it is check if the collision is between a player and the objective to become the first "Not it" of the match
+		//grab pointers to the fixtures
+		b2Fixture* fixa = contact->GetFixtureA();
+		b2Fixture* fixb = contact->GetFixtureB();
 
+		//grab the user data in each fixture 
+		int* uda = reinterpret_cast<int*>(fixa->GetBody()->GetUserData());
+		int* udb = reinterpret_cast<int*>(fixb->GetBody()->GetUserData());
 
+		//check if blue is in fixa, and is colliding with the NotItObjective in fixb, or if she's in fixb and colliding with the objective in fixa
+		if ((*uda == 0 && *udb == 5) || (*uda == 5 && *udb == 0)) {
+			//if she is, then make orange it
+			it = 2;
+			//and destroy the not it objective 
+			itChange = true;
+		}
+		//otherwise check if orange is in fixb, and is colliding with the NotItObjective in fixa, or if he's in fixb and collding with the objective in fixa
+		else if ((*uda == 1 && *udb == 5) || (*uda == 5 && *udb == 1)) {
+			//if he is, then make blue it
+			it = 1;
+			//and destroy the not it objective 
+			itChange = true;
+		}
+	}
 
 }
 
@@ -82,6 +107,32 @@ bool myListener::getJumpB()
 bool myListener::getJumpO()
 {
 	return canJumpO;
+}
+
+//return the player whose currently it 
+int myListener::GetIt()
+{
+	return it;
+}
+
+bool myListener::GetItChange()
+{
+	return itChange;
+}
+
+void myListener::SetItChange(bool change)
+{
+	itChange = change;
+}
+
+bool myListener::GetNotItObjExists()
+{
+	return NotItObjExists;
+}
+
+void myListener::SetNotItObjExists(bool exists)
+{
+	NotItObjExists = exists;
 }
 
 //called by Box2D when two objects stop colliding

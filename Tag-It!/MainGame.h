@@ -13,9 +13,6 @@ public:
 	//initilizes the scene
 	void InitScene(float windowWidth, float windowHeight) override;
 
-	//returns the player (not used)
-	int GetPlayer();
-
 	//updates the scene every frame
 	void Update() override;
 
@@ -35,17 +32,19 @@ public:
 	void MouseWheel(SDL_MouseWheelEvent evnt) override;
 
 private:
-	//player entity number (not used)
-	int m_player;
-
 	//Box2D user data
 	int blue = 0;
 	int orange = 1;
 	int platform = 2;
 	int border = 3;
 	int tag = 4;
+	int notItObjective = 5; 
 
 	//time since jump timers
-	float blueTimeSinceLastJump = 0.0f;
+	float blueTimeSinceLastJump = 0.f;
 	float orangeTimeSinceLastJump = 0.f;
+
+	//time each player has left as the one "it"
+	float blueFuseTimeRemaining = 150.f;
+	float orangeFuseTimeRemaining = 150.f;
 };

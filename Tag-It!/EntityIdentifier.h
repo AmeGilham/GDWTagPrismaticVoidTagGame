@@ -19,6 +19,10 @@ public:
 	//Gets main camera entity
 	static unsigned int MainCamera();
 	bool GetIsMainCamera() const;
+	//Gets NotItObjective entity 
+	static unsigned int NotItObejective();
+	bool GetIsNotItObjective();
+
 	//Get entity number
 	unsigned int GetEntity() const;
 	//Get identifier bitfield
@@ -47,6 +51,10 @@ public:
 	//Sets main camera entity
 	static void MainCamera(unsigned int entity);
 	void SetIsMainCamera(bool main);
+	//Sets not it objective 
+	static void NotItObjective(unsigned int entity);
+	void SetIsNotItObjective(bool notIt);
+
 	//Set entity number
 	void SetEntity(unsigned int entity);
 	//Set identifier bitfield
@@ -66,7 +74,9 @@ private:
 	//Main camera
 	static unsigned int m_mainCamera;
 	bool m_isMainCamera = false;
-
+	//Not it objective 
+	static unsigned int m_notItObejctive;
+	bool m_isNotItObejctive = false;
 
 	//Stores the entity number
 	unsigned int m_entity;

@@ -65,7 +65,16 @@ void ECS::SetIsSecondPlayer(unsigned entity, bool secondPlayer)
 {
 	//Gets reference to the component
 	auto& id = GetComponent<EntityIdentifier>(entity);
-	//Sets whether this entity is the main player
+	//Sets whether this entity is the second player
 	id.SetIsSecondPlayer(secondPlayer);
 	id.SecondPlayer(entity);
+}
+
+void ECS::SetIsNotItObjective(unsigned entity, bool notItObj)
+{
+	//Gets reference to the component
+	auto& id = GetComponent<EntityIdentifier>(entity);
+	//Sets whether this entity is the objective at the beginning of the game to become not it 
+	id.SetIsNotItObjective(notItObj);
+	id.NotItObjective(entity);
 }

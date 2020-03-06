@@ -10,6 +10,8 @@
 #include "EntityIdentifier.h"
 #include "HorizontalScroll.h"
 #include "HealthBar.h"
+#include "Spawn.h"
+
 
 class ECS abstract
 {

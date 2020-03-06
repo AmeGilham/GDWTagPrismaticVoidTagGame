@@ -164,6 +164,7 @@ public:
 
 	//Does the object not move?
 	void SetDynamic(bool isDynamic);
+	void DeleteBody();
 
 private:
 	static bool m_drawBodies;

@@ -1,4 +1,6 @@
 #include "MainGame.h"
+#include "EffectManager.h"
+
 
 //Constructor 
 MainGame::MainGame(std::string name)
@@ -33,6 +35,8 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 
 		//Creates new orthographic camera
 		ECS::AttachComponent<Camera>(entity);
+		ECS::AttachComponent<Spawn>(entity);
+
 		vec4 temp = ECS::GetComponent<Camera>(entity).GetOrthoSize();
 		ECS::GetComponent<Camera>(entity).SetWindowSize(vec2(float(windowWidth), float(windowHeight)));
 		ECS::GetComponent<Camera>(entity).Orthographic(aspectRatio, temp.x, temp.y, temp.z, temp.w, -100.f, 100.f);
@@ -113,6 +117,7 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 			ECS::AttachComponent<Transform>(entity);
 			ECS::AttachComponent<AnimationController>(entity);
 			ECS::AttachComponent<PhysicsBody>(entity);
+			ECS::AttachComponent<Spawn>(entity);
 
 			//Sets up components
 			std::string fileName = "orange.png"; //set the default sprite sheet to be Orange's
@@ -144,7 +149,7 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 
 			//add the physics body to box2D physics world simulator
 			tempBody = m_physicsWorld->CreateBody(&tempDef);
-
+			tempBody->SetFixedRotation(true);
 			//create a spriteLib physics body using the box2D physics body
 			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY),
 				vec2(0.f, 0.f), false);
@@ -166,7 +171,11 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 			else animController.SetActiveAnim(1);
 
 			//Sets up the Identifier
+<<<<<<< HEAD
+			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit() | EntityIdentifier::AnimationBit();
+=======
 			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::AnimationBit() | EntityIdentifier::PhysicsBit();
+>>>>>>> Ame-Review2
 			ECS::SetUpIdentifier(entity, bitHolder, "Player " + std::to_string(i+1));
 			//if it's blue
 			if (i == 0)
@@ -191,6 +200,7 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 		ECS::AttachComponent<Sprite>(entity);
 		ECS::AttachComponent<Transform>(entity);
 		ECS::AttachComponent<PhysicsBody>(entity);
+		ECS::AttachComponent<Spawn>(entity);
 
 		//loadsprite sheet and set up sprite component
 		std::string fileName = "BG.png";
@@ -237,6 +247,8 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 			ECS::AttachComponent<Sprite>(entity);
 			ECS::AttachComponent<Transform>(entity);
 			ECS::AttachComponent<PhysicsBody>(entity);
+			ECS::AttachComponent<Spawn>(entity);
+
 
 			//loadsprite sheet and set up sprite component
 			std::string fileName = "BG.png";
@@ -285,8 +297,57 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 }
 
 //Update the scene, every frame
-void MainGame::Update()
-{
+void MainGame::Update(){
+
+	if (objective == true) {
+		objective = false;
+
+		auto entity = ECS::CreateEntity();
+		//adds components 
+		ECS::AttachComponent<Sprite>(entity);
+		ECS::AttachComponent<Transform>(entity);
+		ECS::AttachComponent<PhysicsBody>(entity);
+		ECS::AttachComponent<Spawn>(entity);
+
+		//loadsprite sheet and set up sprite component
+		std::string fileName = "BG.png";
+		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 7, 21);
+		//setup transform component
+		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, -10.f));
+		ECS::GetComponent<Spawn>(entity).SetObj(true);
+
+		//grab references to the sprite and physics body components
+		auto& tempSpr = ECS::GetComponent<Sprite>(entity);
+		auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+
+		//calculate the area of the sprite that shouldn't have a physics body attached (empty space, etc.)
+		float shrinkX = 0;
+		float shrinkY = (tempSpr.GetHeight() / 1.65f);
+
+		//setup the static box2d physics body
+		b2Body* tempBody;
+		b2BodyDef tempDef;
+		tempDef.type = b2_dynamicBody;
+		//set the position
+		tempDef.position.Set(float32(10.f), float32(14.5f));
+
+		//add the physics body to box2D physics world simulator
+		tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+		//create a spriteLib physics body using the box2D physics body
+		tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, (-tempSpr.GetHeight() / 16.f) * 5.f), false);
+
+		tempBody->SetFixedRotation(true);
+
+		//set up user data to indentify as a border (players can't jump through the bottom)
+		tempBody->SetUserData(&notItObjective);
+
+		//Setup indentifier 
+		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
+		ECS::SetUpIdentifier(entity, bitHolder, "Objective");
+
+	}
+	
 	//add the change in time to the time since blue and orange last jumped (used to control jumping with platforms reseting jumps)
 	blueTimeSinceLastJump += Timer::deltaTime;
 	orangeTimeSinceLastJump += Timer::deltaTime;
@@ -297,12 +358,10 @@ void MainGame::Update()
 
 	//if Blue has run off the right of the screen, make her appear on the left
 	if (bluetempPhysBod.GetPosition().x > 50.5) {
-		bluetempPhysBod.GetBody()->SetTransform(b2Vec2(-50.5, bluebody->GetPosition().y), float32(0));
-	}
+		bluetempPhysBod.GetBody()->SetTransform(b2Vec2(-50.5, bluebody->GetPosition().y), float32(0));}
 	//if Blue has run off the left of the screen, make her appear on the right
 	else if (bluetempPhysBod.GetPosition().x < -50.5) {
-		bluetempPhysBod.GetBody()->SetTransform(b2Vec2(50.5, bluebody->GetPosition().y), float32(0));
-	}
+		bluetempPhysBod.GetBody()->SetTransform(b2Vec2(50.5, bluebody->GetPosition().y), float32(0));}
 
 	//grab orange's physics body info
 	auto& orangetempPhysBod = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
@@ -310,27 +369,33 @@ void MainGame::Update()
 
 	//if Orange has run off the right of the screen, make him appear on the left 
 	if (orangetempPhysBod.GetPosition().x > 50.5) {
-		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(-50.5, orangebody->GetPosition().y), float32(0));
-	}
+		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(-50.5, orangebody->GetPosition().y), float32(0));}
 	//if Orange has run off the left of the screen, make him appear on the right
 	else if (orangetempPhysBod.GetPosition().x < -50.5) {
-		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(50.5, orangebody->GetPosition().y), float32(0));
-	}
+		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(50.5, orangebody->GetPosition().y), float32(0));}
 
 	//if the person whose it has changed
 	if (listener.GetItChange()) {
+		listener.SetItChange(false);
+
 		//check if it was through the not it objective 
 		if (listener.GetNotItObjExists()) {
 			//if it was, set the not it objective to not exist
 			listener.SetNotItObjExists(false);
 			/*fill rest of code about destroying not it objective later*/
+			destroy();
 		}
+
 		//check if blue is now it 
 		if (listener.GetIt() == 1) {
 			/*fill rest of code about showing that blue is now it*/
+			ECS::GetComponent<Sprite>(EntityIdentifier::MainPlayer()).SetWidth(20.f);
+
 		}
 		//if not, then orange must now be it 
 		else {
+			ECS::GetComponent<Sprite>(EntityIdentifier::SecondPlayer()).SetWidth(20.f);
+
 			/*fill rest of code about showing that orange is now it*/
 		}
 	}
@@ -338,30 +403,62 @@ void MainGame::Update()
 	//if Blue is currently it
 	if (listener.GetIt() == 1) {
 		/*fill in code about showing blue is it, and having her bomb fuse burn*/
+		ECS::GetComponent<Sprite>(EntityIdentifier::MainPlayer()).SetWidth(20.f);
+		ECS::GetComponent<Sprite>(EntityIdentifier::SecondPlayer()).SetWidth(6.f);
 		blueFuseTimeRemaining -= Timer::deltaTime;
 	}
 	//Or if Orange is currently it 
 	else if (listener.GetIt() == 2) {
 		/*fill in code about showing Orange is it, and having his bomb fuse burn*/
+		ECS::GetComponent<Sprite>(EntityIdentifier::MainPlayer()).SetWidth(6.f);
+		ECS::GetComponent<Sprite>(EntityIdentifier::SecondPlayer()).SetWidth(20.f);
 		orangeFuseTimeRemaining -= Timer::deltaTime;
 	}
+<<<<<<< HEAD
+	
+	//printf("%f \n", 1/Timer::deltaTime);
+=======
 
 	printf("%f\n", 1.0 / Timer::deltaTime);
+>>>>>>> Ame-Review2
 }
 
-//Stroke of the gamepad input
-void MainGame::GamepadStroke(XInputController* con)
-{
+//to destroy the not it
+void MainGame::destroy(){
+	auto view = m_sceneReg->view<EntityIdentifier>();
+
+	for (auto entity : view) {
+
+		if (m_sceneReg->has<Spawn>(entity)) {
+			if (ECS::GetComponent<Spawn>(entity).GetObj()) { //objective
+				ECS::DestroyEntity(entity);}
+
+
+		
+					   
+		}
+	}
 }
 
-//Gamepad stick input
-void MainGame::GamepadStick(XInputController* con)
-{
-}
+//to destroy the tag boxes
+void MainGame::destroyT(){
+	auto view = m_sceneReg->view<EntityIdentifier>();
 
-//Gamepad trigger button input
-void MainGame::GamepadTrigger(XInputController* con)
-{
+	for (auto entity : view) {
+
+		if (m_sceneReg->has<Spawn>(entity)) {
+
+			if (ECS::GetComponent<Spawn>(entity).GetBlue()) { //for destroying tagging boxes
+				ECS::DestroyEntity(entity);}
+			
+			else if (ECS::GetComponent<Spawn>(entity).GetOrange()) { //for destroying tagging boxes
+				ECS::DestroyEntity(entity);}
+
+			//if (ECS::GetComponent<Spawn>(entity).GetOrange() == 9) { //for destroying tagging boxes
+			//	ECS::DestroyEntity(entity);}
+
+		}
+	}
 }
 
 //keyboard key held down input
@@ -421,6 +518,14 @@ void MainGame::KeyboardHold()
 	b2Body* bodyO = tempPhysBodO.GetBody();
 
 	//if Orange's player is pressing leftArrow, and their x-velocity isn't above the left cap, apply the run force to the left
+<<<<<<< HEAD
+	if (Input::GetKey(Key::LeftArrow) && bodyO->GetLinearVelocity().x > float32(-40.f)) {
+		tempPhysBodO.ApplyForce(-runforce);}
+
+	//if Orange's player is pressing rightArrow, and their x-velocity isn't above the right cap, apply the run force to the right
+	else if (Input::GetKey(Key::RightArrow) && bodyO->GetLinearVelocity().x < float32(40.f)) {
+		tempPhysBodO.ApplyForce(runforce);}
+=======
 	if (Input::GetKey(Key::LeftArrow) && bodyO->GetLinearVelocity().x > float32(-30.f)) {
 		tempPhysBodO.ApplyForce(-runforce);
 	}
@@ -429,6 +534,7 @@ void MainGame::KeyboardHold()
 	else if (Input::GetKey(Key::RightArrow) && bodyO->GetLinearVelocity().x < float32(30.f)) {
 		tempPhysBodO.ApplyForce(runforce);
 	}
+>>>>>>> Ame-Review2
 
 	//otherwise Orange isn't moving on the x-axis
 	else {
@@ -489,30 +595,151 @@ void MainGame::KeyboardHold()
 }
 
 //keyboard key first pressed input
-void MainGame::KeyboardDown()
-{
-	if (Input::GetKeyDown(Key::D))
-	{
+void MainGame::KeyboardDown(){
+
+	if (Input::GetKeyDown(Key::Q) ) { //player 1
+		Timer::Reset();
+		 {
+			auto& blue = ECS::GetComponent<Transform>(EntityIdentifier::MainPlayer());
+			auto& body = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
+			float px = blue.GetPositionX();
+			float py = blue.GetPositionY();
+			
+			auto entity = ECS::CreateEntity();
+			ECS::AttachComponent<Transform>(entity);
+			ECS::AttachComponent<Sprite>(entity);
+			ECS::AttachComponent<PhysicsBody>(entity);
+			ECS::AttachComponent<Spawn>(entity);
+
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(px, py, 99.f));
+
+			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+			auto& tagid = ECS::GetComponent<Spawn>(entity);
+
+			tagid.SetBlue(true);
+			//setup the dynamic box2d physics body
+			
+			b2Joint* tagb;
+			b2Body* tempBody;
+			b2BodyDef tempDef;
+			tempDef.type = b2_staticBody;
+			//set the position
+			if (bright) {//if blue is facing right
+				tempDef.position.Set(float32(px+3.5), float32(py)); //blue right position
+			}
+			else { //has to face left
+				tempDef.position.Set(float32(px-3.5), float32(py)); //blue left position
+			}
+
+			//add the physics body to box2D physics world simulator
+			tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+			//create a spriteLib physics body using the box2D physics body
+			tempPhsBody = PhysicsBody(tempBody, 3.f, 2.f, vec2(0.f, -0.5f), false);
+			
+			//setup the user data to identify them as players
+			tempBody->SetUserData(&btag); //blue
+			unsigned int bitHolder = EntityIdentifier::TransformBit();
+			ECS::SetUpIdentifier(entity, bitHolder, "Tag Box Blue");
+		}
+
+		 if (Timer::time >= 1.0f) {
+			 Timer::Reset();
+			 Timer::Update();
+			 destroyT();
+		 }		
+	}
+
+	if (Input::GetKeyUp(Key::Q)) {
+		destroyT();
+		std::cout << "UPPPPPPPPPP" << std::endl;}
+
+	else if (Input::GetKeyDown(Key::M)) { //player 2 orange
+		Timer::Reset();
+		{
+			auto& blue = ECS::GetComponent<Transform>(EntityIdentifier::SecondPlayer());
+			auto& body = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
+			float px = blue.GetPositionX();
+			float py = blue.GetPositionY();
+
+			auto entity = ECS::CreateEntity();
+			ECS::AttachComponent<Transform>(entity);
+			ECS::AttachComponent<Sprite>(entity);
+			ECS::AttachComponent<PhysicsBody>(entity);
+			ECS::AttachComponent<Spawn>(entity);
+
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(px, py, 99.f));
+
+			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+			auto& tagid = ECS::GetComponent<Spawn>(entity);
+
+			tagid.SetOrange(true); //set it as orange so it will be flagged for destruction
+			//setup the dynamic box2d physics body
+
+			b2Joint* tagb;
+			b2Body* tempBody;
+			b2BodyDef tempDef;
+			tempDef.type = b2_staticBody;
+			//set the position
+			if (oright) {//if orange is facing right
+				tempDef.position.Set(float32(px + 3.5), float32(py)); //orange position
+			}
+			else {
+				tempDef.position.Set(float32(px - 3.5), float32(py)); //orange position
+			}
+
+			//add the physics body to box2D physics world simulator
+			tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+			//create a spriteLib physics body using the box2D physics body
+			tempPhsBody = PhysicsBody(tempBody, 3.f, 2.f, vec2(0.f, -0.5f), false);
+
+			//setup the user data to identify them as players
+			tempBody->SetUserData(&otag); //orange
+			unsigned int bitHolder = EntityIdentifier::TransformBit();
+			ECS::SetUpIdentifier(entity, bitHolder, "Tag Box Orange");
+
+		}
+
+		if (Timer::time >= 1.0f) {
+			Timer::Reset();
+			Timer::Update();
+			destroyT();}
+
+	}
+	
+	if (Input::GetKeyUp(Key::M)) {
+		destroyT();
+		std::cout << "UPPPPPPPPPP" << std::endl;
+	}
+	
+	//animations
+	if (Input::GetKeyDown(Key::D)){
 		auto& animController = ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer());
 		//Sets active animation
 		animController.SetActiveAnim(2);
+		bright = true;
 	}
-	if (Input::GetKeyDown(Key::A))
-	{
+
+	if (Input::GetKeyDown(Key::A)){
 		auto& animController = ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer());
 		//Sets active animation
 		animController.SetActiveAnim(1);
+		bright = false;
 	}
 
 	if (Input::GetKeyDown(Key::RightArrow)) {
 		auto& animController = ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer());
 		//Sets active animation
 		animController.SetActiveAnim(2);
+		oright = true;
 	}
+	
 	if (Input::GetKeyDown(Key::LeftArrow)) {
 		auto& animController = ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer());
 		//Sets active animation
 		animController.SetActiveAnim(1);
+		oright = false;
 	}
 }
 
@@ -533,5 +760,20 @@ void MainGame::MouseClick(SDL_MouseButtonEvent evnt)
 
 //mouse wheel input
 void MainGame::MouseWheel(SDL_MouseWheelEvent evnt)
+{
+}
+
+//Stroke of the gamepad input
+void MainGame::GamepadStroke(XInputController* con)
+{
+}
+
+//Gamepad stick input
+void MainGame::GamepadStick(XInputController* con)
+{
+}
+
+//Gamepad trigger button input
+void MainGame::GamepadTrigger(XInputController* con)
 {
 }

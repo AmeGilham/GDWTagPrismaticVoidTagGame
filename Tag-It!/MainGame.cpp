@@ -171,11 +171,10 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 			else animController.SetActiveAnim(1);
 
 			//Sets up the Identifier
-<<<<<<< HEAD
+
 			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit() | EntityIdentifier::AnimationBit();
-=======
-			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::AnimationBit() | EntityIdentifier::PhysicsBit();
->>>>>>> Ame-Review2
+
+
 			ECS::SetUpIdentifier(entity, bitHolder, "Player " + std::to_string(i+1));
 			//if it's blue
 			if (i == 0)
@@ -414,13 +413,10 @@ void MainGame::Update(){
 		ECS::GetComponent<Sprite>(EntityIdentifier::SecondPlayer()).SetWidth(20.f);
 		orangeFuseTimeRemaining -= Timer::deltaTime;
 	}
-<<<<<<< HEAD
 	
 	//printf("%f \n", 1/Timer::deltaTime);
-=======
 
 	printf("%f\n", 1.0 / Timer::deltaTime);
->>>>>>> Ame-Review2
 }
 
 //to destroy the not it
@@ -518,14 +514,12 @@ void MainGame::KeyboardHold()
 	b2Body* bodyO = tempPhysBodO.GetBody();
 
 	//if Orange's player is pressing leftArrow, and their x-velocity isn't above the left cap, apply the run force to the left
-<<<<<<< HEAD
 	if (Input::GetKey(Key::LeftArrow) && bodyO->GetLinearVelocity().x > float32(-40.f)) {
 		tempPhysBodO.ApplyForce(-runforce);}
 
 	//if Orange's player is pressing rightArrow, and their x-velocity isn't above the right cap, apply the run force to the right
 	else if (Input::GetKey(Key::RightArrow) && bodyO->GetLinearVelocity().x < float32(40.f)) {
 		tempPhysBodO.ApplyForce(runforce);}
-=======
 	if (Input::GetKey(Key::LeftArrow) && bodyO->GetLinearVelocity().x > float32(-30.f)) {
 		tempPhysBodO.ApplyForce(-runforce);
 	}
@@ -534,7 +528,6 @@ void MainGame::KeyboardHold()
 	else if (Input::GetKey(Key::RightArrow) && bodyO->GetLinearVelocity().x < float32(30.f)) {
 		tempPhysBodO.ApplyForce(runforce);
 	}
->>>>>>> Ame-Review2
 
 	//otherwise Orange isn't moving on the x-axis
 	else {

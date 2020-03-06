@@ -377,7 +377,8 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 
 			//loadsprite sheet and set up sprite component
 			std::string fileName = "vert planks.png";
-			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 2, 10);
+			if(i < 2)ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 2, 10);
+			else ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 3, 10);
 			//setup transform component
 			ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 14.f + 0.01 * i));
 
@@ -395,7 +396,7 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 			tempDef.type = b2_staticBody;
 			//set the position
 			if (i < 2) tempDef.position.Set(float32(-1.f + (2.f * i)), float32(-3.f));
-			else tempDef.position.Set(float32(-1.f + (2.f * (i-2))), float32(24.f));
+			else tempDef.position.Set(float32(-2.f + (3.f * (i-2))), float32(24.f));
 			//add the physics body to box2D physics world simulator
 			tempBody = m_physicsWorld->CreateBody(&tempDef);
 

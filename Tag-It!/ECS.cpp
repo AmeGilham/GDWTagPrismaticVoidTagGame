@@ -1,4 +1,5 @@
 #include "ECS.h"
+#include "PhysicsBody.h"
 
 entt::registry* ECS::m_reg = nullptr;
 
@@ -26,8 +27,10 @@ unsigned ECS::CreateEntity()
 	return entity;
 }
 
-void ECS::DestroyEntity(unsigned entity)
-{
+void ECS::DestroyEntity(unsigned entity){
+	if (m_reg->has<PhysicsBody>(entity)) {
+		m_reg->get<PhysicsBody>(entity).DeleteBody();
+	}
 	//Destroys the entity
 	m_reg->destroy(entity);
 }

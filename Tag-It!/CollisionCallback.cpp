@@ -45,6 +45,10 @@ void myListener::PreSolve(b2Contact* contact, const b2Manifold* oldManifold){
 	b2Fixture* fixa = contact->GetFixtureA();
 	b2Fixture* fixb = contact->GetFixtureB();
 
+	//stop the hitboxes from rotating  
+	fixa->GetBody()->SetFixedRotation(true);
+	fixb->GetBody()->SetFixedRotation(true);
+
 	//grab the user data in each fixture 
 	int* uda = reinterpret_cast<int*>(fixa->GetBody()->GetUserData()); 
 	int* udb = reinterpret_cast<int*>(fixb->GetBody()->GetUserData());
@@ -162,9 +166,6 @@ void myListener::jumpThrough(b2Contact* contact, b2Fixture* playFix)
 {
 	//grab the velocity of the fixture
 	b2Vec2 vel = playFix->GetBody()->GetLinearVelocity();
-
-	//stop the player's hitbox from rotating  
-	playFix->GetBody()->SetFixedRotation(true);
 
 	//if the player is jumping
 	if (vel.y > 0.0) {

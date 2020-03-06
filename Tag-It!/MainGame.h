@@ -47,4 +47,8 @@ private:
 	//time each player has left as the one "it"
 	float blueFuseTimeRemaining = 150.f;
 	float orangeFuseTimeRemaining = 150.f;
+
+	//array of ints with important entities, index 0 is not-it, index 1 is the sprite behind it 
+	int imporantEntities[6];
+	int notitdirection = 1;
 };

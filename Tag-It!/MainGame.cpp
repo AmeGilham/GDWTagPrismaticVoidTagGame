@@ -98,6 +98,27 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::AnimationBit();
 		ECS::SetUpIdentifier(entity, bitHolder, "backdrop (dynamic waterflow part");
 	}
+
+	//setup Not-It! objective 
+	{
+		//creates entity 
+		auto entity = ECS::CreateEntity();
+
+		//adds components 
+		ECS::AttachComponent<Sprite>(entity);
+		ECS::AttachComponent<Transform>(entity);
+
+		//setup the sprite and transform components 
+		std::string fileName = "Not-It!.png";
+		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 8, 2);
+		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 17.35f, 30.f));
+
+		//Sets up the Identifier
+		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
+		ECS::SetUpIdentifier(entity, bitHolder, "Not-It! obejctive");
+		ECS::SetIsNotItObjective(entity, true);
+		imporantEntities[0] = entity;
+	}
 	
 	//Setup player entities (both orange and blue, cycling blue then orange)
 	for (int i = 0; i < 2; i++) {
@@ -124,7 +145,7 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 
 			//setup the sprite and transform compoments 
 			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 6, 6, true, &animController);
-			ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 2.5f, 99.f+0.1f*i));
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 2.5f, 50.f+0.1f*i));
 
 			//grab references to the sprite and physic body compoments
 			auto& tempSpr = ECS::GetComponent<Sprite>(entity);
@@ -183,52 +204,83 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 		}
 	}
 
-	{  //ground entity
-		//Creates entity
-		auto entity = ECS::CreateEntity();
+	//plank entities
+	for (int i = 0; i < 50; i++)
+	{
+		{ 
+			//Creates entity
+			auto entity = ECS::CreateEntity();
 
-		//adds components 
-		ECS::AttachComponent<Sprite>(entity);
-		ECS::AttachComponent<Transform>(entity);
-		ECS::AttachComponent<PhysicsBody>(entity);
+			//adds components 
+			ECS::AttachComponent<Sprite>(entity);
+			ECS::AttachComponent<Transform>(entity);
+			ECS::AttachComponent<PhysicsBody>(entity);
 
-		//loadsprite sheet and set up sprite component
-		std::string fileName = "BG.png";
-		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 154, 57);
-		//setup transform component
-		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, -10.f));
+			//loadsprite sheet and set up sprite component
+			std::string fileName = "planks.png";
+			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 10, 2);
+			//setup transform component
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 10.f + 0.01 * i));
 
-		//grab references to the sprite and physics body components
-		auto& tempSpr = ECS::GetComponent<Sprite>(entity);
-		auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+			//grab references to the sprite and physics body components
+			auto& tempSpr = ECS::GetComponent<Sprite>(entity);
+			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
 
-		//calculate the area of the sprite that shouldn't have a physics body attached (empty space, etc.)
-		float shrinkX = 0.f;
-		float shrinkY = (tempSpr.GetHeight() / 2.f);
+			//calculate the area of the sprite that shouldn't have a physics body attached (empty space, etc.)
+			float shrinkX = 0.f;
+			float shrinkY = 0.f;
 
-		//setup the static box2d physics body
-		b2Body* tempBody;
-		b2BodyDef tempDef;
-		tempDef.type = b2_staticBody;
-		//set the position
-		tempDef.position.Set(float32(0.f), float32(-7.5f));
+			//setup the static box2d physics body
+			b2Body* tempBody;
+			b2BodyDef tempDef;
+			tempDef.type = b2_staticBody;
+			//set the position
+			if (i < 12) tempDef.position.Set(float32(-60.f + (10.f * i)), float32(-15.f));
+			else if (i > 11 && i < 24) tempDef.position.Set(float32(-60.f + (10.f * (i - 11))), float32(-17.f));
+			else if (i > 23 && i < 36) tempDef.position.Set(float32(-60.f + (10.f * (i - 23))), float32(-19.f));
+			else if (i > 35 && i < 40)  tempDef.position.Set(float32(-60.f + (10.f * (i - 35))), float32(1.f));
+			else if (i > 39 && i < 44) tempDef.position.Set(float32(60.f - (10.f * (i - 39))), float32(1.f));
+			else if (i > 43 && i < 50)tempDef.position.Set(float32(35.f - (10.f * (i - 43))), float32(15.f));
+			//add the physics body to box2D physics world simulator
+			tempBody = m_physicsWorld->CreateBody(&tempDef);
 
-		//add the physics body to box2D physics world simulator
-		tempBody = m_physicsWorld->CreateBody(&tempDef);
+			//create a spriteLib physics body using the box2D physics body
+			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, 0.45f), false);
 
-		//create a spriteLib physics body using the box2D physics body
-		tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, (-tempSpr.GetHeight() / 16.f) * 6.f), false);
+			//set up user data to indentify as a border (players can't jump through the bottom)
+			tempBody->SetUserData(&border);
 
-		//set up user data to indentify as a border (players can't jump through the bottom)
-		tempBody->SetUserData(&border);
-
-		//Setup indentifier 
-		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
-		ECS::SetUpIdentifier(entity, bitHolder, "Ground");
+			//Setup indentifier 
+			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
+			ECS::SetUpIdentifier(entity, bitHolder, "Plank " + std::to_string(i+1));
+		}
 	}
 
-	//platform  entities (cycles through 8 for this prototype)
-	for (int i = 0; i < 8; i++) {
+	//create the crosswalk entities (just asethic)
+	for (int i = 0; i < 12; i++)
+	{
+		{ 
+			//Creates entity
+			auto entity = ECS::CreateEntity();
+
+			//adds components 
+			ECS::AttachComponent<Sprite>(entity);
+			ECS::AttachComponent<Transform>(entity);
+
+			//loadsprite sheet and set up sprite component
+			std::string fileName = "crosswalk boards.png";
+			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 10, 2);
+			//setup transform component
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(-60.f + (10.f * i), -13.f, 70.f + 0.01 * i));
+
+			//Setup indentifier 
+			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
+			ECS::SetUpIdentifier(entity, bitHolder, "Crosswalk" + std::to_string(i));
+		}
+	}
+
+	//platform  entities
+	for (int i = 0; i < 14; i++) {
 		{  
 			//creates entity
 			auto entity = ECS::CreateEntity();
@@ -239,10 +291,10 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 			ECS::AttachComponent<PhysicsBody>(entity);
 
 			//loadsprite sheet and set up sprite component
-			std::string fileName = "BG.png";
-			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 8, 4);
+			std::string fileName = "logs.png";
+			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 10, 2);
 			//setup transform component
-			ECS::GetComponent<Transform>(entity).SetPosition(vec3(2.5f, 0.f, 10.f + (0.01f * i)));
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(2.5f, 0.f, 12.f + (0.01f * i)));
 
 			//grab references to the sprite and physics body components
 			auto& tempSpr = ECS::GetComponent<Sprite>(entity);
@@ -250,39 +302,162 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 
 			//calculate the area of the sprite that shouldn't have a physics body attached (empty space, etc.)
 			float shrinkX = 0.f;
-			float shrinkY = (tempSpr.GetHeight() / 2.f);
+			float shrinkY = 0.f;
 
 			//setup the static box2d physics body
 			b2Body* tempBody;
 			b2BodyDef tempDef;
 			tempDef.type = b2_staticBody;
 			//Sets positions for each platform 
-			if(i ==0 )tempDef.position.Set(float32(-36.25f), float32(-5.f)); //bottom left
-			else if(i == 1)tempDef.position.Set(float32(0.f), float32(-5.f)); //bottom middle
-			else if (i == 2)tempDef.position.Set(float32(36.25f), float32(-5.f)); //bottom right
-			else if (i == 3)tempDef.position.Set(float32(-18.f), float32(5.5f)); //middle left
-			else if (i == 4)tempDef.position.Set(float32(18.f), float32(5.5f)); //midle right
-			else if (i == 5)tempDef.position.Set(float32(-36.25f), float32(15.f)); //top left
-			else if (i == 6)tempDef.position.Set(float32(0.f), float32(15.f)); //top middle
-			else if (i == 7)tempDef.position.Set(float32(36.25f), float32(15.f));//top right
+			if(i ==0 )tempDef.position.Set(float32(-60.f), float32(-7.f)); 
+			else if(i == 1)tempDef.position.Set(float32(-50.f), float32(-7.f)); 
+			else if (i == 2)tempDef.position.Set(float32(-40.f), float32(-7.f)); 
+			else if (i == 3)tempDef.position.Set(float32(60.f), float32(-7.f)); 
+			else if (i == 4)tempDef.position.Set(float32(50.f), float32(-7.f)); 
+			else if (i == 5)tempDef.position.Set(float32(40.f), float32(-7.f)); 
+			else if (i == 6)tempDef.position.Set(float32(-5.f), float32(-7.f));
+			else if (i == 7)tempDef.position.Set(float32(5.f), float32(-7.f));
+			else if (i == 8)tempDef.position.Set(float32(-65.f), float32(9.f));
+			else if (i == 9)tempDef.position.Set(float32(-55.f), float32(9.f));
+			else if (i == 10)tempDef.position.Set(float32(-45.f), float32(9.f));
+			else if (i == 11)tempDef.position.Set(float32(65.f), float32(9.f));
+			else if (i == 12)tempDef.position.Set(float32(55.f), float32(9.f));
+			else if (i == 13)tempDef.position.Set(float32(45.f), float32(9.f));
 
 			//add the physics body to box2D physics world simulator
 			tempBody = m_physicsWorld->CreateBody(&tempDef);
 
 			//create a spriteLib physics body using the box2D physics body
-			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, (-tempSpr.GetHeight() / 16.f) * 6.f), false);
+			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, 0.f), false);
 
 			//set up user data to indentify as a platform (players can jump through the bottom)
 			tempBody->SetUserData(&platform);
 
 			//Setup indentifier 
 			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
-			ECS::SetUpIdentifier(entity, bitHolder, "Platform " + std::to_string(i+1));
+			ECS::SetUpIdentifier(entity, bitHolder, "Log platform " + std::to_string(i+1));
 		}
 	}
 
+	//create the rope entities (just asethic, first jump distance)
+	for (int i = 0; i < 24; i++)
+	{
+		{
+			//Creates entity
+			auto entity = ECS::CreateEntity();
 
+			//adds components 
+			ECS::AttachComponent<Sprite>(entity);
+			ECS::AttachComponent<Transform>(entity);
+
+			//loadsprite sheet and set up sprite component
+			std::string fileName = "ropes.png";
+			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 10, 2);
+			//setup transform component
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(-60.f + (10.f * i), -7.f, 11.f + 0.01 * i));
+			if(i > 11) ECS::GetComponent<Transform>(entity).SetPosition(vec3(-60.f + (10.f * (i-12)), 9.f, 11.f + 0.01 * i));
+
+			//Setup indentifier 
+			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
+			ECS::SetUpIdentifier(entity, bitHolder, "Rope " + std::to_string(i));
+		}
+	}
+
+	//vertical segements
+	//vertical planks
+	for (int i = 0; i < 4; i++){
+		{
+			//Creates entity
+			auto entity = ECS::CreateEntity();
+
+			//adds components 
+			ECS::AttachComponent<Sprite>(entity);
+			ECS::AttachComponent<Transform>(entity);
+			ECS::AttachComponent<PhysicsBody>(entity);
+
+			//loadsprite sheet and set up sprite component
+			std::string fileName = "vert planks.png";
+			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 2, 10);
+			//setup transform component
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 14.f + 0.01 * i));
+
+			//grab references to the sprite and physics body components
+			auto& tempSpr = ECS::GetComponent<Sprite>(entity);
+			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+
+			//calculate the area of the sprite that shouldn't have a physics body attached (empty space, etc.)
+			float shrinkX = 0.f;
+			float shrinkY = 0.f;
+
+			//setup the static box2d physics body
+			b2Body* tempBody;
+			b2BodyDef tempDef;
+			tempDef.type = b2_staticBody;
+			//set the position
+			if (i < 2) tempDef.position.Set(float32(-1.f + (2.f * i)), float32(-3.f));
+			else tempDef.position.Set(float32(-1.f + (2.f * (i-2))), float32(24.f));
+			//add the physics body to box2D physics world simulator
+			tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+			//create a spriteLib physics body using the box2D physics body
+			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX + 0.5f), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, 0.0f), false);
+
+			//set up user data to indentify as a border (players can't jump through the bottom)
+			tempBody->SetUserData(&border);
+
+			//Setup indentifier 
+			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
+			ECS::SetUpIdentifier(entity, bitHolder, "Vertical plank " + std::to_string(i + 1));
+		}
+	}
+
+	//create the vertical rope entities (just asethic)
+	{
+		//Creates entity
+		auto entity = ECS::CreateEntity();
+
+		//adds components 
+		ECS::AttachComponent<Sprite>(entity);
+		ECS::AttachComponent<Transform>(entity);
+
+		//load sprites and set up sprite component
+		std::string fileName = "vert ropes.png";
+		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 2, 16);
+		//setup transform component
+		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 8.f, 9.f));
+
+		//Setup indentifier 
+		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
+		ECS::SetUpIdentifier(entity, bitHolder, "Vertical rope");
+	}
+
+	//create the bombs part of the HUD 
+	for(int i = 0; i < 2; i++){
+		{
+			//creates entity
+			auto entity = ECS::CreateEntity();
+
+			//adds components
+			ECS::AttachComponent<Sprite>(entity);
+			ECS::AttachComponent<Transform>(entity);
+
+			//load sprites and set up sprite component
+			std::string fileName = "blue bomb.png";
+			if (i == 1) fileName = "orange bomb.png";
+			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 12, 4);
+			//Setup transform 
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(-15,-17.f, 98.f+(0.01 * i)));
+			if (i == 1) ECS::GetComponent<Transform>(entity).SetPosition(vec3(15, -17.f, 98.f + (0.01 * i)));
+
+			//Setup indentifier 
+			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
+			if (i == 0) ECS::SetUpIdentifier(entity, bitHolder, "blue bomb");
+			else ECS::SetUpIdentifier(entity, bitHolder, "orange bomb");
+		}
+	}
 }
+
+
 
 //Update the scene, every frame
 void MainGame::Update()
@@ -461,7 +636,7 @@ void MainGame::KeyboardHold()
 	}
 
 	//vector for the force of player's jumping
-	vec3 jump = vec3(0.f, 5750.f * 60.f * Timer::deltaTime, 0.f);
+	vec3 jump = vec3(0.f, 5200.f * 60.f * Timer::deltaTime, 0.f);
 
 	//if blue's player has pressed W, and she can jump, make her jump
 	if (Input::GetKey(Key::W)) {

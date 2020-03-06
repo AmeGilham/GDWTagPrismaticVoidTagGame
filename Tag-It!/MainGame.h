@@ -17,6 +17,7 @@ public:
 	void Update() override;
 
 	void destroy();
+	void createT(int ud);
 	void destroyT();
 
 	//Gamepad input
@@ -52,6 +53,13 @@ private:
 	//time since jump timers
 	float blueTimeSinceLastJump = 0.f;
 	float orangeTimeSinceLastJump = 0.f;
+
+	//time since each player hit the "Tag button" 
+	float timeSinceTagTriggered = 0.f;
+	//bool for if a tag entity exists
+	bool tagExists = false; 
+	//variable to store the entity number for the tag object 
+	unsigned int tagEntity = 0;
 
 	//time each player has left as the one "it"
 	float blueFuseTimeRemaining = 150.f;

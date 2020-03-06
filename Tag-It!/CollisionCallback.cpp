@@ -48,6 +48,11 @@ void myListener::PreSolve(b2Contact* contact, const b2Manifold* oldManifold){
 	int* uda = reinterpret_cast<int*>(fixa->GetBody()->GetUserData()); 
 	int* udb = reinterpret_cast<int*>(fixb->GetBody()->GetUserData());
 	
+	//if any of the objects are a tag box 
+	if (*uda == 4 || *uda == 6 || *udb == 4 || *udb == 6) {
+		contact->SetEnabled(false);
+	}
+
 	//check if a player in a is colliding with a platform in b
 	if ((*uda == 0 || *uda == 1) && *udb == 2) {
 		//if so see if it needs to jump through
@@ -59,68 +64,29 @@ void myListener::PreSolve(b2Contact* contact, const b2Manifold* oldManifold){
 		jumpThrough(contact, fixb);
 	}
 
-	if (((*udb == 1  && *uda == 4)) || (*uda == 1 && *udb == 4)) { //if orange collides with blue tag box
-		if (Input::GetKey(Key::Q)) {
-			if (it == 1) {
-				//if she is, then make orange it
-				it = 2;
-				//and destroy the not it objective 
-				itChange = true;
-				std::cout << "Hello";
-			}
-			//if orange is it 
-			else if (it == 2) {
-			
-			}
+	//Check if Orange is colliding with Blue's tag box
+	if (((*udb == 1  && *uda == 4)) || (*uda == 1 && *udb == 4)) {
+		if (it == 1) {
+			//if she is, then make orange it
+			it = 2;
+			//and change whose it
+			itChange = true;
 		}
-
-		contact->SetEnabled(false);
 	}
 	
-	if (((*udb == 0 && *uda == 6)) || (*uda == 0 && *udb == 6)) { //if blue collides with orange tag box
-
-		if (Input::GetKey(Key::M)) {
-			if (it == 1) {//notihng happens to blue
-			
-			}
-			//if orange is it 
-			else if (it == 2) {
-				//if she is, then make blue it
-				it = 1;
-				//and destroy the not it objective 
-				itChange = true;
-				std::cout << "Hello";
-			}
+	//Check if Blue is colliding with Orange's tag box
+	if (((*udb == 0 && *uda == 6)) || (*uda == 0 && *udb == 6)) {
+		if (it == 2) {
+			//if he is, then make blue it
+			it = 1;
+			//and change whose it
+			itChange = true;
 		}
-
-		contact->SetEnabled(false);
 	}
 
 
 	//check if the players are colliding with each other 
 	if ((*uda == 0 && *udb == 1) || (*uda == 1 && *udb == 0)) {
-		if (Input::GetKey(Key::M)) { //player 2
-
-			if (Timer::time >= 1.5f) { //cooldown timer for tagging (1.5 seconds before palyer can tag the other player)
-				Timer::Reset();
-				Timer::Update();
-
-				// if blue is it
-				if (it == 1) {
-
-				}
-
-				//if orange is it 
-				else if (it == 2) {
-
-				
-
-				}
-
-			}
-
-		}
-
 		//if they are, let them pass through each other 
 		contact->SetEnabled(false);
 	}

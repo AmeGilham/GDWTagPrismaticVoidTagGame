@@ -453,14 +453,44 @@ void MainGame::Update(){
 		ECS::SetUpIdentifier(entity, bitHolder, "Objective");
 
 	}
-	
-	//add the change in time to the time since blue and orange last jumped (used to control jumping with platforms reseting jumps)
-	blueTimeSinceLastJump += Timer::deltaTime;
-	orangeTimeSinceLastJump += Timer::deltaTime;
 
 	//grab blue's physics body info
 	auto& bluetempPhysBod = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
 	b2Body* bluebody = bluetempPhysBod.GetBody();
+
+	//grab orange's physics body info
+	auto& orangetempPhysBod = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
+	b2Body* orangebody = orangetempPhysBod.GetBody();
+
+	
+	//add the change in time to the time since blue and orange last jumped (used to control jumping with platforms reseting jumps)
+	blueTimeSinceLastJump += Timer::deltaTime;
+	orangeTimeSinceLastJump += Timer::deltaTime;
+	//add the change in time to the time since a tag was triggered
+	timeSinceTagTriggered += Timer::deltaTime;
+
+	if (timeSinceTagTriggered > 0.083f && tagExists) {
+		destroyT();
+	}
+	else if (tagExists) {
+		b2Body* tagBody = ECS::GetComponent<PhysicsBody>(tagEntity).GetBody();
+		if (listener.GetIt() == 1) {
+			if (bright) {
+				tagBody->SetTransform(b2Vec2(bluebody->GetPosition().x + 3.5, bluebody->GetPosition().y), bluebody->GetAngle());
+			}
+			else {
+				tagBody->SetTransform(b2Vec2(bluebody->GetPosition().x - 3.5, bluebody->GetPosition().y), bluebody->GetAngle());
+			}
+		}
+		else if (listener.GetIt() == 2) {
+			if (oright) {
+				tagBody->SetTransform(b2Vec2(orangebody->GetPosition().x + 3.5, orangebody->GetPosition().y), orangebody->GetAngle());
+			}
+			else {
+				tagBody->SetTransform(b2Vec2(orangebody->GetPosition().x - 3.5, orangebody->GetPosition().y), orangebody->GetAngle());
+			}
+		}
+	}
 
 	//if Blue has run off the right of the screen, make her appear on the left
 	if (bluetempPhysBod.GetPosition().x > 50.5) {
@@ -469,9 +499,6 @@ void MainGame::Update(){
 	else if (bluetempPhysBod.GetPosition().x < -50.5) {
 		bluetempPhysBod.GetBody()->SetTransform(b2Vec2(50.5, bluebody->GetPosition().y), float32(0));}
 
-	//grab orange's physics body info
-	auto& orangetempPhysBod = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
-	b2Body* orangebody = orangetempPhysBod.GetBody();
 
 	//if Orange has run off the right of the screen, make him appear on the left 
 	if (orangetempPhysBod.GetPosition().x > 50.5) {
@@ -532,11 +559,109 @@ void MainGame::destroy(){
 
 		if (m_sceneReg->has<Spawn>(entity)) {
 			if (ECS::GetComponent<Spawn>(entity).GetObj()) { //objective
-				ECS::DestroyEntity(entity);}
+				ECS::DestroyEntity(entity);
+			}
+		}
+	}
+}
 
+void MainGame::createT(int ud)
+{
+	if (ud == 4) {
+		{
+			auto& blue = ECS::GetComponent<Transform>(EntityIdentifier::MainPlayer());
+			auto& body = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
+			float px = blue.GetPositionX();
+			float py = blue.GetPositionY();
 
-		
-					   
+			auto entity = ECS::CreateEntity();
+			ECS::AttachComponent<Transform>(entity);
+			ECS::AttachComponent<Sprite>(entity);
+			ECS::AttachComponent<PhysicsBody>(entity);
+			ECS::AttachComponent<Spawn>(entity);
+
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(px, py, 99.f));
+
+			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+			auto& tagid = ECS::GetComponent<Spawn>(entity);
+
+			tagid.SetBlue(true);
+			//setup the dynamic box2d physics body
+
+			b2Joint* tagb;
+			b2Body* tempBody;
+			b2BodyDef tempDef;
+			tempDef.type = b2_staticBody;
+			//set the position
+			if (bright) {//if blue is facing right
+				tempDef.position.Set(float32(px + 3.5), float32(py)); //blue right position
+			}
+			else { //has to face left
+				tempDef.position.Set(float32(px - 3.5), float32(py)); //blue left position
+			}
+
+			//add the physics body to box2D physics world simulator
+			tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+			//create a spriteLib physics body using the box2D physics body
+			tempPhsBody = PhysicsBody(tempBody, 3.f, 2.f, vec2(0.f, -0.5f), false);
+
+			//setup the user data to identify them as players
+			tempBody->SetUserData(&btag); //blue
+			unsigned int bitHolder = EntityIdentifier::TransformBit();
+			ECS::SetUpIdentifier(entity, bitHolder, "Tag Box Blue");
+
+			tagExists = true;
+			tagEntity = entity;
+		}
+	}
+
+	else if (ud == 6) {
+		{
+			auto& orange = ECS::GetComponent<Transform>(EntityIdentifier::SecondPlayer());
+			auto& body = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
+			float px = orange.GetPositionX();
+			float py = orange.GetPositionY();
+
+			auto entity = ECS::CreateEntity();
+			ECS::AttachComponent<Transform>(entity);
+			ECS::AttachComponent<Sprite>(entity);
+			ECS::AttachComponent<PhysicsBody>(entity);
+			ECS::AttachComponent<Spawn>(entity);
+
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(px, py, 99.f));
+
+			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+			auto& tagid = ECS::GetComponent<Spawn>(entity);
+
+			tagid.SetOrange(true); //set it as orange so it will be flagged for destruction
+			//setup the dynamic box2d physics body
+
+			b2Joint* tagb;
+			b2Body* tempBody;
+			b2BodyDef tempDef;
+			tempDef.type = b2_staticBody;
+			//set the position
+			if (oright) {//if orange is facing right
+				tempDef.position.Set(float32(px + 3.5), float32(py)); //orange position
+			}
+			else {
+				tempDef.position.Set(float32(px - 3.5), float32(py)); //orange position
+			}
+
+			//add the physics body to box2D physics world simulator
+			tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+			//create a spriteLib physics body using the box2D physics body
+			tempPhsBody = PhysicsBody(tempBody, 3.f, 2.f, vec2(0.f, -0.5f), false);
+
+			//setup the user data to identify them as players
+			tempBody->SetUserData(&otag); //orange
+			unsigned int bitHolder = EntityIdentifier::TransformBit();
+			ECS::SetUpIdentifier(entity, bitHolder, "Tag Box Orange");
+
+			tagExists = true;
+			tagEntity = entity;
 		}
 	}
 }
@@ -550,16 +675,17 @@ void MainGame::destroyT(){
 		if (m_sceneReg->has<Spawn>(entity)) {
 
 			if (ECS::GetComponent<Spawn>(entity).GetBlue()) { //for destroying tagging boxes
-				ECS::DestroyEntity(entity);}
+				ECS::DestroyEntity(entity);
+			}
 			
 			else if (ECS::GetComponent<Spawn>(entity).GetOrange()) { //for destroying tagging boxes
-				ECS::DestroyEntity(entity);}
-
-			//if (ECS::GetComponent<Spawn>(entity).GetOrange() == 9) { //for destroying tagging boxes
-			//	ECS::DestroyEntity(entity);}
+				ECS::DestroyEntity(entity);
+			}
 
 		}
 	}
+	tagEntity = 0;
+	tagExists = false;
 }
 
 //keyboard key held down input
@@ -689,120 +815,14 @@ void MainGame::KeyboardHold()
 //keyboard key first pressed input
 void MainGame::KeyboardDown(){
 
-	if (Input::GetKeyDown(Key::Q) ) { //player 1
-		Timer::Reset();
-		 {
-			auto& blue = ECS::GetComponent<Transform>(EntityIdentifier::MainPlayer());
-			auto& body = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
-			float px = blue.GetPositionX();
-			float py = blue.GetPositionY();
-			
-			auto entity = ECS::CreateEntity();
-			ECS::AttachComponent<Transform>(entity);
-			ECS::AttachComponent<Sprite>(entity);
-			ECS::AttachComponent<PhysicsBody>(entity);
-			ECS::AttachComponent<Spawn>(entity);
-
-			ECS::GetComponent<Transform>(entity).SetPosition(vec3(px, py, 99.f));
-
-			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
-			auto& tagid = ECS::GetComponent<Spawn>(entity);
-
-			tagid.SetBlue(true);
-			//setup the dynamic box2d physics body
-			
-			b2Joint* tagb;
-			b2Body* tempBody;
-			b2BodyDef tempDef;
-			tempDef.type = b2_staticBody;
-			//set the position
-			if (bright) {//if blue is facing right
-				tempDef.position.Set(float32(px+3.5), float32(py)); //blue right position
-			}
-			else { //has to face left
-				tempDef.position.Set(float32(px-3.5), float32(py)); //blue left position
-			}
-
-			//add the physics body to box2D physics world simulator
-			tempBody = m_physicsWorld->CreateBody(&tempDef);
-
-			//create a spriteLib physics body using the box2D physics body
-			tempPhsBody = PhysicsBody(tempBody, 3.f, 2.f, vec2(0.f, -0.5f), false);
-			
-			//setup the user data to identify them as players
-			tempBody->SetUserData(&btag); //blue
-			unsigned int bitHolder = EntityIdentifier::TransformBit();
-			ECS::SetUpIdentifier(entity, bitHolder, "Tag Box Blue");
-		}
-
-		 if (Timer::time >= 1.0f) {
-			 Timer::Reset();
-			 Timer::Update();
-			 destroyT();
-		 }		
+	if (Input::GetKeyDown(Key::Q) && listener.GetIt() == 1 && timeSinceTagTriggered > 0.083f) { //player 1 blue tagging
+		createT(btag);
+		timeSinceTagTriggered = 0.f;
 	}
 
-	if (Input::GetKeyUp(Key::Q)) {
-		destroyT();
-		std::cout << "UPPPPPPPPPP" << std::endl;}
-
-	else if (Input::GetKeyDown(Key::M)) { //player 2 orange
-		Timer::Reset();
-		{
-			auto& blue = ECS::GetComponent<Transform>(EntityIdentifier::SecondPlayer());
-			auto& body = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
-			float px = blue.GetPositionX();
-			float py = blue.GetPositionY();
-
-			auto entity = ECS::CreateEntity();
-			ECS::AttachComponent<Transform>(entity);
-			ECS::AttachComponent<Sprite>(entity);
-			ECS::AttachComponent<PhysicsBody>(entity);
-			ECS::AttachComponent<Spawn>(entity);
-
-			ECS::GetComponent<Transform>(entity).SetPosition(vec3(px, py, 99.f));
-
-			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
-			auto& tagid = ECS::GetComponent<Spawn>(entity);
-
-			tagid.SetOrange(true); //set it as orange so it will be flagged for destruction
-			//setup the dynamic box2d physics body
-
-			b2Joint* tagb;
-			b2Body* tempBody;
-			b2BodyDef tempDef;
-			tempDef.type = b2_staticBody;
-			//set the position
-			if (oright) {//if orange is facing right
-				tempDef.position.Set(float32(px + 3.5), float32(py)); //orange position
-			}
-			else {
-				tempDef.position.Set(float32(px - 3.5), float32(py)); //orange position
-			}
-
-			//add the physics body to box2D physics world simulator
-			tempBody = m_physicsWorld->CreateBody(&tempDef);
-
-			//create a spriteLib physics body using the box2D physics body
-			tempPhsBody = PhysicsBody(tempBody, 3.f, 2.f, vec2(0.f, -0.5f), false);
-
-			//setup the user data to identify them as players
-			tempBody->SetUserData(&otag); //orange
-			unsigned int bitHolder = EntityIdentifier::TransformBit();
-			ECS::SetUpIdentifier(entity, bitHolder, "Tag Box Orange");
-
-		}
-
-		if (Timer::time >= 1.0f) {
-			Timer::Reset();
-			Timer::Update();
-			destroyT();}
-
-	}
-	
-	if (Input::GetKeyUp(Key::M)) {
-		destroyT();
-		std::cout << "UPPPPPPPPPP" << std::endl;
+	else if (Input::GetKeyDown(Key::M) && listener.GetIt() == 2 && timeSinceTagTriggered > 0.083f) { //player 2 orange tagging
+		createT(otag);
+		timeSinceTagTriggered = 0.f;
 	}
 	
 	//animations

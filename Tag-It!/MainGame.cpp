@@ -48,6 +48,60 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 		ECS::SetUpIdentifier(entity, bitHolder, "Main Cam");
 		ECS::SetIsMainCamera(entity, true);
 	}
+
+	//setup for the backdrop (static, not the flow of the water)
+	{
+		//Creates enetity
+		auto entity = ECS::CreateEntity(); 
+
+		//Adds components
+		ECS::AttachComponent<Sprite>(entity);
+		ECS::AttachComponent<Transform>(entity);
+
+		//sets up components 
+		std::string fileName = "backdrop.png";
+
+		//sets up sprite and transform components
+		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 90, 50);
+		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 0.f));
+
+		//Setup indentifier 
+		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
+		ECS::SetUpIdentifier(entity, bitHolder, "Backdrop (static)");
+	}
+
+	//setup for backdrop (animated, waterfall flow section)
+	{
+		//our JSON animation file
+		auto flow = File::LoadJSON("waterfall.json");
+
+		//creates entity
+		auto entity = ECS::CreateEntity();
+
+		//Adds components 
+		ECS::AttachComponent<Sprite>(entity);
+		ECS::AttachComponent<Transform>(entity);
+		ECS::AttachComponent<AnimationController>(entity);
+
+		//Sets up components
+		std::string fileName = "flow.png";
+		//grab a reference to the animation controller
+		auto& animController = ECS::GetComponent<AnimationController>(entity);
+		//set the spriteset
+		animController.InitUVs(fileName);
+
+		//setup the sprite and transform components
+		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 23, 23, true, &animController);
+		ECS::GetComponent<Transform>(entity).SetPosition(vec3(-33.f, -13.f, 1.f));
+		
+		//creates the animations
+		animController.AddAnimation(flow["flow"]);
+		animController.SetActiveAnim(0);
+
+		//Sets up the Identifier
+		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::AnimationBit();
+		ECS::SetUpIdentifier(entity, bitHolder, "backdrop (dynamic waterflow part");
+	}
 	
 	//Setup player entities (both orange and blue, cycling blue then orange)
 	for (int i = 0; i < 2; i++) {
@@ -117,7 +171,11 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 			else animController.SetActiveAnim(1);
 
 			//Sets up the Identifier
+<<<<<<< HEAD
 			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit() | EntityIdentifier::AnimationBit();
+=======
+			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::AnimationBit() | EntityIdentifier::PhysicsBit();
+>>>>>>> Ame-Review2
 			ECS::SetUpIdentifier(entity, bitHolder, "Player " + std::to_string(i+1));
 			//if it's blue
 			if (i == 0)
@@ -196,7 +254,7 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 			std::string fileName = "BG.png";
 			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 8, 4);
 			//setup transform component
-			ECS::GetComponent<Transform>(entity).SetPosition(vec3(2.5f, 0.f, -10.f));
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(2.5f, 0.f, 10.f + (0.01f * i)));
 
 			//grab references to the sprite and physics body components
 			auto& tempSpr = ECS::GetComponent<Sprite>(entity);
@@ -356,8 +414,13 @@ void MainGame::Update(){
 		ECS::GetComponent<Sprite>(EntityIdentifier::SecondPlayer()).SetWidth(20.f);
 		orangeFuseTimeRemaining -= Timer::deltaTime;
 	}
+<<<<<<< HEAD
 	
 	//printf("%f \n", 1/Timer::deltaTime);
+=======
+
+	printf("%f\n", 1.0 / Timer::deltaTime);
+>>>>>>> Ame-Review2
 }
 
 //to destroy the not it
@@ -402,7 +465,7 @@ void MainGame::destroyT(){
 void MainGame::KeyboardHold()
 {
 	//vector with the force for the player's x movement
-	vec3 runforce = vec3(2000.f, 0.f, 0.f);
+	vec3 runforce = vec3(1000.f * 60.f * Timer::deltaTime, 0.f, 0.f);
 
 	//grab a reference to blue's physics body
 	auto& tempPhysBodB = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
@@ -410,12 +473,12 @@ void MainGame::KeyboardHold()
 	b2Body* bodyB = tempPhysBodB.GetBody();
 
 	//if Blue's player is pressing A, and their x-velocity isn't above the left cap, apply the run force to the left
-	if (Input::GetKey(Key::A) && bodyB->GetLinearVelocity().x > float32(-40.f)) {
+	if (Input::GetKey(Key::A) && bodyB->GetLinearVelocity().x > float32(-30.f)) {
 		tempPhysBodB.ApplyForce(-runforce);
 	}
 
 	//if Blue's player is pressing D, and their x-velocity isn't above the right cap, apply the run force to the right
-	else if (Input::GetKey(Key::D) && bodyB->GetLinearVelocity().x < float32(40.f)) {
+	else if (Input::GetKey(Key::D) && bodyB->GetLinearVelocity().x < float32(30.f)) {
 		tempPhysBodB.ApplyForce(runforce);
 	}
 
@@ -455,12 +518,23 @@ void MainGame::KeyboardHold()
 	b2Body* bodyO = tempPhysBodO.GetBody();
 
 	//if Orange's player is pressing leftArrow, and their x-velocity isn't above the left cap, apply the run force to the left
+<<<<<<< HEAD
 	if (Input::GetKey(Key::LeftArrow) && bodyO->GetLinearVelocity().x > float32(-40.f)) {
 		tempPhysBodO.ApplyForce(-runforce);}
 
 	//if Orange's player is pressing rightArrow, and their x-velocity isn't above the right cap, apply the run force to the right
 	else if (Input::GetKey(Key::RightArrow) && bodyO->GetLinearVelocity().x < float32(40.f)) {
 		tempPhysBodO.ApplyForce(runforce);}
+=======
+	if (Input::GetKey(Key::LeftArrow) && bodyO->GetLinearVelocity().x > float32(-30.f)) {
+		tempPhysBodO.ApplyForce(-runforce);
+	}
+
+	//if Orange's player is pressing rightArrow, and their x-velocity isn't above the right cap, apply the run force to the right
+	else if (Input::GetKey(Key::RightArrow) && bodyO->GetLinearVelocity().x < float32(30.f)) {
+		tempPhysBodO.ApplyForce(runforce);
+	}
+>>>>>>> Ame-Review2
 
 	//otherwise Orange isn't moving on the x-axis
 	else {
@@ -493,7 +567,7 @@ void MainGame::KeyboardHold()
 	}
 
 	//vector for the force of player's jumping
-	vec3 jump = vec3(0.f, 5750.f, 0.f);
+	vec3 jump = vec3(0.f, 5750.f * 60.f * Timer::deltaTime, 0.f);
 
 	//if blue's player has pressed W, and she can jump, make her jump
 	if (Input::GetKey(Key::W)) {

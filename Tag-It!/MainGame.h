@@ -16,6 +16,9 @@ public:
 	//updates the scene every frame
 	void Update() override;
 
+	void destroy();
+	void destroyT();
+
 	//Gamepad input
 	void GamepadStroke(XInputController* con) override;
 	void GamepadStick(XInputController* con) override;
@@ -36,9 +39,15 @@ private:
 	int blue = 0;
 	int orange = 1;
 	int platform = 2;
-	int border = 3;
-	int tag = 4;
+	int border = 3; 
+	int btag = 4; //tag box for blue (2 different tag variables beacuse if they used the same, pre solve thinks the box is touching the other player
+	int otag = 6; //tag box for orange
 	int notItObjective = 5; 
+
+	bool objective = true;
+
+	bool bright = true; //is blue facing right?
+	bool oright = false; //is orange facing right?
 
 	//time since jump timers
 	float blueTimeSinceLastJump = 0.f;

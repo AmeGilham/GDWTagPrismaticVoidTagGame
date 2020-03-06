@@ -169,7 +169,6 @@ void Game::KeyboardUp()
 	}
 }
 
-
 void Game::MouseMotion(SDL_MouseMotionEvent evnt)
 {
 	//mouse moved

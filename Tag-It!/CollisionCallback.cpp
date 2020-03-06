@@ -9,7 +9,6 @@ myListener::myListener()
 //called by Box2D when two things begin colliding
 void myListener::BeginContact(b2Contact* contact){
 	//begin contact code
-	
 	//check if it's the first phase of the game and noone is it yet
 	if (it == 0) {
 		//if it is check if the collision is between a player and the objective to become the first "Not it" of the match
@@ -64,8 +63,68 @@ void myListener::PreSolve(b2Contact* contact, const b2Manifold* oldManifold){
 		jumpThrough(contact, fixb);
 	}
 
+	if (((*udb == 1  && *uda == 4)) || (*uda == 1 && *udb == 4)) { //if orange collides with blue tag box
+		if (Input::GetKey(Key::Q)) {
+			if (it == 1) {
+				//if she is, then make orange it
+				it = 2;
+				//and destroy the not it objective 
+				itChange = true;
+				std::cout << "Hello";
+			}
+			//if orange is it 
+			else if (it == 2) {
+			
+			}
+		}
+
+		contact->SetEnabled(false);
+	}
+	
+	if (((*udb == 0 && *uda == 6)) || (*uda == 0 && *udb == 6)) { //if blue collides with orange tag box
+
+		if (Input::GetKey(Key::M)) {
+			if (it == 1) {//notihng happens to blue
+			
+			}
+			//if orange is it 
+			else if (it == 2) {
+				//if she is, then make blue it
+				it = 1;
+				//and destroy the not it objective 
+				itChange = true;
+				std::cout << "Hello";
+			}
+		}
+
+		contact->SetEnabled(false);
+	}
+
+
 	//check if the players are colliding with each other 
 	if ((*uda == 0 && *udb == 1) || (*uda == 1 && *udb == 0)) {
+		if (Input::GetKey(Key::M)) { //player 2
+
+			if (Timer::time >= 1.5f) { //cooldown timer for tagging (1.5 seconds before palyer can tag the other player)
+				Timer::Reset();
+				Timer::Update();
+
+				// if blue is it
+				if (it == 1) {
+
+				}
+
+				//if orange is it 
+				else if (it == 2) {
+
+				
+
+				}
+
+			}
+
+		}
+
 		//if they are, let them pass through each other 
 		contact->SetEnabled(false);
 	}
@@ -114,28 +173,23 @@ bool myListener::getJumpO()
 }
 
 //return the player whose currently it 
-int myListener::GetIt()
-{
+int myListener::GetIt(){
 	return it;
 }
 
-bool myListener::GetItChange()
-{
+bool myListener::GetItChange(){
 	return itChange;
 }
 
-void myListener::SetItChange(bool change)
-{
+void myListener::SetItChange(bool change){
 	itChange = change;
 }
 
-bool myListener::GetNotItObjExists()
-{
+bool myListener::GetNotItObjExists(){
 	return NotItObjExists;
 }
 
-void myListener::SetNotItObjExists(bool exists)
-{
+void myListener::SetNotItObjExists(bool exists){
 	NotItObjExists = exists;
 }
 
@@ -162,8 +216,7 @@ void myListener::EndContact (b2Contact* contact){
 	}
 }
 
-void myListener::jumpThrough(b2Contact* contact, b2Fixture* playFix)
-{
+void myListener::jumpThrough(b2Contact* contact, b2Fixture* playFix){
 	//grab the velocity of the fixture
 	b2Vec2 vel = playFix->GetBody()->GetLinearVelocity();
 
@@ -174,8 +227,7 @@ void myListener::jumpThrough(b2Contact* contact, b2Fixture* playFix)
 	}
 }
 
-void myListener::jumpReset(int* ud)
-{
+void myListener::jumpReset(int* ud){
 	//if the player is landing 
 	if (*ud == 0) {
 		canJumpB = true;
@@ -185,27 +237,3 @@ void myListener::jumpReset(int* ud)
 	}
 }
 
-
-
-
-
-
-
-//fixa->GetBody()->GetPosition();
-	//fixb->GetBody()->GetPosition();
-
-	//const b2Body* bodyA = contact->GetFixtureA() ->GetBody();
-	//const b2Body* bodyB = contact->GetFixtureB()->GetBody();
-	//b2WorldManifold worldManifold;
-
-	//b2Vec2 position = contact->GetFixtureA()->GetBody()->GetPosition();
-	//b2Vec2 position2 = contact->GetFixtureB()->GetBody()->GetPosition();
-	//contact->GetWorldManifold(&worldManifold);
-
-	/*HelloWorld* scene = (HelloWorld*)Game::m_activeScene;
-	scene->get<PhysicsBody>(EntityIdentifier::MainPlayer()).GetPosition();*/
-	//std::cout << position <<"Position A";
-
-	//if (((worldManifold.normal.x >= 80 && worldManifold.normal.x <= 170) && worldManifold.normal.y <= 50)  ) {
-	//	contact->SetEnabled(false);
-	//}

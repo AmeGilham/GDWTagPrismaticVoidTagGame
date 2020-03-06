@@ -261,6 +261,10 @@ void PhysicsBody::SetDynamic(bool isDynamic)
 	m_dynamic = isDynamic;
 }
 
+void PhysicsBody::DeleteBody(){
+	m_body->GetWorld()->DestroyBody(m_body);
+}
+
 PhysicsBody::PhysicsBody(b2Body * body, float radius, vec2 centerOffset, bool isDynamic)
 {
 	b2CircleShape tempShape;

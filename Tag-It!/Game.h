@@ -3,6 +3,8 @@
 
 #include "BackEnd.h"
 #include "MainGame.h"
+#include "MainMenu.h"
+#include "LevelSelect.h"
 
 //Our main class for running our game
 class Game
@@ -42,7 +44,7 @@ public:
 	//Runs the GUI
 	//*Uses ImGUI for this
 	void GUI();
-
+	void changescene();
 	//Check events
 	//*Checks the results of the events that have been polled
 	void CheckEvents();
@@ -82,12 +84,7 @@ private:
 	bool m_click = false;
 	bool m_wheel = false;
 	int numPress;
-	//vec2 m_velocity = vec2(0.f, 0.f);
-	//vec2 acceleration = vec2(0.f, 0.f);
-
-	//int m_maxHeight = -28.f;
-	//int m_currentGround = -10.f;
-	//bool jump = false;
+	
 };
 
 

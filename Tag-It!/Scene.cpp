@@ -34,8 +34,7 @@ entt::registry* Scene::GetScene() const
 	return m_sceneReg;
 }
 
-void Scene::SetScene(entt::registry& scene)
-{
+void Scene::SetScene(entt::registry& scene){
 	m_sceneReg = &scene;
 }
 

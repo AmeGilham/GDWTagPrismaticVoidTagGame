@@ -19,8 +19,7 @@ public:
 	//Saves the scene
 	void SaveScene();
 
-	//Each scene will need to have a different
-	//init, as each scene's contents will be different
+	//Each scene will need to have a different init, as each scene's contents will be different
 	virtual void InitScene(float windowWidth, float windowHeight) { printf("windowwidth: %f, windowHeight: %f", windowWidth, windowHeight); };
 
 	//each frame update function
@@ -43,11 +42,12 @@ public:
 	virtual void MouseClick(SDL_MouseButtonEvent evnt) { };
 	virtual void MouseWheel(SDL_MouseWheelEvent evnt) { };
 
-
 	//Get the scene registry
 	entt::registry* GetScene() const;
 	//Set the scene registry
 	void SetScene(entt::registry& scene);
+
+	//getters and setters
 	std::string GetName() const;
 	void SetName(std::string name);
 

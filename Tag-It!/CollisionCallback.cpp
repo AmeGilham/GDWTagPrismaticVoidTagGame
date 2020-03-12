@@ -50,8 +50,7 @@ void myListener::PreSolve(b2Contact* contact, const b2Manifold* oldManifold){
 	
 	//if any of the objects are a tag box 
 	if (*uda == 4 || *uda == 6 || *udb == 4 || *udb == 6) {
-		contact->SetEnabled(false);
-	}
+		contact->SetEnabled(false);}
 
 	//check if a player in a is colliding with a platform in b
 	if ((*uda == 0 || *uda == 1) && *udb == 2) {

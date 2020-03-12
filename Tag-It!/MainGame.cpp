@@ -1,7 +1,6 @@
 #include "MainGame.h"
 #include "EffectManager.h"
 
-
 //Constructor 
 MainGame::MainGame(std::string name)
 	: Scene(name)
@@ -460,6 +459,7 @@ void MainGame::destroy(){
 	}
 }
 
+//create user tag box
 void MainGame::createT(int ud)
 {
 	if (ud == 4) {
@@ -718,13 +718,11 @@ void MainGame::KeyboardDown(){
 
 	if (Input::GetKeyDown(Key::Q) && listener.GetIt() == 1 && timeSinceTagTriggered > 0.083f) { //player 1 blue tagging
 		createT(btag);
-		timeSinceTagTriggered = 0.f;
-	}
+		timeSinceTagTriggered = 0.f;}
 
 	else if (Input::GetKeyDown(Key::M) && listener.GetIt() == 2 && timeSinceTagTriggered > 0.083f) { //player 2 orange tagging
 		createT(otag);
-		timeSinceTagTriggered = 0.f;
-	}
+		timeSinceTagTriggered = 0.f;}
 	
 	//animations
 	if (Input::GetKeyDown(Key::D)){

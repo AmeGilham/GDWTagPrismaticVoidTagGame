@@ -3,6 +3,8 @@
 
 #include "BackEnd.h"
 #include "MainGame.h"
+#include "MainMenu.h"
+#include "LevelSelect.h"
 
 //Our main class for running our game
 class Game

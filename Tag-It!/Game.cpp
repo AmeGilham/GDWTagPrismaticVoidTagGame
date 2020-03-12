@@ -36,6 +36,8 @@ void Game::InitGame()
 	m_window = BackEnd::GetWindow();
 
 	//Creates a new HelloWorld scene
+	//m_scenes.push_back(new MainMenu("Menu"));
+	//m_scenes.push_back(new LevelSelect("Level Menu"));
 	m_scenes.push_back(new MainGame("1v1 Match"));
 	//Sets active scene reference to our scene
 	m_activeScene = m_scenes[0];
@@ -192,6 +194,24 @@ void Game::MouseClick(SDL_MouseButtonEvent evnt)
 {
 	//mouse click
 	m_activeScene->MouseClick(evnt);
+
+	if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 119.f && float(evnt.x) <= 799.f) && (float(evnt.y) >= 137.f && float(evnt.y) <= 541.f) && (m_activeScene == m_scenes[1])) {
+		printf("\n LEVEL SELECT \n");
+		m_activeScene->Unload();
+		m_activeScene = m_scenes[2];
+		m_activeScene->InitScene(float(BackEnd::GetWindowWidth()), float(BackEnd::GetWindowHeight()));
+		m_register = m_activeScene->GetScene();
+	}
+
+	//menu switching code
+	/*else if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 393.f && float(evnt.x) <= 527.f) && (float(evnt.y) >= 307.f && float(evnt.y) <= 373.f) && (m_activeScene == m_scenes[0])) {
+		printf("\n CLICKED");
+		m_activeScene->Unload();
+		m_activeScene = m_scenes[1];
+		m_activeScene->InitScene(float(BackEnd::GetWindowWidth()), float(BackEnd::GetWindowHeight()));
+		m_register = m_activeScene->GetScene();
+	}*/
+
 
 	if (m_guiActive)
 	{

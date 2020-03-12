@@ -70,7 +70,7 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 	}
 
 	//setup for backdrop (animated, waterfall flow section)
-	{
+	{ 
 		//our JSON animation file
 		auto flow = File::LoadJSON("waterfall.json");
 

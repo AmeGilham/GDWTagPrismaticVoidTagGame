@@ -68,13 +68,13 @@ void LevelSelect::MouseMotion(SDL_MouseMotionEvent evnt){
 		//SetScene(m_menu);
 		printf("MOVED");
 		auto& spr = ECS::GetComponent<Sprite>(EntityIdentifier::MainPlayer());
-		std::string fileName = "screenshot.png";
+		std::string fileName = "level1H.png";
 		spr.LoadSprite(fileName, 50, 30);
 	}
 
 	else {
 		auto& spr = ECS::GetComponent<Sprite>(EntityIdentifier::MainPlayer());
-		std::string fileName = "BG.jpg";
+		std::string fileName = "screenshot.png";
 		spr.LoadSprite(fileName, 50, 30);
 	}
 

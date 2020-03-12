@@ -83,6 +83,11 @@ void Animation::Reset()
 	m_done = false;
 }
 
+void Animation::frameMod(UVCoordinates frame, int index)
+{
+	m_frames[index] = frame;
+}
+
 bool Animation::GetAnimationDone() const
 {
 	//Returns the m_done bool
@@ -108,6 +113,11 @@ bool Animation::GetRepeating() const
 float Animation::GetSecPerFrame() const
 {
 	return m_secPerFrame;
+}
+
+int Animation::GetCurrentFrameIndex()
+{
+	return m_currentFrame;
 }
 
 void Animation::SetRepeating(bool repeating)

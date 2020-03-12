@@ -56,6 +56,9 @@ public:
 	//*Frame data
 	void Reset();
 	
+	//all a frame to be modified 
+	void frameMod(UVCoordinates frame, int index);
+
 	//Getters
 	//Grabs whether or not the "animation finished" flag has been set
 	bool GetAnimationDone() const;
@@ -67,6 +70,8 @@ public:
 	bool GetRepeating() const;
 	//Get the seconds per frame for the animation
 	float GetSecPerFrame() const;
+	//get the index of the current frame
+	int GetCurrentFrameIndex();
 
 	//Setters
 	//Set if the animation repeats

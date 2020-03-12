@@ -2,6 +2,7 @@
 
 #include "Scene.h"
 #include "Input.h"
+#include <math.h>
 
 //Scene child class for the main match / core of the gameplay
 class MainGame : public Scene
@@ -35,6 +36,8 @@ public:
 	void MouseClick(SDL_MouseButtonEvent evnt) override;
 	void MouseWheel(SDL_MouseWheelEvent evnt) override;
 
+	//create animations 
+	void createAnimation(Animation* anim, int x, int y, int width, int height, int frames, bool flipped, float lenghtOfFrame, bool repeating);
 private:
 	//Box2D user data
 	int blue = 0;
@@ -60,8 +63,14 @@ private:
 	bool tagExists = false; 
 	//variable to store the entity number for the tag object 
 	unsigned int tagEntity = 0;
+	//variable to store the entity number of the "It!" Hud object
+	unsigned int itIdentifyingHudEntity = 0;
+
+	//Hud bomb entity numbers, 0 is blue, 1 is orange, 2 is the burning fuse sprite
+	unsigned int bombs[3];
 
 	//time each player has left as the one "it"
-	float blueFuseTimeRemaining = 150.f;
-	float orangeFuseTimeRemaining = 150.f;
+	float maxTime = 90.f; 
+	float blueFuseTimeRemaining = maxTime;
+	float orangeFuseTimeRemaining = maxTime;
 };

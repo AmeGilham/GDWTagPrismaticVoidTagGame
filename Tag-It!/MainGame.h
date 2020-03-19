@@ -59,6 +59,11 @@ private:
 
 	//time since each player hit the "Tag button" 
 	float timeSinceTagTriggered = 0.f;
+
+	//time since palyer last slid
+	float timeSinceSlideB = 0.f;
+	float timeSinceSlideO = 0.f;
+
 	//bool for if a tag entity exists
 	bool tagExists = false; 
 	//variable to store the entity number for the tag object 

@@ -1,7 +1,6 @@
 #include "MainGame.h"
 #include "EffectManager.h"
 
-
 //Constructor 
 MainGame::MainGame(std::string name)
 	: Scene(name)
@@ -15,8 +14,7 @@ MainGame::MainGame(std::string name)
 }
 
 //Initlize the scene
-void MainGame::InitScene(float windowWidth, float windowHeight)
-{
+void MainGame::InitScene(float windowWidth, float windowHeight){
 	//Dynamically allocates the register (so when you unload the scene when you switch between scenes
 	//you can later reInit this scene
 	m_sceneReg = new entt::registry;
@@ -498,7 +496,6 @@ void MainGame::InitScene(float windowWidth, float windowHeight)
 
 //Update the scene, every frame
 void MainGame::Update(){
-
 	if (objective == true) {
 		objective = false;
 
@@ -554,13 +551,15 @@ void MainGame::Update(){
 	//grab orange's physics body info
 	auto& orangetempPhysBod = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
 	b2Body* orangebody = orangetempPhysBod.GetBody();
-
 	
 	//add the change in time to the time since blue and orange last jumped (used to control jumping with platforms reseting jumps)
 	blueTimeSinceLastJump += Timer::deltaTime;
 	orangeTimeSinceLastJump += Timer::deltaTime;
 	//add the change in time to the time since a tag was triggered
 	timeSinceTagTriggered += Timer::deltaTime;
+	//add the change in time to the time since the player last slid
+	timeSinceSlideB += Timer::deltaTime;
+	timeSinceSlideO += Timer::deltaTime;
 
 	//apply gravity to both characters 
 	bluetempPhysBod.ApplyForce(vec3(0.f, -250.f * 60.f * Timer::deltaTime, 0.f));
@@ -716,7 +715,7 @@ void MainGame::Update(){
 	//printf("%f\n", 1.0 / Timer::deltaTime);
 }
 
-//to destroy the not it
+//to destroy the not it objective
 void MainGame::destroy(){
 	auto view = m_sceneReg->view<EntityIdentifier>();
 
@@ -730,8 +729,7 @@ void MainGame::destroy(){
 	}
 }
 
-void MainGame::createT(int ud)
-{
+void MainGame::createT(int ud){
 	if (ud == 4) {
 		{
 			auto& blue = ECS::GetComponent<Transform>(EntityIdentifier::MainPlayer());
@@ -854,8 +852,7 @@ void MainGame::destroyT(){
 }
 
 //keyboard key held down input
-void MainGame::KeyboardHold()
-{
+void MainGame::KeyboardHold(){
 	//vector with the force for the player's x movement
 	vec3 runforce = vec3(1000.f * 60.f * Timer::deltaTime, 0.f, 0.f);
 
@@ -865,14 +862,11 @@ void MainGame::KeyboardHold()
 	b2Body* bodyB = tempPhysBodB.GetBody();
 
 	//if Blue's player is pressing A, and their x-velocity isn't above the left cap, apply the run force to the left
-	if (Input::GetKey(Key::A) && bodyB->GetLinearVelocity().x > float32(-40.f)) {
-		tempPhysBodB.ApplyForce(-runforce);
-	}
-
+	if (Input::GetKey(Key::A) && bodyB->GetLinearVelocity().x > float32(-40.f) && !(Input::GetKey(Key::S)) ) {
+		tempPhysBodB.ApplyForce(-runforce);}
 	//if Blue's player is pressing D, and their x-velocity isn't above the right cap, apply the run force to the right
-	else if (Input::GetKey(Key::D) && bodyB->GetLinearVelocity().x < float32(40.f)) {
-		tempPhysBodB.ApplyForce(runforce);
-	}
+	else if (Input::GetKey(Key::D) && bodyB->GetLinearVelocity().x < float32(40.f) && !(Input::GetKey(Key::S)) ) {
+		tempPhysBodB.ApplyForce(runforce);}
 
 	//otherwise blue isn't moving on the x-axis
 	else {
@@ -910,14 +904,12 @@ void MainGame::KeyboardHold()
 	b2Body* bodyO = tempPhysBodO.GetBody();
 
 	//if Orange's player is pressing leftArrow, and their x-velocity isn't above the left cap, apply the run force to the left
-	if (Input::GetKey(Key::LeftArrow) && bodyO->GetLinearVelocity().x > float32(-40.f)) {
-		tempPhysBodO.ApplyForce(-runforce);
-	}
+	if (Input::GetKey(Key::LeftArrow) && bodyO->GetLinearVelocity().x > float32(-40.f)&& !(Input::GetKey(Key::DownArrow)) ) {
+		tempPhysBodO.ApplyForce(-runforce);}
 
 	//if Orange's player is pressing rightArrow, and their x-velocity isn't above the right cap, apply the run force to the right
-	else if (Input::GetKey(Key::RightArrow) && bodyO->GetLinearVelocity().x < float32(40.f)) {
-		tempPhysBodO.ApplyForce(runforce);
-	}
+	else if (Input::GetKey(Key::RightArrow) && bodyO->GetLinearVelocity().x < float32(40.f) && !(Input::GetKey(Key::DownArrow)) ) {
+		tempPhysBodO.ApplyForce(runforce);}
 
 	//otherwise Orange isn't moving on the x-axis
 	else {
@@ -963,7 +955,7 @@ void MainGame::KeyboardHold()
 			tempPhysBodB.ApplyForce(jump);
 		}
 	}
-
+	//SLINDING MECHANIC CODE
 	//if orange's player has pressed upArrow, and he can jump, make him jump
 	if (Input::GetKey(Key::UpArrow)) {
 		//Check if Orange can jump 
@@ -975,6 +967,40 @@ void MainGame::KeyboardHold()
 			tempPhysBodO.ApplyForce(jump);
 		}
 	}
+
+	if (Input::GetKey(Key::S)) {//crouch to lower hitbox for blue
+		tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
+		tempPhysBodB.SetHeight(1.f);}
+	
+	if (Input::GetKey(Key::DownArrow)) {//crouch to lower hitbox for orange
+		tempPhysBodO.SetCenterOffset(vec2(0.f, -1.5f));
+		tempPhysBodO.SetHeight(1.5f);}
+
+
+	if ((Input::GetKey(Key::S) && Input::GetKeyDown(Key::D)) && timeSinceSlideB > 1.f) { //sliding left for blue 
+		tempPhysBodB.ApplyForce(vec3(9000.f, 0.f, 0.f));
+		timeSinceSlideB = 0.f;}
+	else if ((Input::GetKey(Key::S) && Input::GetKeyDown(Key::A)) && timeSinceSlideB > 1.f) {
+		tempPhysBodB.ApplyForce(vec3(-6000.f, 0.f, 0.f));
+		timeSinceSlideB = 0.f;}
+
+	if ((Input::GetKey(Key::DownArrow) && Input::GetKeyDown(Key::RightArrow)) && timeSinceSlideO > 1.f) { //sliding for blue
+		tempPhysBodO.ApplyForce(vec3(6000.f, 0.f, 0.f));
+		timeSinceSlideO = 0.f;}
+	else if ((Input::GetKey(Key::DownArrow) && Input::GetKeyDown(Key::LeftArrow)) && timeSinceSlideO > 1.f) { //sliding for blue
+		tempPhysBodO.ApplyForce(vec3(-6000.f, 0.f, 0.f));
+		timeSinceSlideO = 0.f;}
+
+	if (Input::GetKeyUp(Key::S)) { //resets player hitbox to original size after key is released
+		tempPhysBodB.SetCenterOffset(vec2(0.f, 0.f));
+		tempPhysBodB.SetHeight(6.f);}
+
+	if (Input::GetKeyUp(Key::DownArrow)) { //resets player hitbox to original size after key is released
+		tempPhysBodO.SetCenterOffset(vec2(0.f, 0.f));
+		tempPhysBodO.SetHeight(6.f);}
+
+
+
 }
 
 //keyboard key first pressed input

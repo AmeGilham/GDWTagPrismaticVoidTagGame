@@ -955,7 +955,8 @@ void MainGame::KeyboardHold(){
 			tempPhysBodB.ApplyForce(jump);
 		}
 	}
-	//SLINDING MECHANIC CODE
+	
+	//SLIDING MECHANIC CODE
 	//if orange's player has pressed upArrow, and he can jump, make him jump
 	if (Input::GetKey(Key::UpArrow)) {
 		//Check if Orange can jump 
@@ -970,7 +971,7 @@ void MainGame::KeyboardHold(){
 
 	if (Input::GetKey(Key::S)) {//crouch to lower hitbox for blue
 		tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
-		tempPhysBodB.SetHeight(1.f);}
+		tempPhysBodB.SetHeight(1.5f);}
 	
 	if (Input::GetKey(Key::DownArrow)) {//crouch to lower hitbox for orange
 		tempPhysBodO.SetCenterOffset(vec2(0.f, -1.5f));
@@ -978,27 +979,26 @@ void MainGame::KeyboardHold(){
 
 
 	if ((Input::GetKey(Key::S) && Input::GetKeyDown(Key::D)) && timeSinceSlideB > 1.f) { //sliding left for blue 
-		tempPhysBodB.ApplyForce(vec3(9000.f, 0.f, 0.f));
+		tempPhysBodB.ApplyForce(vec3(6000.f, 0.f, 0.f));
 		timeSinceSlideB = 0.f;}
 	else if ((Input::GetKey(Key::S) && Input::GetKeyDown(Key::A)) && timeSinceSlideB > 1.f) {
 		tempPhysBodB.ApplyForce(vec3(-6000.f, 0.f, 0.f));
 		timeSinceSlideB = 0.f;}
 
-	if ((Input::GetKey(Key::DownArrow) && Input::GetKeyDown(Key::RightArrow)) && timeSinceSlideO > 1.f) { //sliding for blue
+	if ((Input::GetKey(Key::DownArrow) && Input::GetKeyDown(Key::RightArrow)) && timeSinceSlideO > 1.f) { //sliding for orange
 		tempPhysBodO.ApplyForce(vec3(6000.f, 0.f, 0.f));
 		timeSinceSlideO = 0.f;}
-	else if ((Input::GetKey(Key::DownArrow) && Input::GetKeyDown(Key::LeftArrow)) && timeSinceSlideO > 1.f) { //sliding for blue
+	else if ((Input::GetKey(Key::DownArrow) && Input::GetKeyDown(Key::LeftArrow)) && timeSinceSlideO > 1.f) { //sliding for orange
 		tempPhysBodO.ApplyForce(vec3(-6000.f, 0.f, 0.f));
 		timeSinceSlideO = 0.f;}
 
-	if (Input::GetKeyUp(Key::S)) { //resets player hitbox to original size after key is released
+	if (Input::GetKeyUp(Key::S)) { //resets player hitbox to original size after key is released for blue
 		tempPhysBodB.SetCenterOffset(vec2(0.f, 0.f));
 		tempPhysBodB.SetHeight(6.f);}
 
-	if (Input::GetKeyUp(Key::DownArrow)) { //resets player hitbox to original size after key is released
+	if (Input::GetKeyUp(Key::DownArrow)) { //resets player hitbox to original size after key is released for orange
 		tempPhysBodO.SetCenterOffset(vec2(0.f, 0.f));
 		tempPhysBodO.SetHeight(6.f);}
-
 
 
 }

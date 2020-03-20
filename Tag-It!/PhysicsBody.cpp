@@ -300,6 +300,7 @@ PhysicsBody::PhysicsBody(b2Body * body, float radius, vec2 centerOffset, bool is
 	InitBody();
 }
 
+//box
 PhysicsBody::PhysicsBody(b2Body * body, float width, float height, vec2 centerOffset, bool isDynamic)
 {
 	b2PolygonShape tempShape;

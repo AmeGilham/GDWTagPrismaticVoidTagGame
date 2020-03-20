@@ -86,8 +86,7 @@ bool Game::Run()
 	return true;
 }
 
-void Game::Update()
-{
+void Game::Update(){
 	//Update timer
 	Timer::Update();
 	//Update the backend
@@ -114,8 +113,7 @@ void Game::GUI()
 	UI::End();
 }
 
-void Game::CheckEvents()
-{
+void Game::CheckEvents(){
 	if (m_close)
 		m_window->Close();
 
@@ -195,6 +193,7 @@ void Game::MouseClick(SDL_MouseButtonEvent evnt)
 	//mouse click
 	m_activeScene->MouseClick(evnt);
 
+	//menu switching code (level selector to game\level 1 )
 	if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 119.f && float(evnt.x) <= 799.f) && (float(evnt.y) >= 137.f && float(evnt.y) <= 541.f) && (m_activeScene == m_scenes[1])) {
 		printf("\n LEVEL SELECT \n");
 		m_activeScene->Unload();
@@ -203,7 +202,7 @@ void Game::MouseClick(SDL_MouseButtonEvent evnt)
 		m_register = m_activeScene->GetScene();
 	}
 
-	//menu switching code
+	//main menu to level selector
 	/*else if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 393.f && float(evnt.x) <= 527.f) && (float(evnt.y) >= 307.f && float(evnt.y) <= 373.f) && (m_activeScene == m_scenes[0])) {
 		printf("\n CLICKED");
 		m_activeScene->Unload();

@@ -857,6 +857,7 @@ void MainGame::KeyboardHold(){
 	vec3 runforce = vec3(1000.f * 60.f * Timer::deltaTime, 0.f, 0.f);
 
 	//grab a reference to blue's physics body
+	auto tempPhysBodB2 = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
 	auto& tempPhysBodB = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
 	//create a pointer to Blue's box2d body
 	b2Body* bodyB = tempPhysBodB.GetBody();
@@ -971,16 +972,41 @@ void MainGame::KeyboardHold(){
 
 	if (Input::GetKey(Key::S)) {//crouch to lower hitbox for blue
 		tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
-		tempPhysBodB.SetHeight(1.5f);}
+		tempPhysBodB.SetHeight(2.f);
+
+		//recreating the box2d collision box
+		b2PolygonShape tempShape;
+
+		tempShape.SetAsBox(float32(tempPhysBodB.GetWidth() / 2.f), float32(tempPhysBodB.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
+		b2FixtureDef fix;
+		fix.shape = &tempShape;
+		fix.density = 0.08f;
+		fix.friction = 0.2f;//0.3f
+		bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
+		bodyB->CreateFixture(&fix); //recreates it with smaller hitbox
+	}
 	
 	if (Input::GetKey(Key::DownArrow)) {//crouch to lower hitbox for orange
 		tempPhysBodO.SetCenterOffset(vec2(0.f, -1.5f));
-		tempPhysBodO.SetHeight(1.5f);}
+		tempPhysBodO.SetHeight(2.f);
+		//recreating the box2d collision box
+		b2PolygonShape tempShape;
+		tempShape.SetAsBox(float32(tempPhysBodO.GetWidth() / 2.f), float32(tempPhysBodO.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodO.GetCenterOffset().x), float32(tempPhysBodO.GetCenterOffset().y)), float32(0.f));
+
+		b2FixtureDef fix;
+		fix.shape = &tempShape;
+		fix.density = 0.08f;
+		fix.friction = 0.2f;//0.3f
+		bodyO->DestroyFixture(bodyO->GetFixtureList());
+		bodyO->CreateFixture(&fix);
+	}
 
 
 	if ((Input::GetKey(Key::S) && Input::GetKeyDown(Key::D)) && timeSinceSlideB > 1.f) { //sliding left for blue 
 		tempPhysBodB.ApplyForce(vec3(6000.f, 0.f, 0.f));
-		timeSinceSlideB = 0.f;}
+		timeSinceSlideB = 0.f;
+		
+	}
 	else if ((Input::GetKey(Key::S) && Input::GetKeyDown(Key::A)) && timeSinceSlideB > 1.f) {
 		tempPhysBodB.ApplyForce(vec3(-6000.f, 0.f, 0.f));
 		timeSinceSlideB = 0.f;}
@@ -994,11 +1020,37 @@ void MainGame::KeyboardHold(){
 
 	if (Input::GetKeyUp(Key::S)) { //resets player hitbox to original size after key is released for blue
 		tempPhysBodB.SetCenterOffset(vec2(0.f, 0.f));
-		tempPhysBodB.SetHeight(6.f);}
+		tempPhysBodB.SetHeight(6.f);
+
+		//recreating the box2d collision box
+		b2PolygonShape tempShape;
+		float shrinkY = tempPhysBodB.GetWidth() / 6.f;
+
+		tempShape.SetAsBox(float32(tempPhysBodB.GetWidth() / 2.f), float32(tempPhysBodB.GetHeight() /2.f), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
+
+		b2FixtureDef fix;
+		fix.shape = &tempShape;
+		fix.density = 0.08f;
+		fix.friction = 0.2f;//0.3f
+		bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
+		bodyB->CreateFixture(&fix); //should recreate it with original hitbox
+	}
 
 	if (Input::GetKeyUp(Key::DownArrow)) { //resets player hitbox to original size after key is released for orange
 		tempPhysBodO.SetCenterOffset(vec2(0.f, 0.f));
-		tempPhysBodO.SetHeight(6.f);}
+		tempPhysBodO.SetHeight(6.f);
+
+		//recreating the box2d collision box
+		b2PolygonShape tempShape;
+		tempShape.SetAsBox(float32(tempPhysBodO.GetWidth() / 2.f), float32(tempPhysBodO.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodO.GetCenterOffset().x), float32(tempPhysBodO.GetCenterOffset().y)), float32(0.f));
+
+		b2FixtureDef fix;
+		fix.shape = &tempShape;
+		fix.density = 0.08f;
+		fix.friction = 0.2f;//0.3f
+		bodyO->DestroyFixture(bodyO->GetFixtureList());
+		bodyO->CreateFixture(&fix);
+	}
 
 
 }

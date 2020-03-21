@@ -118,24 +118,24 @@ void MainGame::InitScene(float windowWidth, float windowHeight){
 			ECS::AttachComponent<Spawn>(entity);
 
 			//Sets up components
-			std::string fileName = "orange.png"; //set the default sprite sheet to be Orange's
-			if (i == 0) fileName = "blue.png"; //if the first player is being created, make it blue
+			std::string fileName = "orange sprites.png"; //set the default sprite sheet to be Orange's
+			if (i == 0) fileName = "blue sprites.png"; //if the first player is being created, make it blue
 			//grab a reference to the animation controler
 			auto& animController = ECS::GetComponent<AnimationController>(entity);
 			//set the spritesheet 
 			animController.InitUVs(fileName);
 
 			//setup the sprite and transform compoments 
-			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 6, 6, true, &animController);
-			ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 2.5f, 99.f + 0.1f * i));
+			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 10, 10, true, &animController);
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 2.5f, 25.f + 0.1f * i));
 
 			//grab references to the sprite and physic body compoments
 			auto& tempSpr = ECS::GetComponent<Sprite>(entity);
 			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
 
 			//calculate the area of the sprite that shouldn't have a physics body attached (empty space, ponytail/necklace, etc.)
-			float shrinkX = tempSpr.GetWidth() / 3.f;
-			float shrinkY = tempSpr.GetWidth() / 6.f;
+			float shrinkX = tempSpr.GetWidth() / 1.5f;
+			float shrinkY = tempSpr.GetWidth() / 2.f;
 
 			//setup the dynamic box2d physics body
 			b2Body* tempBody;
@@ -157,12 +157,15 @@ void MainGame::InitScene(float windowWidth, float windowHeight){
 			else tempBody->SetUserData(&orange); //orange
 
 			//add their animations, and make sure they're set to be repeating
-			animController.AddAnimation(moving["runLeft"]);
-			animController.GetAnimation(0).SetRepeating(true);
-			animController.AddAnimation(moving["runLeft"]);
-			animController.GetAnimation(1).SetRepeating(true);
-			animController.AddAnimation(moving["runRight"]);
-			animController.GetAnimation(2).SetRepeating(true);
+			animController.AddAnimation(Animation());
+			auto& anim0 = animController.GetAnimation(0);
+			createAnimation(&anim0, 0, 0, 600, 600, 6, false, 0.083f, true);
+			animController.AddAnimation(Animation());
+			auto& anim1 = animController.GetAnimation(1);
+			createAnimation(&anim1, 0, 0, 600, 600, 6, false, 0.083f, true);
+			animController.AddAnimation(Animation());
+			auto& anim2 = animController.GetAnimation(2);
+			createAnimation(&anim2, 0, 0, 600, 600, 6, true, 0.083f, true);
 
 			//set the active animations so that they're facing the right direction when they spawn
 			if (i == 0) animController.SetActiveAnim(2);
@@ -562,8 +565,8 @@ void MainGame::Update(){
 	timeSinceSlideO += Timer::deltaTime;
 
 	//apply gravity to both characters 
-	bluetempPhysBod.ApplyForce(vec3(0.f, -250.f * 60.f * Timer::deltaTime, 0.f));
-	orangetempPhysBod.ApplyForce(vec3(0.f, -250.f * 60.f * Timer::deltaTime, 0.f));
+	bluetempPhysBod.ApplyForce(vec3(0.f, -300.f * 60.f * Timer::deltaTime, 0.f));
+	orangetempPhysBod.ApplyForce(vec3(0.f, -300.f * 60.f * Timer::deltaTime, 0.f));
 
 	if (timeSinceTagTriggered > 0.083f && tagExists) {
 		destroyT();
@@ -712,7 +715,7 @@ void MainGame::Update(){
 		ECS::GetComponent<Transform>(bombs[2]).SetPosition(vec3(17.f - (8.f * timeLeftRatio), -16.8f, 98.8f));
 	}
 
-	//printf("%f\n", 1.0 / Timer::deltaTime);
+	printf("%f\n", 1.0 / Timer::deltaTime);
 }
 
 //to destroy the not it objective

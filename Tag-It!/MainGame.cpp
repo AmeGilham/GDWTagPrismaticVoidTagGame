@@ -174,6 +174,11 @@ void MainGame::InitScene(float windowWidth, float windowHeight){
 			//Sets up the Identifier
 			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::AnimationBit() | EntityIdentifier::PhysicsBit();
 			ECS::SetUpIdentifier(entity, bitHolder, "Player " + std::to_string(i + 1));
+			std::cout << " ORIINAL "   << tempPhsBody.GetHeight() << std::endl;
+			std::cout << " ORIINAL X " << tempPhsBody.GetCenterOffset().x << std::endl;
+			std::cout << " ORIINAL Y " << tempPhsBody.GetCenterOffset().y << std::endl;
+
+
 			//if it's blue
 			if (i == 0)
 			{
@@ -715,7 +720,7 @@ void MainGame::Update(){
 		ECS::GetComponent<Transform>(bombs[2]).SetPosition(vec3(17.f - (8.f * timeLeftRatio), -16.8f, 98.8f));
 	}
 
-	printf("%f\n", 1.0 / Timer::deltaTime);
+	//printf("%f\n", 1.0 / Timer::deltaTime);
 }
 
 //to destroy the not it objective
@@ -960,7 +965,6 @@ void MainGame::KeyboardHold(){
 		}
 	}
 	
-	//SLIDING MECHANIC CODE
 	//if orange's player has pressed upArrow, and he can jump, make him jump
 	if (Input::GetKey(Key::UpArrow)) {
 		//Check if Orange can jump 
@@ -973,87 +977,85 @@ void MainGame::KeyboardHold(){
 		}
 	}
 
-	if (Input::GetKey(Key::S)) {//crouch to lower hitbox for blue
+	//SLIDING MECHANIC CODE
+	if (Input::GetKeyDown(Key::S)) {//crouch to lower hitbox for blue
 		tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
 		tempPhysBodB.SetHeight(2.f);
 
 		//recreating the box2d collision box
 		b2PolygonShape tempShape;
-
-		tempShape.SetAsBox(float32(tempPhysBodB.GetWidth() / 2.f), float32(tempPhysBodB.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
+		tempShape.SetAsBox(float32(tempPhysBodB.GetWidth()/2.f), float32(tempPhysBodB.GetHeight()/2.f ), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
 		b2FixtureDef fix;
+
 		fix.shape = &tempShape;
 		fix.density = 0.08f;
-		fix.friction = 0.2f;//0.3f
+		fix.friction = 0.35f;//0.3f
 		bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
 		bodyB->CreateFixture(&fix); //recreates it with smaller hitbox
 	}
 	
-	if (Input::GetKey(Key::DownArrow)) {//crouch to lower hitbox for orange
+	if (Input::GetKeyDown(Key::DownArrow)) {//crouch to lower hitbox for orange
 		tempPhysBodO.SetCenterOffset(vec2(0.f, -1.5f));
 		tempPhysBodO.SetHeight(2.f);
 		//recreating the box2d collision box
 		b2PolygonShape tempShape;
-		tempShape.SetAsBox(float32(tempPhysBodO.GetWidth() / 2.f), float32(tempPhysBodO.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodO.GetCenterOffset().x), float32(tempPhysBodO.GetCenterOffset().y)), float32(0.f));
+		tempShape.SetAsBox(float32(tempPhysBodO.GetWidth()/2.f), float32(tempPhysBodO.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodO.GetCenterOffset().x), float32(tempPhysBodO.GetCenterOffset().y)), float32(0.f));
 
 		b2FixtureDef fix;
 		fix.shape = &tempShape;
 		fix.density = 0.08f;
-		fix.friction = 0.2f;//0.3f
+		fix.friction = 0.35f;//0.3f
 		bodyO->DestroyFixture(bodyO->GetFixtureList());
 		bodyO->CreateFixture(&fix);
 	}
 
-
 	if ((Input::GetKey(Key::S) && Input::GetKeyDown(Key::D)) && timeSinceSlideB > 1.f) { //sliding left for blue 
-		tempPhysBodB.ApplyForce(vec3(6000.f, 0.f, 0.f));
-		timeSinceSlideB = 0.f;
-		
-	}
+		//tempPhysBodB.ApplyForce(vec3(5000.f, 0.f, 0.f));
+		tempPhysBodB.ApplyForce(runforce*4.f);
+		timeSinceSlideB = 0.f;}
 	else if ((Input::GetKey(Key::S) && Input::GetKeyDown(Key::A)) && timeSinceSlideB > 1.f) {
-		tempPhysBodB.ApplyForce(vec3(-6000.f, 0.f, 0.f));
+		tempPhysBodB.ApplyForce(vec3(-5000.f, 0.f, 0.f));
 		timeSinceSlideB = 0.f;}
 
 	if ((Input::GetKey(Key::DownArrow) && Input::GetKeyDown(Key::RightArrow)) && timeSinceSlideO > 1.f) { //sliding for orange
-		tempPhysBodO.ApplyForce(vec3(6000.f, 0.f, 0.f));
+		tempPhysBodO.ApplyForce(vec3(5000.f, 0.f, 0.f));
 		timeSinceSlideO = 0.f;}
 	else if ((Input::GetKey(Key::DownArrow) && Input::GetKeyDown(Key::LeftArrow)) && timeSinceSlideO > 1.f) { //sliding for orange
-		tempPhysBodO.ApplyForce(vec3(-6000.f, 0.f, 0.f));
+		tempPhysBodO.ApplyForce(vec3(-5000.f, 0.f, 0.f));
 		timeSinceSlideO = 0.f;}
 
 	if (Input::GetKeyUp(Key::S)) { //resets player hitbox to original size after key is released for blue
-		tempPhysBodB.SetCenterOffset(vec2(0.f, 0.f));
-		tempPhysBodB.SetHeight(6.f);
+		tempPhysBodB.SetCenterOffset ( vec2(0.f, 0.f) );
+		tempPhysBodB.SetHeight(5.f);
 
 		//recreating the box2d collision box
 		b2PolygonShape tempShape;
-		float shrinkY = tempPhysBodB.GetWidth() / 6.f;
-
-		tempShape.SetAsBox(float32(tempPhysBodB.GetWidth() / 2.f), float32(tempPhysBodB.GetHeight() /2.f), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
-
+		tempShape.SetAsBox( float32 (tempPhysBodB.GetWidth()/2.f ), float32( tempPhysBodB.GetHeight() /2.f), b2Vec2 ( float32 (tempPhysBodB.GetCenterOffset().x), float32 (tempPhysBodB.GetCenterOffset().y) ), float32(0.f) );
+		std::cout << tempPhysBodB.GetHeight() << std::endl;
+		
 		b2FixtureDef fix;
 		fix.shape = &tempShape;
 		fix.density = 0.08f;
-		fix.friction = 0.2f;//0.3f
+		fix.friction = 0.35f;
+		
 		bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
 		bodyB->CreateFixture(&fix); //should recreate it with original hitbox
 	}
 
 	if (Input::GetKeyUp(Key::DownArrow)) { //resets player hitbox to original size after key is released for orange
 		tempPhysBodO.SetCenterOffset(vec2(0.f, 0.f));
-		tempPhysBodO.SetHeight(6.f);
+		tempPhysBodO.SetHeight(5.f);
 
 		//recreating the box2d collision box
 		b2PolygonShape tempShape;
-		tempShape.SetAsBox(float32(tempPhysBodO.GetWidth() / 2.f), float32(tempPhysBodO.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodO.GetCenterOffset().x), float32(tempPhysBodO.GetCenterOffset().y)), float32(0.f));
+		tempShape.SetAsBox(float32(tempPhysBodO.GetWidth()/2.f ), float32(tempPhysBodO.GetHeight()/2.f ), b2Vec2(float32(tempPhysBodO.GetCenterOffset().x), float32(tempPhysBodO.GetCenterOffset().y)), float32(0.f));
 
 		b2FixtureDef fix;
 		fix.shape = &tempShape;
 		fix.density = 0.08f;
-		fix.friction = 0.2f;//0.3f
+		fix.friction = 0.35f;//0.3f
 		bodyO->DestroyFixture(bodyO->GetFixtureList());
-		bodyO->CreateFixture(&fix);
-	}
+		bodyO->CreateFixture(&fix);}
 
 
 }

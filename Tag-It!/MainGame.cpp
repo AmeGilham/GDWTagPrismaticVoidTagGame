@@ -118,15 +118,15 @@ void MainGame::InitScene(float windowWidth, float windowHeight){
 			ECS::AttachComponent<Spawn>(entity);
 
 			//Sets up components
-			std::string fileName = "orange sprites.png"; //set the default sprite sheet to be Orange's
-			if (i == 0) fileName = "blue sprites.png"; //if the first player is being created, make it blue
+			std::string fileName = "orange 2.png"; //set the default sprite sheet to be Orange's
+			if (i == 0) fileName = "blue 2.png"; //if the first player is being created, make it blue
 			//grab a reference to the animation controler
 			auto& animController = ECS::GetComponent<AnimationController>(entity);
 			//set the spritesheet 
 			animController.InitUVs(fileName);
 
 			//setup the sprite and transform compoments 
-			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 10, 10, true, &animController);
+			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 17, 17, true, &animController);
 			ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 2.5f, 25.f + 0.1f * i));
 
 			//grab references to the sprite and physic body compoments
@@ -134,8 +134,8 @@ void MainGame::InitScene(float windowWidth, float windowHeight){
 			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
 
 			//calculate the area of the sprite that shouldn't have a physics body attached (empty space, ponytail/necklace, etc.)
-			float shrinkX = tempSpr.GetWidth() / 1.5f;
-			float shrinkY = tempSpr.GetWidth() / 2.f;
+			float shrinkX = tempSpr.GetWidth() / 1.25f;
+			float shrinkY = tempSpr.GetWidth() / 1.45f;
 
 			//setup the dynamic box2d physics body
 			b2Body* tempBody;
@@ -157,19 +157,22 @@ void MainGame::InitScene(float windowWidth, float windowHeight){
 			else tempBody->SetUserData(&orange); //orange
 
 			//add their animations, and make sure they're set to be repeating
-			animController.AddAnimation(Animation());
-			auto& anim0 = animController.GetAnimation(0);
-			createAnimation(&anim0, 0, 0, 600, 600, 6, false, 0.083f, true);
-			animController.AddAnimation(Animation());
-			auto& anim1 = animController.GetAnimation(1);
-			createAnimation(&anim1, 0, 0, 600, 600, 6, false, 0.083f, true);
-			animController.AddAnimation(Animation());
-			auto& anim2 = animController.GetAnimation(2);
-			createAnimation(&anim2, 0, 0, 600, 600, 6, true, 0.083f, true);
+			animController.AddAnimation(Animation());//0
+			auto& idleLeft = animController.GetAnimation(0);
+			createAnimation(&idleLeft, 0, 0, 250, 250, 6, false, 0.083f, true);
+			animController.AddAnimation(Animation());//1
+			auto& idleRight = animController.GetAnimation(1);
+			createAnimation(&idleRight, 0, 0, 250, 250, 6, true, 0.083f, true);
+			animController.AddAnimation(Animation());//2
+			auto& runLeft = animController.GetAnimation(2);
+			createAnimation(&runLeft, 0, 250, 250, 250, 6, false, 0.083f, true);
+			animController.AddAnimation(Animation());//3
+			auto& runRight = animController.GetAnimation(3);
+			createAnimation(&runRight, 0, 250, 250, 250, 6, true, 0.083f, true);
 
 			//set the active animations so that they're facing the right direction when they spawn
-			if (i == 0) animController.SetActiveAnim(2);
-			else animController.SetActiveAnim(1);
+			if (i == 0) animController.SetActiveAnim(1);
+			else animController.SetActiveAnim(0);
 
 			//Sets up the Identifier
 			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::AnimationBit() | EntityIdentifier::PhysicsBit();
@@ -867,10 +870,14 @@ void MainGame::KeyboardHold(){
 
 	//if Blue's player is pressing A, and their x-velocity isn't above the left cap, apply the run force to the left
 	if (Input::GetKey(Key::A) && bodyB->GetLinearVelocity().x > float32(-40.f) && !(Input::GetKey(Key::S)) ) {
-		tempPhysBodB.ApplyForce(-runforce);}
+		tempPhysBodB.ApplyForce(-runforce);
+		ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer()).SetActiveAnim(2);
+	}
 	//if Blue's player is pressing D, and their x-velocity isn't above the right cap, apply the run force to the right
 	else if (Input::GetKey(Key::D) && bodyB->GetLinearVelocity().x < float32(40.f) && !(Input::GetKey(Key::S)) ) {
-		tempPhysBodB.ApplyForce(runforce);}
+		tempPhysBodB.ApplyForce(runforce);
+		ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer()).SetActiveAnim(3);
+	}
 
 	//otherwise blue isn't moving on the x-axis
 	else {
@@ -885,6 +892,7 @@ void MainGame::KeyboardHold(){
 			//otherwise it's between 0 and 5, so just set it to 0
 			else {
 				bodyB->SetLinearVelocity(b2Vec2(0, bodyB->GetLinearVelocity().y));
+				ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer()).SetActiveAnim(1);
 			}
 		}
 		//and if she's still moving left, add velocity to her motion (bringing her to 0 and thus not moving)
@@ -898,6 +906,7 @@ void MainGame::KeyboardHold(){
 			//otherwise it's between -5 and 0, so just set it to 0
 			else {
 				bodyB->SetLinearVelocity(b2Vec2(0, bodyB->GetLinearVelocity().y));
+				ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer()).SetActiveAnim(0);
 			}
 		}
 	}
@@ -909,11 +918,15 @@ void MainGame::KeyboardHold(){
 
 	//if Orange's player is pressing leftArrow, and their x-velocity isn't above the left cap, apply the run force to the left
 	if (Input::GetKey(Key::LeftArrow) && bodyO->GetLinearVelocity().x > float32(-40.f)&& !(Input::GetKey(Key::DownArrow)) ) {
-		tempPhysBodO.ApplyForce(-runforce);}
+		tempPhysBodO.ApplyForce(-runforce);
+		ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer()).SetActiveAnim(2);
+	}
 
 	//if Orange's player is pressing rightArrow, and their x-velocity isn't above the right cap, apply the run force to the right
 	else if (Input::GetKey(Key::RightArrow) && bodyO->GetLinearVelocity().x < float32(40.f) && !(Input::GetKey(Key::DownArrow)) ) {
-		tempPhysBodO.ApplyForce(runforce);}
+		tempPhysBodO.ApplyForce(runforce);
+		ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer()).SetActiveAnim(3);
+	}
 
 	//otherwise Orange isn't moving on the x-axis
 	else {
@@ -928,6 +941,7 @@ void MainGame::KeyboardHold(){
 			//otherwise it's between 0 and 5, so just set it to 0
 			else {
 				bodyO->SetLinearVelocity(b2Vec2(0, bodyO->GetLinearVelocity().y));
+				ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer()).SetActiveAnim(1);
 			}
 		}
 		//and if he's still moving left, add velocity to his motion (bringing him to 0 and thus not moving)
@@ -941,6 +955,7 @@ void MainGame::KeyboardHold(){
 			//otherwise it's between -5 and 0, so just set it to 0
 			else {
 				bodyO->SetLinearVelocity(b2Vec2(0, bodyO->GetLinearVelocity().y));
+				ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer()).SetActiveAnim(0);
 			}
 		}
 	}
@@ -1072,31 +1087,30 @@ void MainGame::KeyboardDown(){
 	}
 	
 	//animations
-	if (Input::GetKeyDown(Key::D)){
-		auto& animController = ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer());
+	auto& blueAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer());
+	auto& OrangeAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer());
+
+	if (Input::GetKeyDown(Key::D) && (blueAnimController.GetActiveAnim() != 1 || blueAnimController.GetActiveAnim() != 3)){
 		//Sets active animation
-		animController.SetActiveAnim(2);
+		blueAnimController.SetActiveAnim(1);
 		bright = true;
 	}
 
-	if (Input::GetKeyDown(Key::A)){
-		auto& animController = ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer());
+	if (Input::GetKeyDown(Key::A) && (blueAnimController.GetActiveAnim() != 0 || blueAnimController.GetActiveAnim() != 2)){
 		//Sets active animation
-		animController.SetActiveAnim(1);
+		blueAnimController.SetActiveAnim(0);
 		bright = false;
 	}
 
-	if (Input::GetKeyDown(Key::RightArrow)) {
-		auto& animController = ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer());
+	if (Input::GetKeyDown(Key::RightArrow) && (OrangeAnimController.GetActiveAnim() != 1 || OrangeAnimController.GetActiveAnim() != 3)) {
 		//Sets active animation
-		animController.SetActiveAnim(2);
+		OrangeAnimController.SetActiveAnim(1);
 		oright = true;
 	}
 	
-	if (Input::GetKeyDown(Key::LeftArrow)) {
-		auto& animController = ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer());
+	if (Input::GetKeyDown(Key::LeftArrow) && (OrangeAnimController.GetActiveAnim() != 0 || OrangeAnimController.GetActiveAnim() != 2)) {
 		//Sets active animation
-		animController.SetActiveAnim(1);
+		OrangeAnimController.SetActiveAnim(0);
 		oright = false;
 	}
 }

@@ -54,7 +54,6 @@ public:
 	void KeyboardHold();
 	void KeyboardDown();
 	void KeyboardUp();
-	int GetLevel();
 	//Mouse input
 	void MouseMotion(SDL_MouseMotionEvent evnt);
 	void MouseClick(SDL_MouseButtonEvent evnt);
@@ -83,7 +82,7 @@ private:
 	bool m_motion = false;
 	bool m_click = false;
 	bool m_wheel = false;
-	int level;
+	int level=0;
 	
 };
 

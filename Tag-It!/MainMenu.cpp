@@ -90,8 +90,7 @@ void MainMenu::MouseClick(SDL_MouseButtonEvent evnt) { //mouse click
 //mouse motion
 void MainMenu::MouseMotion(SDL_MouseMotionEvent evnt) {
 
-    if ((float(evnt.x) >= 393.f && float(evnt.x) <= 527.f) && (float(evnt.y) >= 307.f && float(evnt.y) <= 373.f)) {
-        //SetScene(m_menu);
+    if ((float(evnt.x) >= 856.f && float(evnt.x) <= 1063.f) && (float(evnt.y) >= 492.f && float(evnt.y) <= 590.f)) {
         printf("MOVED");
         auto& spr = ECS::GetComponent<Sprite>(EntityIdentifier::MainPlayer());
         std::string fileName = "play2.png";
@@ -101,8 +100,7 @@ void MainMenu::MouseMotion(SDL_MouseMotionEvent evnt) {
     else {
         auto& spr = ECS::GetComponent<Sprite>(EntityIdentifier::MainPlayer());
         std::string fileName = "play.png";
-        spr.LoadSprite(fileName, 10, 5);
-    }
+        spr.LoadSprite(fileName, 10, 5);}
 
 
 

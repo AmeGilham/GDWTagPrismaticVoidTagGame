@@ -22,6 +22,9 @@ public:
 	void createT(int ud);
 	void destroyT();
 
+	void level1(float windowWidth, float windowHeight);
+	void level2(float windowWidth, float windowHeight);
+
 	//Gamepad input
 	void GamepadStroke(XInputController* con) override;
 	void GamepadStick(XInputController* con) override;

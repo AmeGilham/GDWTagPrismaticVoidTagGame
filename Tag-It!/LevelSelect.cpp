@@ -34,7 +34,7 @@ void LevelSelect::InitScene(float windowWidth, float windowHeight) {
         ECS::SetIsMainCamera(entity, true);
     }
 
-    //setup for the backdrop (static, not the flow of the water)
+    //setup for level 1 (waterfall)
     {
         //Creates entity
         auto entity = ECS::CreateEntity();
@@ -47,36 +47,71 @@ void LevelSelect::InitScene(float windowWidth, float windowHeight) {
         std::string fileName = "screenshot.png";
 
         //sets up sprite and transform components
-        ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 50, 30);
-        ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 0.f));
+        ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 25, 15);
+        ECS::GetComponent<Transform>(entity).SetPosition(vec3(-15.f, 0.f, 0.f));
 
         //Setup indentifier
         unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
-        ECS::SetUpIdentifier(entity, bitHolder, "Play Button");
+        ECS::SetUpIdentifier(entity, bitHolder, "Level 1");
         ECS::SetIsMainPlayer(entity, true);
     }
 
+    //setup level 2 (tbd)
+    {
+        //Creates entity
+        auto entity = ECS::CreateEntity();
+
+        //Adds components
+        ECS::AttachComponent<Sprite>(entity);
+        ECS::AttachComponent<Transform>(entity);
+
+        //sets up components
+        std::string fileName = "screenshot.png";
+
+        //sets up sprite and transform components
+        ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 25, 15);
+        ECS::GetComponent<Transform>(entity).SetPosition(vec3(15.f, 0.f, 0.f));
+
+        //Setup indentifier
+        unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
+        ECS::SetUpIdentifier(entity, bitHolder, "Level 2");
+        ECS::SetIsSecondPlayer(entity, true);
+    }
 
 }
 
 void LevelSelect::MouseClick(SDL_MouseButtonEvent evnt) {
-    //printf("Mouse moved (%f, %f)\n", float(evnt.x), float(evnt.y));
+    printf("Mouse moved (%f, %f)\n", float(evnt.x), float(evnt.y));
 }
 
 void LevelSelect::MouseMotion(SDL_MouseMotionEvent evnt) {
-    if ((float(evnt.x) >= 119.f && float(evnt.x) <= 799.f) && (float(evnt.y) >= 137.f && float(evnt.y) <= 541.f)) {
-        //SetScene(m_menu);
-        printf("MOVED");
+    if ((float(evnt.x) >= 366.f && float(evnt.x) <= 906.f) && (float(evnt.y) >= 377.f && float(evnt.y) <= 701.f)) {
+      //  printf("MOVED");
         auto& spr = ECS::GetComponent<Sprite>(EntityIdentifier::MainPlayer());
-        std::string fileName = "screenshot.png";
-        spr.LoadSprite(fileName, 50, 30);
+        std::string fileName = "level1H.png";
+        spr.LoadSprite(fileName, 25, 15);
     }
 
     else {
         auto& spr = ECS::GetComponent<Sprite>(EntityIdentifier::MainPlayer());
-        std::string fileName = "BG.jpg";
-        spr.LoadSprite(fileName, 50, 30);
+        std::string fileName = "screenshot.png";
+        spr.LoadSprite(fileName, 25, 15);
     }
+
+
+    if ((float(evnt.x) >= 1014.f && float(evnt.x) <= 1553.f) && (float(evnt.y) >= 377.f && float(evnt.y) <= 701.f)) {
+        //  printf("MOVED");
+        auto& spr = ECS::GetComponent<Sprite>(EntityIdentifier::SecondPlayer());
+        std::string fileName = "level1H.png";
+        spr.LoadSprite(fileName, 25, 15);
+    }
+
+    else {
+        auto& spr = ECS::GetComponent<Sprite>(EntityIdentifier::SecondPlayer());
+        std::string fileName = "screenshot.png";
+        spr.LoadSprite(fileName, 25, 15);
+    }
+
 
 
 }

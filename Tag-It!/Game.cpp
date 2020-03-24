@@ -169,9 +169,6 @@ void Game::KeyboardUp()
 	}
 }
 
-int Game::GetLevel(){
-	return level;
-}
 
 void Game::MouseMotion(SDL_MouseMotionEvent evnt)
 {
@@ -192,28 +189,35 @@ void Game::MouseMotion(SDL_MouseMotionEvent evnt)
 	m_motion = false;
 }
 
-void Game::MouseClick(SDL_MouseButtonEvent evnt)
-{
+void Game::MouseClick(SDL_MouseButtonEvent evnt){
 	//mouse click
 	m_activeScene->MouseClick(evnt);
 
 	//menu switching code (level selector to game\level 1 )
-	if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 119.f && float(evnt.x) <= 799.f) && (float(evnt.y) >= 137.f && float(evnt.y) <= 541.f) && (m_activeScene == m_scenes[1])) {
+	if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 366.f && float(evnt.x) <= 906.f) && (float(evnt.y) >= 377.f && float(evnt.y) <= 701.f) && (m_activeScene == m_scenes[1])) {
 		printf("\n LEVEL SELECT \n");
 		m_activeScene->Unload();
 		m_activeScene = m_scenes[2];
-		m_activeScene->InitScene(float(BackEnd::GetWindowWidth()), float(BackEnd::GetWindowHeight()));
+		level = 1; //variable to let initscnee know which level to create
+		m_activeScene->InitScene(float(BackEnd::GetWindowWidth()), float(BackEnd::GetWindowHeight()), level);
+		m_register = m_activeScene->GetScene();}
+
+	else if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 1014.f && float(evnt.x) <= 1553.f) && (float(evnt.y) >= 377.f && float(evnt.y) <= 701.f) && (m_activeScene == m_scenes[1])) {
+		printf("\n LEVEL SELECT \n");
+		m_activeScene->Unload();
+		m_activeScene = m_scenes[2];
+		level = 2; //variable to let initscnee know which level to create
+		m_activeScene->InitScene(float(BackEnd::GetWindowWidth()), float(BackEnd::GetWindowHeight()), level);
 		m_register = m_activeScene->GetScene();
 	}
 
 	//main menu to level selector
-	else if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 393.f && float(evnt.x) <= 527.f) && (float(evnt.y) >= 307.f && float(evnt.y) <= 373.f) && (m_activeScene == m_scenes[0])) {
+	 else if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 856.f && float(evnt.x) <= 1063.f) && (float(evnt.y) >= 492.f && float(evnt.y) <= 590.f) && (m_activeScene == m_scenes[0])) {
 		printf("\n CLICKED");
 		m_activeScene->Unload();
 		m_activeScene = m_scenes[1];
 		m_activeScene->InitScene(float(BackEnd::GetWindowWidth()), float(BackEnd::GetWindowHeight()));
-		m_register = m_activeScene->GetScene();
-	}
+		m_register = m_activeScene->GetScene();}
 
 
 	if (m_guiActive)

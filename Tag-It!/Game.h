@@ -54,7 +54,7 @@ public:
 	void KeyboardHold();
 	void KeyboardDown();
 	void KeyboardUp();
-
+	int GetLevel();
 	//Mouse input
 	void MouseMotion(SDL_MouseMotionEvent evnt);
 	void MouseClick(SDL_MouseButtonEvent evnt);
@@ -83,13 +83,8 @@ private:
 	bool m_motion = false;
 	bool m_click = false;
 	bool m_wheel = false;
-	int numPress;
-	//vec2 m_velocity = vec2(0.f, 0.f);
-	//vec2 acceleration = vec2(0.f, 0.f);
-
-	//int m_maxHeight = -28.f;
-	//int m_currentGround = -10.f;
-	//bool jump = false;
+	int level;
+	
 };
 
 

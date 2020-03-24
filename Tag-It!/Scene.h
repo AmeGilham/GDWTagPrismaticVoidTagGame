@@ -22,6 +22,8 @@ public:
 	//Each scene will need to have a different
 	//init, as each scene's contents will be different
 	virtual void InitScene(float windowWidth, float windowHeight) { printf("windowwidth: %f, windowHeight: %f", windowWidth, windowHeight); };
+	virtual void InitScene(float windowWidth, float windowHeight, int level) { printf("windowwidth: %f, windowHeight: %f", windowWidth, windowHeight); };
+
 
 	//each frame update function
 	virtual void Update() {}

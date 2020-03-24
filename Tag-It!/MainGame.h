@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Game.h"
 #include "Scene.h"
 #include "Input.h"
 #include <math.h>
@@ -12,7 +13,7 @@ public:
 	MainGame(std::string name);
 
 	//initilizes the scene
-	void InitScene(float windowWidth, float windowHeight) override;
+	void InitScene(float windowWidth, float windowHeight, int level) override;
 
 	//updates the scene every frame
 	void Update() override;

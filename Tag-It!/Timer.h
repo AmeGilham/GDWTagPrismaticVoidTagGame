@@ -11,7 +11,7 @@ public:
 	//Current clock and last clock
 	static clock_t currentClock, lastClock;
 	//Change in time (time since last frame) and total game time
-	static float deltaTime, time;
+	static float deltaTime, time, deltaTime2;
 
 	//Resets the clock to zero
 	static void Reset();

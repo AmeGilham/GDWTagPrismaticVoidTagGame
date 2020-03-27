@@ -8,8 +8,7 @@ Sprite::Sprite(std::string& fileName, int width, int height)
 	LoadSprite(fileName, width, height);
 }
 
-bool Sprite::LoadSprite(std::string& fileName, int width, int height, bool animated, AnimationController* anim)
-{
+bool Sprite::LoadSprite(std::string& fileName, int width, int height, bool animated, AnimationController* anim){
 	//If spritePlane not initialized
 		//Grab the Vert VBO
 		//Init the sprite plane

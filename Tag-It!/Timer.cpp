@@ -5,6 +5,8 @@ clock_t Timer::currentClock = 0L;
 
 float Timer::time = 0.f;
 float Timer::deltaTime = 0.f;
+float Timer::deltaTime2 = 0.f;
+
 
 void Timer::Reset()
 {
@@ -14,6 +16,8 @@ void Timer::Reset()
 	//Resets the total time passed and time since last frame
 	time = 0.f;
 	deltaTime = 0.f;
+	deltaTime2 = 0.f;
+
 }
 
 void Timer::Update()
@@ -25,6 +29,10 @@ void Timer::Update()
 	//Gets the difference betweent he last clock and the current clock
 	//Then divides it by Clocks per second (via multiplying 1.f/CLOCKS_PER_SEC)
 	deltaTime = (currentClock - lastClock) * ONE_OVER_CLOCKS_PER_SEC;
+	deltaTime2 = (currentClock - lastClock) * ONE_OVER_CLOCKS_PER_SEC;
+
 	//Adds delta time to the total time passed (since last reset)
 	time += deltaTime;
+	time += deltaTime2;
+
 }

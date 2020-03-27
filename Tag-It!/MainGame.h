@@ -42,6 +42,9 @@ public:
 
 	//create animations 
 	void createAnimation(Animation* anim, int x, int y, int width, int height, int frames, bool flipped, float lenghtOfFrame, bool repeating);
+	void itAnimB();
+	void itAnimO();
+	float round(float var);
 private:
 	//Box2D user data
 	int blue = 0;
@@ -74,6 +77,13 @@ private:
 	unsigned int tagEntity = 0;
 	//variable to store the entity number of the "It!" Hud object
 	unsigned int itIdentifyingHudEntity = 0;
+	float itTime = 5.f;
+	float animTime = itTime;
+	float timeLeft;
+
+	float animTimeO = itTime;
+	float timeLeftO;
+
 
 	//Hud bomb entity numbers, 0 is blue, 1 is orange, 2 is the burning fuse sprite
 	unsigned int bombs[3];

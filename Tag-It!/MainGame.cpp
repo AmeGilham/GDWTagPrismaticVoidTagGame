@@ -99,8 +99,8 @@ void MainGame::Update(){
 	//add the change in time to the time since a tag was triggered
 	timeSinceTagTriggered += Timer::deltaTime;
 	//add the change in time to the time since the player last slid
-	timeSinceSlideB += Timer::deltaTime;
-	timeSinceSlideO += Timer::deltaTime;
+	timeSinceSlideB += Timer::deltaTime2;
+	timeSinceSlideO += Timer::deltaTime2;
 
 	//apply gravity to both characters 
 	bluetempPhysBod.ApplyForce(vec3(0.f, -300.f * 60.f * Timer::deltaTime, 0.f));
@@ -136,7 +136,6 @@ void MainGame::Update(){
 	else if (bluetempPhysBod.GetPosition().x < -50.5) {
 		bluetempPhysBod.GetBody()->SetTransform(b2Vec2(50.5, bluebody->GetPosition().y), float32(0));}
 
-
 	//if Orange has run off the right of the screen, make him appear on the left 
 	if (orangetempPhysBod.GetPosition().x > 50.5) {
 		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(-50.5, orangebody->GetPosition().y), float32(0));}
@@ -158,11 +157,10 @@ void MainGame::Update(){
 
 		//check if blue is now it 
 		if (listener.GetIt() == 1) {
-			if (itIdentifyingHudEntity != 0)
-			{
+			if (itIdentifyingHudEntity != 0){
 				ECS::DestroyEntity(itIdentifyingHudEntity);
-				itIdentifyingHudEntity = 0;
-			}
+				itIdentifyingHudEntity = 0;}
+
 			//create entity showing that blue is it
 			{
 				//creates entity
@@ -171,27 +169,25 @@ void MainGame::Update(){
 				//adds components
 				ECS::AttachComponent<Sprite>(entity);
 				ECS::AttachComponent<Transform>(entity);
-
-				//load sprites and set up sprite component
+				
 				std::string fileName = "Blue It.png";
-				ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 3, 2);
+				//setup up sprite
+				ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 18, 17);
 				//Setup transform 
-				ECS::GetComponent<Transform>(entity).SetPosition(vec3(-22.5f, -18.f, 99.f));
-
+				ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 99.f));
+		
 				//Setup indentifier 
 				unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
 				ECS::SetUpIdentifier(entity, bitHolder, "Blue It Hud");
-				itIdentifyingHudEntity = entity;
-			}
+				itIdentifyingHudEntity = entity;}
+
 			/*fill rest of code about showing that blue is now it*/
 		}
 		//if not, then orange must now be it 
 		else {
-			if (itIdentifyingHudEntity != 0)
-			{
+			if (itIdentifyingHudEntity != 0){
 				ECS::DestroyEntity(itIdentifyingHudEntity);
-				itIdentifyingHudEntity = 0;
-			}
+				itIdentifyingHudEntity = 0;}
 			//create entity showing that orange is it
 			{
 				//creates entity
@@ -203,9 +199,9 @@ void MainGame::Update(){
 
 				//load sprites and set up sprite component
 				std::string fileName = "Orange It.png";
-				ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 3, 2);
+				ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 18, 17);
 				//Setup transform 
-				ECS::GetComponent<Transform>(entity).SetPosition(vec3(22.5f, -18.f, 99.f));
+				ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 99.f));
 
 				//Setup indentifier 
 				unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
@@ -223,7 +219,7 @@ void MainGame::Update(){
 		float timeLeftRatio = blueFuseTimeRemaining / maxTime;
 		float spaceLeftOnFuse = timeLeftRatio * 463.f;
 		spaceLeftOnFuse = std::round(spaceLeftOnFuse);
-		printf("%f\n", blueFuseTimeRemaining);
+		//printf("%f\n", blueFuseTimeRemaining);
 		if (std::fmod(spaceLeftOnFuse, 58.f) == 0.f) {
 			auto& animController = ECS::GetComponent<AnimationController>(bombs[0]);
 			auto& anim = animController.GetAnimation(0);
@@ -232,7 +228,10 @@ void MainGame::Update(){
 			ECS::GetComponent<Sprite>(bombs[0]).SetWidth(4 + std::round(8 * timeLeftRatio));
 			ECS::GetComponent<Transform>(bombs[0]).SetPosition(vec3(-15.f - 0.5f * (12 - ECS::GetComponent<Sprite>(bombs[0]).GetWidth()), -17.f, 98.f));
 		}
-		ECS::GetComponent<Transform>(bombs[2]).SetPosition(vec3(-17.f + (8.f * timeLeftRatio),-16.8f,98.8f));
+		ECS::GetComponent<Transform>(bombs[2]).SetPosition (  vec3 (-17.f + (8.f * timeLeftRatio),-16.8f,98.8f) );
+
+		itAnimB(); //function for it animation
+
 	}
 	//Or if Orange is currently it 
 	else if (listener.GetIt() == 2) {
@@ -250,7 +249,8 @@ void MainGame::Update(){
 			ECS::GetComponent<Sprite>(bombs[1]).SetWidth(4 + std::round(8 * timeLeftRatio));
 			ECS::GetComponent<Transform>(bombs[1]).SetPosition(vec3(15.f + 0.5f * (12 - ECS::GetComponent<Sprite>(bombs[1]).GetWidth()), -17.f, 98.f));
 		}
-		ECS::GetComponent<Transform>(bombs[2]).SetPosition(vec3(17.f - (8.f * timeLeftRatio), -16.8f, 98.8f));
+	ECS::GetComponent<Transform>(bombs[2]).SetPosition(vec3(17.f - (8.f * timeLeftRatio), -16.8f, 98.8f));
+	itAnimO();
 	}
 
 	//printf("%f\n", 1.0 / Timer::deltaTime);
@@ -870,7 +870,6 @@ void MainGame::level1(float windowWidth, float windowHeight){
 		bombs[2] = entity;
 	}
 
-
 }
 
 //placeholder code for level 2
@@ -1214,16 +1213,15 @@ void MainGame::KeyboardHold(){
 	vec3 runforce = vec3(1000.f * 60.f * Timer::deltaTime, 0.f, 0.f);
 
 	//grab a reference to blue's physics body
-	auto tempPhysBodB2 = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
 	auto& tempPhysBodB = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
 	//create a pointer to Blue's box2d body
 	b2Body* bodyB = tempPhysBodB.GetBody();
 
 	//if Blue's player is pressing A, and their x-velocity isn't above the left cap, apply the run force to the left
-	if (Input::GetKey(Key::A) && bodyB->GetLinearVelocity().x > float32(-40.f) && !(Input::GetKey(Key::S)) ) {
+	if (Input::GetKey(Key::A) && bodyB->GetLinearVelocity().x > float32(-40.f) &&  (!(Input::GetKey(Key::S)) && timeSinceSlideB > 0.1f) ) {
 		tempPhysBodB.ApplyForce(-runforce);}
 	//if Blue's player is pressing D, and their x-velocity isn't above the right cap, apply the run force to the right
-	else if (Input::GetKey(Key::D) && bodyB->GetLinearVelocity().x < float32(40.f) && !(Input::GetKey(Key::S)) ) {
+	else if (Input::GetKey(Key::D) && bodyB->GetLinearVelocity().x < float32(40.f) && (!(Input::GetKey(Key::S)) && timeSinceSlideB > 0.1f) ) {
 		tempPhysBodB.ApplyForce(runforce);}
 
 	//otherwise blue isn't moving on the x-axis
@@ -1262,11 +1260,11 @@ void MainGame::KeyboardHold(){
 	b2Body* bodyO = tempPhysBodO.GetBody();
 
 	//if Orange's player is pressing leftArrow, and their x-velocity isn't above the left cap, apply the run force to the left
-	if (Input::GetKey(Key::LeftArrow) && bodyO->GetLinearVelocity().x > float32(-40.f)&& !(Input::GetKey(Key::DownArrow)) ) {
+	if (Input::GetKey(Key::LeftArrow) && bodyO->GetLinearVelocity().x > float32(-40.f)&& ( !(Input::GetKey(Key::DownArrow)) && timeSinceSlideO > 1.f) ) {
 		tempPhysBodO.ApplyForce(-runforce);}
 
 	//if Orange's player is pressing rightArrow, and their x-velocity isn't above the right cap, apply the run force to the right
-	else if (Input::GetKey(Key::RightArrow) && bodyO->GetLinearVelocity().x < float32(40.f) && !(Input::GetKey(Key::DownArrow)) ) {
+	else if (Input::GetKey(Key::RightArrow) && bodyO->GetLinearVelocity().x < float32(40.f) && (!(Input::GetKey(Key::DownArrow)) && timeSinceSlideO > 1.f)) {
 		tempPhysBodO.ApplyForce(runforce);}
 
 	//otherwise Orange isn't moving on the x-axis
@@ -1327,28 +1325,51 @@ void MainGame::KeyboardHold(){
 	}
 
 	//SLIDING MECHANIC CODE
-	if (Input::GetKeyDown(Key::S)) {//crouch to lower hitbox for blue
+	
+	if ((Input::GetKeyDown(Key::S) && Input::GetKey(Key::D)) && timeSinceSlideB > 1.f) { //sliding left for blue 
 		tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
 		tempPhysBodB.SetHeight(2.f);
 
 		//recreating the box2d collision box
 		b2PolygonShape tempShape;
-		tempShape.SetAsBox(float32(tempPhysBodB.GetWidth()/2.f), float32(tempPhysBodB.GetHeight()/2.f ), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
+		tempShape.SetAsBox(float32(tempPhysBodB.GetWidth() / 2.f), float32(tempPhysBodB.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
 		b2FixtureDef fix;
-
 		fix.shape = &tempShape;
 		fix.density = 0.08f;
 		fix.friction = 0.35f;//0.3f
 		bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
 		bodyB->CreateFixture(&fix); //recreates it with smaller hitbox
-	}
-	
-	if (Input::GetKeyDown(Key::DownArrow)) {//crouch to lower hitbox for orange
+
+		tempPhysBodB.ApplyForce(vec3(5500.f, 0.f, 0.f));
+		//tempPhysBodB.ApplyForce(runforce * 4.f);
+		timeSinceSlideB = 0.f;
+	}	
+
+	else if ((Input::GetKeyDown(Key::S) && (Input::GetKey(Key::A)) && timeSinceSlideB > 1.f)) {
+		tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
+		tempPhysBodB.SetHeight(2.f);
+
+		//recreating the box2d collision box
+		b2PolygonShape tempShape;
+		tempShape.SetAsBox(float32(tempPhysBodB.GetWidth() / 2.f), float32(tempPhysBodB.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
+		b2FixtureDef fix;
+		fix.shape = &tempShape;
+		fix.density = 0.08f;
+		fix.friction = 0.35f;//0.3f
+		bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
+		bodyB->CreateFixture(&fix); //recreates it with smaller hitbox
+
+		tempPhysBodB.ApplyForce(vec3(-5500.f, 0.f, 0.f));
+		//Input::GetKeyDown(Key::S) == false;
+		timeSinceSlideB = 0.f;}
+	else {}
+
+	if ((Input::GetKeyDown(Key::DownArrow) && Input::GetKey(Key::RightArrow)) && timeSinceSlideO > 1.f) { //sliding for orange
 		tempPhysBodO.SetCenterOffset(vec2(0.f, -1.5f));
 		tempPhysBodO.SetHeight(2.f);
 		//recreating the box2d collision box
 		b2PolygonShape tempShape;
-		tempShape.SetAsBox(float32(tempPhysBodO.GetWidth()/2.f), float32(tempPhysBodO.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodO.GetCenterOffset().x), float32(tempPhysBodO.GetCenterOffset().y)), float32(0.f));
+		tempShape.SetAsBox(float32(tempPhysBodO.GetWidth() / 2.f), float32(tempPhysBodO.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodO.GetCenterOffset().x), float32(tempPhysBodO.GetCenterOffset().y)), float32(0.f));
 
 		b2FixtureDef fix;
 		fix.shape = &tempShape;
@@ -1356,22 +1377,41 @@ void MainGame::KeyboardHold(){
 		fix.friction = 0.35f;//0.3f
 		bodyO->DestroyFixture(bodyO->GetFixtureList());
 		bodyO->CreateFixture(&fix);
-	}
 
-	if ((Input::GetKey(Key::S) && Input::GetKeyDown(Key::D)) && timeSinceSlideB > 1.f) { //sliding left for blue 
-		//tempPhysBodB.ApplyForce(vec3(5000.f, 0.f, 0.f));
-		tempPhysBodB.ApplyForce(runforce*4.f);
-		timeSinceSlideB = 0.f;}
-	else if ((Input::GetKey(Key::S) && Input::GetKeyDown(Key::A)) && timeSinceSlideB > 1.f) {
-		tempPhysBodB.ApplyForce(vec3(-5000.f, 0.f, 0.f));
-		timeSinceSlideB = 0.f;}
-
-	if ((Input::GetKey(Key::DownArrow) && Input::GetKeyDown(Key::RightArrow)) && timeSinceSlideO > 1.f) { //sliding for orange
-		tempPhysBodO.ApplyForce(vec3(5000.f, 0.f, 0.f));
+		tempPhysBodO.ApplyForce(vec3(5500.f, 0.f, 0.f));
 		timeSinceSlideO = 0.f;}
-	else if ((Input::GetKey(Key::DownArrow) && Input::GetKeyDown(Key::LeftArrow)) && timeSinceSlideO > 1.f) { //sliding for orange
+
+	else if ((Input::GetKeyDown(Key::DownArrow) && Input::GetKey(Key::LeftArrow)) && timeSinceSlideO > 1.f) { //sliding for orange
+		tempPhysBodO.SetCenterOffset(vec2(0.f, -1.5f));
+		tempPhysBodO.SetHeight(2.f);
+		//recreating the box2d collision box
+		b2PolygonShape tempShape;
+		tempShape.SetAsBox(float32(tempPhysBodO.GetWidth() / 2.f), float32(tempPhysBodO.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodO.GetCenterOffset().x), float32(tempPhysBodO.GetCenterOffset().y)), float32(0.f));
+
+		b2FixtureDef fix;
+		fix.shape = &tempShape;
+		fix.density = 0.08f;
+		fix.friction = 0.35f;//0.3f
+		bodyO->DestroyFixture(bodyO->GetFixtureList());
+		bodyO->CreateFixture(&fix);
+
 		tempPhysBodO.ApplyForce(vec3(-5000.f, 0.f, 0.f));
-		timeSinceSlideO = 0.f;}
+		timeSinceSlideO = 0.f;
+
+		//tempPhysBodO.SetCenterOffset(vec2(0.f, 0.f));
+		//tempPhysBodO.SetHeight(5.f);
+
+		////recreating the box2d collision box
+		//b2PolygonShape tempShape2;
+		//tempShape2.SetAsBox(float32(tempPhysBodO.GetWidth() / 2.f), float32(tempPhysBodO.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodO.GetCenterOffset().x), float32(tempPhysBodO.GetCenterOffset().y)), float32(0.f));
+
+		//b2FixtureDef fix2;
+		//fix.shape = &tempShape2;
+		//fix.density = 0.08f;
+		//fix.friction = 0.35f;//0.3f
+		//bodyO->DestroyFixture(bodyO->GetFixtureList());
+		//bodyO->CreateFixture(&fix2);
+	}
 
 	if (Input::GetKeyUp(Key::S)) { //resets player hitbox to original size after key is released for blue
 		tempPhysBodB.SetCenterOffset ( vec2(0.f, 0.f) );
@@ -1380,8 +1420,7 @@ void MainGame::KeyboardHold(){
 		//recreating the box2d collision box
 		b2PolygonShape tempShape;
 		tempShape.SetAsBox( float32 (tempPhysBodB.GetWidth()/2.f ), float32( tempPhysBodB.GetHeight() /2.f), b2Vec2 ( float32 (tempPhysBodB.GetCenterOffset().x), float32 (tempPhysBodB.GetCenterOffset().y) ), float32(0.f) );
-		std::cout << tempPhysBodB.GetHeight() << std::endl;
-		
+				
 		b2FixtureDef fix;
 		fix.shape = &tempShape;
 		fix.density = 0.08f;
@@ -1410,15 +1449,23 @@ void MainGame::KeyboardHold(){
 //keyboard key first pressed input
 void MainGame::KeyboardDown(){
 
-	if (Input::GetKeyDown(Key::Q) && listener.GetIt() == 1 && timeSinceTagTriggered > 0.083f) { //player 1 blue tagging
-		createT(btag);
-		timeSinceTagTriggered = 0.f;
-	}
+	//grab a reference to blue's physics body
+	auto& tempPhysBodB = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
+	//create a pointer to Blue's box2d body
+	b2Body* bodyB = tempPhysBodB.GetBody();
 
-	else if (Input::GetKeyDown(Key::M) && listener.GetIt() == 2 && timeSinceTagTriggered > 0.083f) { //player 2 orange tagging
+	//grab a reference to orange's physics body
+	auto& tempPhysBodO = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
+	//create a pointer to Orange's box2d body
+	b2Body* bodyO = tempPhysBodO.GetBody();
+	   
+	if (Input::GetKeyDown(Key::Q) && listener.GetIt() == 1 && timeSinceTagTriggered > 0.083f ) { //player 1 blue tagging
+		createT(btag);
+		timeSinceTagTriggered = 0.f;}
+
+	else if (Input::GetKeyDown(Key::M) && listener.GetIt() == 2 && timeSinceTagTriggered > 0.083f ) { //player 2 orange tagging
 		createT(otag);
-		timeSinceTagTriggered = 0.f;
-	}
+		timeSinceTagTriggered = 0.f;}
 	
 	//animations
 	if (Input::GetKeyDown(Key::D)){
@@ -1471,8 +1518,7 @@ void MainGame::MouseWheel(SDL_MouseWheelEvent evnt)
 }
 
 //creates frames for animation objects
-void MainGame::createAnimation(Animation* anim, int x, int y, int width, int height, int frames, bool flipped, float lenghtOfFrame, bool repeating)
-{
+void MainGame::createAnimation(Animation* anim, int x, int y, int width, int height, int frames, bool flipped, float lenghtOfFrame, bool repeating){
 	//assumes horizontal animation
 	//create vectors for the bottom left and top right coordinates
 	vec2 bl(0, 0);
@@ -1501,6 +1547,85 @@ void MainGame::createAnimation(Animation* anim, int x, int y, int width, int hei
 	anim->SetSecPerFrame(lenghtOfFrame);
 	//Set if the animation should repeat
 	anim->SetRepeating(repeating);
+}
+
+void MainGame::itAnimB() {
+	std::string fileName = "Blue It.png";
+	auto& sprite = ECS::GetComponent<Sprite>(itIdentifyingHudEntity);
+	auto& trans = ECS::GetComponent<Transform>(itIdentifyingHudEntity);
+	//(trans.GetPositionX() >= -22.5f && trans.GetPositionY() >= -18.f)
+
+	if (listener.GetIt() == 1) {
+		animTimeO = itTime;
+		animTime -= Timer::deltaTime;
+		timeLeft = animTime / maxTime;}
+
+	//else if (listener.GetIt() == 2) {
+	//	animTime = itTime;
+	//}
+	///*else {
+	//	animTime = 5.f;
+	//	float timeLeft = animTime / itTime;}*/
+
+	float i = 0.f;
+	float num = 0.f;
+	float q = 0.f;
+
+	//for (int i = 0; i < 15; i++) {
+	//	trans.SetPosition (vec3 (trans.GetPositionX() -1.5f, trans.GetPositionY() -1.2f, 99.f) );
+	//	sprite.SetHeight(sprite.GetHeight() - 1);
+	//	sprite.SetWidth(sprite.GetWidth() - 1);
+	////	sprite.LoadSprite (fileName, sprite.GetHeight() - 1, sprite.GetWidth() - 1);
+	//}
+	std::cout << animTime << std::endl;
+	if (trans.GetPositionX() >= -22.5f && trans.GetPositionY() >= -18.f) {
+		trans.SetPosition(vec3(trans.GetPositionX() - (3.55f * timeLeft), trans.GetPositionY() - (2.8f * timeLeft), 99.f));}
+
+	if (sprite.GetHeight() > 3 && sprite.GetWidth() > 2)
+	sprite.LoadSprite(fileName, sprite.GetHeight() - (0.5 * timeLeft), sprite.GetWidth() - (0.5 * timeLeft) );
+
+	//if ((q > 3.f) && trans.GetPositionX() != -22.5f ) {
+	//	do {
+	//		trans.SetPosition(vec3(trans.GetPositionX() - 1.5f, trans.GetPositionY() - 1.2f, 99.f));
+	//		//sprite.LoadSprite(fileName, sprite.GetHeight() - 1, sprite.GetWidth() - 1);
+	//		
+	//		num = Timer::deltaTime * 10.5f;
+	//		i += round(num);
+	//		std::cout << round(num) << "\n";
+	//	} while (i <= 2.9f);
+	//	q = 0.f;
+	//}
+	//ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 3, 2);
+	//ECS::GetComponent<Transform>(entity).SetPosition(vec3(-22.5f, -18.f, 99.f));
+}
+
+void MainGame::itAnimO(){
+	std::string fileName = "Orange It.png";
+	auto& sprite = ECS::GetComponent<Sprite>(itIdentifyingHudEntity);
+	auto& trans = ECS::GetComponent<Transform>(itIdentifyingHudEntity);
+
+	if (listener.GetIt() == 2 ) {
+		animTime = itTime;
+		animTimeO -= Timer::deltaTime;
+		timeLeftO = animTimeO / maxTime;
+		std::cout << "YO"<< animTimeO << std::endl;
+	}
+	else if (listener.GetIt() == 1){
+		animTimeO = itTime;}
+	
+
+	if (sprite.GetHeight() > 3 && sprite.GetWidth() > 2) 
+		sprite.LoadSprite(fileName, sprite.GetHeight() - (0.5 * timeLeftO), sprite.GetWidth() - (0.5 * timeLeftO));
+
+	if (trans.GetPositionX() <= 22.5f && trans.GetPositionY() >= -18.f) {
+		trans.SetPosition(vec3(trans.GetPositionX() + (3.56f * timeLeftO), trans.GetPositionY() - (2.82f * timeLeftO), 99.f));
+	}
+
+}
+
+float MainGame::round(float var){
+	float value = (int)(var * 10 + .5);
+	return (float)value / 10;
 }
 
 //Stroke of the gamepad input

@@ -1578,8 +1578,16 @@ void MainGame::itAnimB() {
 	////	sprite.LoadSprite (fileName, sprite.GetHeight() - 1, sprite.GetWidth() - 1);
 	//}
 	std::cout << animTime << std::endl;
-	if (trans.GetPositionX() >= -22.5f && trans.GetPositionY() >= -18.f) {
-		trans.SetPosition(vec3(trans.GetPositionX() - (3.55f * timeLeft), trans.GetPositionY() - (2.8f * timeLeft), 99.f));}
+	/*if (trans.GetPositionX() >= -22.5f && trans.GetPositionY() >= -18.f) {
+		trans.SetPosition(vec3(trans.GetPositionX() - (3.55f * timeLeft), trans.GetPositionY() - (2.8f * timeLeft), 99.f));}*/
+
+	if (trans.GetPositionX() >= -22.5f) {
+		trans.SetPositionX(trans.GetPositionX() - (7.5f * timeLeft));}
+
+	if (trans.GetPositionY() >= -18.f) {
+		trans.SetPositionY(trans.GetPositionY() - (5.99f * timeLeft));	}
+
+
 
 	if (sprite.GetHeight() > 3 && sprite.GetWidth() > 2)
 	sprite.LoadSprite(fileName, sprite.GetHeight() - (0.5 * timeLeft), sprite.GetWidth() - (0.5 * timeLeft) );
@@ -1617,9 +1625,15 @@ void MainGame::itAnimO(){
 	if (sprite.GetHeight() > 3 && sprite.GetWidth() > 2) 
 		sprite.LoadSprite(fileName, sprite.GetHeight() - (0.5 * timeLeftO), sprite.GetWidth() - (0.5 * timeLeftO));
 
-	if (trans.GetPositionX() <= 22.5f && trans.GetPositionY() >= -18.f) {
-		trans.SetPosition(vec3(trans.GetPositionX() + (3.56f * timeLeftO), trans.GetPositionY() - (2.82f * timeLeftO), 99.f));
-	}
+	/*if (trans.GetPositionX() <= 22.5f && trans.GetPositionY() >= -18.f) {
+		trans.SetPosition(vec3(trans.GetPositionX() + (6.16f * timeLeftO), trans.GetPositionY() - (5.89f * timeLeftO), 99.f));}*/
+
+	if (trans.GetPositionX() <= 22.5f) {
+		trans.SetPositionX(trans.GetPositionX() + (7.5f * timeLeftO));}
+
+	if (trans.GetPositionY() >= -18.f) {
+		trans.SetPositionY(trans.GetPositionY() - (5.99f * timeLeftO));}
+
 
 }
 

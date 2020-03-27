@@ -66,10 +66,15 @@ private:
 
 	//time since each player hit the "Tag button" 
 	float timeSinceTagTriggered = 0.f;
+	//store the index of the frame for the animation that's being swapped out with the tagging animation
+	int tagFrame = -1; 
 
 	//time since palyer last slid
 	float timeSinceSlideB = 0.f;
 	float timeSinceSlideO = 0.f;
+	//are the players current sliding 
+	bool blueSlide = false; 
+	bool orangeSlide = false; 
 
 	//bool for if a tag entity exists
 	bool tagExists = false; 
@@ -88,6 +93,8 @@ private:
 	//Hud bomb entity numbers, 0 is blue, 1 is orange, 2 is the burning fuse sprite
 	unsigned int bombs[3];
 
+	//last player to trigger a tag, 1 is blue, 2 is orange
+	int  playerWhoTriggedTag = 0;
 	//time each player has left as the one "it"
 	float maxTime = 90.f; 
 	float blueFuseTimeRemaining = maxTime;

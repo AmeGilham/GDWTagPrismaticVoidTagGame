@@ -487,15 +487,15 @@ void MainGame::level1(float windowWidth, float windowHeight){
 			ECS::AttachComponent<Spawn>(entity);
 
 			//Sets up components
-			std::string fileName = "orange sprites.png"; //set the default sprite sheet to be Orange's
-			if (i == 0) fileName = "blue sprites.png"; //if the first player is being created, make it blue
+			std::string fileName = "orange 2.png"; //set the default sprite sheet to be Orange's
+			if (i == 0) fileName = "blue 2.png"; //if the first player is being created, make it blue
 			//grab a reference to the animation controler
 			auto& animController = ECS::GetComponent<AnimationController>(entity);
 			//set the spritesheet 
 			animController.InitUVs(fileName);
 
 			//setup the sprite and transform compoments 
-			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 10, 10, true, &animController);
+			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 17, 17, true, &animController);
 			ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 2.5f, 25.f + 0.1f * i));
 
 			//grab references to the sprite and physic body compoments
@@ -503,8 +503,8 @@ void MainGame::level1(float windowWidth, float windowHeight){
 			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
 
 			//calculate the area of the sprite that shouldn't have a physics body attached (empty space, ponytail/necklace, etc.)
-			float shrinkX = tempSpr.GetWidth() / 1.5f;
-			float shrinkY = tempSpr.GetWidth() / 2.f;
+			float shrinkX = tempSpr.GetWidth() / 1.25f;
+			float shrinkY = tempSpr.GetWidth() / 1.45f;
 
 			//setup the dynamic box2d physics body
 			b2Body* tempBody;
@@ -526,19 +526,79 @@ void MainGame::level1(float windowWidth, float windowHeight){
 			else tempBody->SetUserData(&orange); //orange
 
 			//add their animations, and make sure they're set to be repeating
-			animController.AddAnimation(Animation());
-			auto& anim0 = animController.GetAnimation(0);
-			createAnimation(&anim0, 0, 0, 600, 600, 6, false, 0.083f, true);
-			animController.AddAnimation(Animation());
-			auto& anim1 = animController.GetAnimation(1);
-			createAnimation(&anim1, 0, 0, 600, 600, 6, false, 0.083f, true);
-			animController.AddAnimation(Animation());
-			auto& anim2 = animController.GetAnimation(2);
-			createAnimation(&anim2, 0, 0, 600, 600, 6, true, 0.083f, true);
+			//IDLE 
+			//idle while facing left
+			animController.AddAnimation(Animation());//0
+			auto& idleLeft = animController.GetAnimation(0);
+			createAnimation(&idleLeft, 0, 0, 250, 250, 6, false, 0.083f, true);
+			//idle while facing right 
+			animController.AddAnimation(Animation());//1
+			auto& idleRight = animController.GetAnimation(1);
+			createAnimation(&idleRight, 0, 0, 250, 250, 6, true, 0.083f, true);
+
+			//RUN 
+			//run while facing left
+			animController.AddAnimation(Animation());//2
+			auto& runLeft = animController.GetAnimation(2);
+			createAnimation(&runLeft, 0, 250, 250, 250, 6, false, 0.083f, true);
+			//run while facing right
+			animController.AddAnimation(Animation());//3
+			auto& runRight = animController.GetAnimation(3);
+			createAnimation(&runRight, 0, 250, 250, 250, 6, true, 0.083f, true);
+
+			//JUMP
+			//jump while facing left
+			animController.AddAnimation(Animation());//4
+			auto& jumpLeft = animController.GetAnimation(4);
+			createAnimation(&jumpLeft, 0, 500, 250, 250, 6, false, 0.083f, true);
+			//jump while facing right
+			animController.AddAnimation(Animation());//5
+			auto& jumpRight = animController.GetAnimation(5);
+			createAnimation(&jumpRight, 0, 500, 250, 250, 6, true, 0.083f, true);
+
+			//TAGGING IDLE
+			//tag while otherwise idle, left
+			animController.AddAnimation(Animation());//6
+			auto& idleTagLeft = animController.GetAnimation(6);
+			createAnimation(&idleTagLeft, 0, 750, 250, 250, 6, false, 0.083f, true);
+			//tag while otherwise idle, right
+			animController.AddAnimation(Animation());//7
+			auto& idleTagRight = animController.GetAnimation(7);
+			createAnimation(&idleTagRight, 0, 750, 250, 250, 6, true, 0.083f, true);
+
+			//TAGGING RUN
+			//tag while running to the left
+			animController.AddAnimation(Animation());//8
+			auto& runTagLeft = animController.GetAnimation(8);
+			createAnimation(&runTagLeft, 0, 1000, 250, 250, 6, false, 0.083f, true);
+			//tag while running to the right
+			animController.AddAnimation(Animation());//9
+			auto& runTagRight = animController.GetAnimation(9);
+			createAnimation(&runTagRight, 0, 1000, 250, 250, 6, true, 0.083f, true);
+
+			//TAGGING Jump
+			//tag while jumping and facing to the left
+			animController.AddAnimation(Animation());//10
+			auto& jumpTagLeft = animController.GetAnimation(10);
+			createAnimation(&jumpTagLeft, 0, 1250, 250, 250, 6, false, 0.083f, true);
+			//tag while jumping and facing to the left
+			animController.AddAnimation(Animation());//11
+			auto& jumpTagRight = animController.GetAnimation(11);
+			createAnimation(&jumpTagRight, 0, 1250, 250, 250, 6, true, 0.083f, true);
+
+			//SLIDING 
+			//slide while facing left
+			animController.AddAnimation(Animation());//12
+			auto& slideLeft = animController.GetAnimation(12);
+			createAnimation(&slideLeft, 0, 1500, 250, 250, 4, false, 0.083f, true);
+			//slide while facing right
+			animController.AddAnimation(Animation());//13
+			auto& slideRight = animController.GetAnimation(13);
+			createAnimation(&slideRight, 0, 1500, 250, 250, 4, true, 0.083f, true);
 
 			//set the active animations so that they're facing the right direction when they spawn
-			if (i == 0) animController.SetActiveAnim(2);
-			else animController.SetActiveAnim(1);
+			if (i == 0) animController.SetActiveAnim(1);
+			else animController.SetActiveAnim(0);
 
 			//Sets up the Identifier
 			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::AnimationBit() | EntityIdentifier::PhysicsBit();
@@ -604,7 +664,7 @@ void MainGame::level1(float windowWidth, float windowHeight){
 			tempBody = m_physicsWorld->CreateBody(&tempDef);
 
 			//create a spriteLib physics body using the box2D physics body
-			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, 0.45f), false);
+			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, 0.f), false);
 
 			//set up user data to indentify as a border (players can't jump through the bottom)
 			tempBody->SetUserData(&border);
@@ -872,6 +932,11 @@ void MainGame::level1(float windowWidth, float windowHeight){
 
 }
 
+//Update the scene, every frame
+void MainGame::Update(){
+	//NOT-IT OBJECTIVE
+	if (objective == true) {
+		objective = false;
 //placeholder code for level 2
 void MainGame::level2(float windowWidth, float windowHeight){
 	float aspectRatio = windowWidth / windowHeight;
@@ -918,11 +983,31 @@ void MainGame::level2(float windowWidth, float windowHeight){
 		ECS::SetUpIdentifier(entity, bitHolder, "Backdrop (static)");
 	}
 
+	//MOTION
+	//grab blue's physics body info
+	auto& bluetempPhysBod = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
+	b2Body* bluebody = bluetempPhysBod.GetBody();
 	//setup for backdrop (animated, waterfall flow section)
 	{
 		//our JSON animation file
 		auto flow = File::LoadJSON("waterfall.json");
 
+	//grab orange's physics body info
+	auto& orangetempPhysBod = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
+	b2Body* orangebody = orangetempPhysBod.GetBody();
+
+	//grab both's animation controllers
+	auto& blueAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer()); //blue 
+	auto& orangeAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer()); //orange
+	
+	//add the change in time to the time since blue and orange last jumped (used to control jumping with platforms reseting jumps)
+	blueTimeSinceLastJump += Timer::deltaTime;
+	orangeTimeSinceLastJump += Timer::deltaTime;
+	//add the change in time to the time since a tag was triggered
+	timeSinceTagTriggered += Timer::deltaTime;
+	//add the change in time to the time since the player last slid
+	timeSinceSlideB += Timer::deltaTime;
+	timeSinceSlideO += Timer::deltaTime;
 		//creates entity
 		auto entity = ECS::CreateEntity();
 
@@ -937,14 +1022,101 @@ void MainGame::level2(float windowWidth, float windowHeight){
 		auto& animController = ECS::GetComponent<AnimationController>(entity);
 		//set the spriteset
 		animController.InitUVs(fileName);
+	//if Blue has run off the right of the screen, make her appear on the left
+	if (bluetempPhysBod.GetPosition().x > 50.5) {
+		bluetempPhysBod.GetBody()->SetTransform(b2Vec2(-50.5, bluebody->GetPosition().y), float32(0));}
+	//if Blue has run off the left of the screen, make her appear on the right
+	else if (bluetempPhysBod.GetPosition().x < -50.5) {
+		bluetempPhysBod.GetBody()->SetTransform(b2Vec2(50.5, bluebody->GetPosition().y), float32(0));}
+
+
+	//if Orange has run off the right of the screen, make him appear on the left 
+	if (orangetempPhysBod.GetPosition().x > 50.5) {
+		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(-50.5, orangebody->GetPosition().y), float32(0));}
+	//if Orange has run off the left of the screen, make him appear on the right
+	else if (orangetempPhysBod.GetPosition().x < -50.5) {
+		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(50.5, orangebody->GetPosition().y), float32(0));}
+
+	//TAGGING 
+	if (timeSinceTagTriggered > 0.116f &&  tagExists) {
+		destroyT();
+		//if blue is it 
+		if (playerWhoTriggedTag == 1) {
+			//set the correct regular animation based on the current tag animation
+			blueAnimController.SetActiveAnim(blueAnimController.GetActiveAnim() - 6);
+			//make sure it's on the right frame
+			blueAnimController.GetAnimation(blueAnimController.GetActiveAnim()).SetCurrentFrameIndex(tagFrame++);
+		}
+		//otherwise, if orange is it 
+		else if (playerWhoTriggedTag == 2) {
+			//set the correct regular animation based on the current tag animation
+			orangeAnimController.SetActiveAnim(orangeAnimController.GetActiveAnim() - 6);
+			//make sure it's on the right frame
+			orangeAnimController.GetAnimation(orangeAnimController.GetActiveAnim()).SetCurrentFrameIndex(tagFrame++);
+		}
+		tagFrame = -1;
+	}
+	else if (tagExists) {
+		b2Body* tagBody = ECS::GetComponent<PhysicsBody>(tagEntity).GetBody();
+		if (listener.GetIt() == 1) {
+			if (bright) {
+				tagBody->SetTransform(b2Vec2(bluebody->GetPosition().x + 3.5, bluebody->GetPosition().y), bluebody->GetAngle());
+			}
+			else {
+				tagBody->SetTransform(b2Vec2(bluebody->GetPosition().x - 3.5, bluebody->GetPosition().y), bluebody->GetAngle());
+			}
+		}
+		else if (listener.GetIt() == 2) {
+			if (oright) {
+				tagBody->SetTransform(b2Vec2(orangebody->GetPosition().x + 3.5, orangebody->GetPosition().y), orangebody->GetAngle());
+			}
+			else {
+				tagBody->SetTransform(b2Vec2(orangebody->GetPosition().x - 3.5, orangebody->GetPosition().y), orangebody->GetAngle());
+			}
+		}
+	}
 
 		//setup the sprite and transform components
 		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 23, 23, true, &animController);
 		ECS::GetComponent<Transform>(entity).SetPosition(vec3(-33.f, -13.f, 1.f));
+	//ANIMATIONS 
 
 		//creates the animations
 		animController.AddAnimation(flow["flow"]);
 		animController.SetActiveAnim(0);
+	//make sure it's not on a tag animation first
+	if (!tagExists) {
+		//check which animation blue should be playing
+			//blue idle 
+		if ((blueAnimController.GetActiveAnim() != 12 && blueAnimController.GetActiveAnim() != 13) || timeSinceSlideB > 0.332f) {
+			if (bluetempPhysBod.GetBody()->GetLinearVelocity().x == 0) {
+				//if blue isn't moving, check that the direction she's facing, and if it's not already playing, play the apporiate idle animation
+				if (bright && blueAnimController.GetActiveAnim() != 1) blueAnimController.SetActiveAnim(1);
+				else if (!bright && blueAnimController.GetActiveAnim() != 0) blueAnimController.SetActiveAnim(0);
+			}
+			//blue run
+			else if (bluetempPhysBod.GetBody()->GetLinearVelocity().x != 0) {
+				//if blue is only moving on the x-axis, check that the direction she's facing, and if it's not already playing, play the apporiate run animation
+				if (bright && blueAnimController.GetActiveAnim() != 3) blueAnimController.SetActiveAnim(3);
+				else if (!bright && blueAnimController.GetActiveAnim() != 2) blueAnimController.SetActiveAnim(2);
+			}
+		}
+		//check which animation orange should be playing
+		if ((orangeAnimController.GetActiveAnim() != 12 && orangeAnimController.GetActiveAnim() != 13) || timeSinceSlideO > 0.332f) {
+			//orange idle 
+			if (orangetempPhysBod.GetBody()->GetLinearVelocity().x == 0) {
+				//if orange isn't moving, check that the direction he's facing, and if it's not already playing, play the apporiate idle animation
+				if (oright && orangeAnimController.GetActiveAnim() != 1) orangeAnimController.SetActiveAnim(1);
+				else if (!oright && orangeAnimController.GetActiveAnim() != 0) orangeAnimController.SetActiveAnim(0);
+			}
+			//orange run 
+			else if (orangetempPhysBod.GetBody()->GetLinearVelocity().x != 0) {
+				//if orange is only moving on the x-axis, check that the direction he's facing, and if it's not already playing, play the apporiate run animation
+				if (oright && orangeAnimController.GetActiveAnim() != 3) orangeAnimController.SetActiveAnim(3);
+				else if (!oright && orangeAnimController.GetActiveAnim() != 2) orangeAnimController.SetActiveAnim(2);
+			}
+		}
+	}
 
 		//Sets up the Identifier
 		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::AnimationBit();
@@ -956,6 +1128,9 @@ void MainGame::level2(float windowWidth, float windowHeight){
 		{
 			//Our JSON animation file
 			auto moving = File::LoadJSON("Player.json");
+	//if the person whose it has changed
+	if (listener.GetItChange()) {
+		listener.SetItChange(false);
 
 			//Creates entity
 			auto entity = ECS::CreateEntity();
@@ -1016,6 +1191,8 @@ void MainGame::level2(float windowWidth, float windowHeight){
 			animController.AddAnimation(Animation());
 			auto& anim2 = animController.GetAnimation(2);
 			createAnimation(&anim2, 0, 0, 600, 600, 6, true, 0.083f, true);
+	//printf("%f\n", 1.0 / Timer::deltaTime);
+}
 
 			//set the active animations so that they're facing the right direction when they spawn
 			if (i == 0) animController.SetActiveAnim(2);
@@ -1089,6 +1266,14 @@ void MainGame::level2(float windowWidth, float windowHeight){
 			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
 			ECS::SetUpIdentifier(entity, bitHolder, "Vertical plank " + std::to_string(i + 1));
 		}
+		playerWhoTriggedTag = 1;
+		auto& blueAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer());
+		//grab the current frame of the current animation
+		tagFrame = blueAnimController.GetAnimation(blueAnimController.GetActiveAnim()).GetCurrentFrameIndex();
+		//set the correct tag animation based on the current regular animation
+		blueAnimController.SetActiveAnim(blueAnimController.GetActiveAnim() + 6);
+		//make sure it's on the right frame
+		blueAnimController.GetAnimation(blueAnimController.GetActiveAnim()).SetCurrentFrameIndex(tagFrame);
 	}
 
 	//platform  entities
@@ -1149,6 +1334,14 @@ void MainGame::level2(float windowWidth, float windowHeight){
 			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
 			ECS::SetUpIdentifier(entity, bitHolder, "Log platform " + std::to_string(i + 1));
 		}
+		playerWhoTriggedTag = 2;
+		auto& orangeAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer());
+		//grab the current frame of the current animation
+		tagFrame = orangeAnimController.GetAnimation(orangeAnimController.GetActiveAnim()).GetCurrentFrameIndex();
+		//set the correct tag animation based on the current regular animation
+		orangeAnimController.SetActiveAnim(orangeAnimController.GetActiveAnim() + 6);
+		//make sure it's on the right frame
+		orangeAnimController.GetAnimation(orangeAnimController.GetActiveAnim()).SetCurrentFrameIndex(tagFrame);
 	}
 
 
@@ -1218,11 +1411,13 @@ void MainGame::KeyboardHold(){
 	b2Body* bodyB = tempPhysBodB.GetBody();
 
 	//if Blue's player is pressing A, and their x-velocity isn't above the left cap, apply the run force to the left
-	if (Input::GetKey(Key::A) && bodyB->GetLinearVelocity().x > float32(-40.f) &&  (!(Input::GetKey(Key::S)) && timeSinceSlideB > 0.1f) ) {
-		tempPhysBodB.ApplyForce(-runforce);}
+	if (Input::GetKey(Key::A) && bodyB->GetLinearVelocity().x > float32(-40.f) && !(Input::GetKey(Key::S)) ) {
+		tempPhysBodB.ApplyForce(-runforce);
+	}
 	//if Blue's player is pressing D, and their x-velocity isn't above the right cap, apply the run force to the right
-	else if (Input::GetKey(Key::D) && bodyB->GetLinearVelocity().x < float32(40.f) && (!(Input::GetKey(Key::S)) && timeSinceSlideB > 0.1f) ) {
-		tempPhysBodB.ApplyForce(runforce);}
+	else if (Input::GetKey(Key::D) && bodyB->GetLinearVelocity().x < float32(40.f) && !(Input::GetKey(Key::S)) ) {
+		tempPhysBodB.ApplyForce(runforce);
+	}
 
 	//otherwise blue isn't moving on the x-axis
 	else {
@@ -1260,12 +1455,14 @@ void MainGame::KeyboardHold(){
 	b2Body* bodyO = tempPhysBodO.GetBody();
 
 	//if Orange's player is pressing leftArrow, and their x-velocity isn't above the left cap, apply the run force to the left
-	if (Input::GetKey(Key::LeftArrow) && bodyO->GetLinearVelocity().x > float32(-40.f)&& ( !(Input::GetKey(Key::DownArrow)) && timeSinceSlideO > 1.f) ) {
-		tempPhysBodO.ApplyForce(-runforce);}
+	if (Input::GetKey(Key::LeftArrow) && bodyO->GetLinearVelocity().x > float32(-40.f)&& !(Input::GetKey(Key::DownArrow)) ) {
+		tempPhysBodO.ApplyForce(-runforce);
+	}
 
 	//if Orange's player is pressing rightArrow, and their x-velocity isn't above the right cap, apply the run force to the right
-	else if (Input::GetKey(Key::RightArrow) && bodyO->GetLinearVelocity().x < float32(40.f) && (!(Input::GetKey(Key::DownArrow)) && timeSinceSlideO > 1.f)) {
-		tempPhysBodO.ApplyForce(runforce);}
+	else if (Input::GetKey(Key::RightArrow) && bodyO->GetLinearVelocity().x < float32(40.f) && !(Input::GetKey(Key::DownArrow)) ) {
+		tempPhysBodO.ApplyForce(runforce);
+	}
 
 	//otherwise Orange isn't moving on the x-axis
 	else {
@@ -1325,8 +1522,11 @@ void MainGame::KeyboardHold(){
 	}
 
 	//SLIDING MECHANIC CODE
-	
-	if ((Input::GetKeyDown(Key::S) && Input::GetKey(Key::D)) && timeSinceSlideB > 1.f) { //sliding left for blue 
+	//grab animation controller
+	auto& blueAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer());
+	auto& orangeAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer());
+
+	if (Input::GetKey(Key::S)) {//crouch to lower hitbox for blue
 		tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
 		tempPhysBodB.SetHeight(2.f);
 
@@ -1411,6 +1611,30 @@ void MainGame::KeyboardHold(){
 		//fix.friction = 0.35f;//0.3f
 		//bodyO->DestroyFixture(bodyO->GetFixtureList());
 		//bodyO->CreateFixture(&fix2);
+	if ((Input::GetKey(Key::S) && Input::GetKeyDown(Key::D)) && timeSinceSlideB > 1.f) { //sliding left for blue 
+		tempPhysBodB.ApplyForce(vec3(6000.f, 0.f, 0.f));
+		timeSinceSlideB = 0.f;
+		blueSlide = true;
+		blueAnimController.SetActiveAnim(13);
+	}
+	else if ((Input::GetKey(Key::S) && Input::GetKeyDown(Key::A)) && timeSinceSlideB > 1.f) {
+		tempPhysBodB.ApplyForce(vec3(-6000.f, 0.f, 0.f));
+		timeSinceSlideB = 0.f;
+		blueSlide = true;
+		blueAnimController.SetActiveAnim(12);
+	}
+
+	if ((Input::GetKey(Key::DownArrow) && Input::GetKeyDown(Key::RightArrow)) && timeSinceSlideO > 1.f) { //sliding for orange
+		tempPhysBodO.ApplyForce(vec3(6000.f, 0.f, 0.f));
+		orangeSlide = true;
+		timeSinceSlideO = 0.f;
+		orangeAnimController.SetActiveAnim(13);
+	}
+	else if ((Input::GetKey(Key::DownArrow) && Input::GetKeyDown(Key::LeftArrow)) && timeSinceSlideO > 1.f) { //sliding for orange
+		tempPhysBodO.ApplyForce(vec3(-6000.f, 0.f, 0.f));
+		orangeSlide = true;
+		timeSinceSlideO = 0.f;
+		orangeAnimController.SetActiveAnim(12);
 	}
 
 	if (Input::GetKeyUp(Key::S)) { //resets player hitbox to original size after key is released for blue
@@ -1428,6 +1652,8 @@ void MainGame::KeyboardHold(){
 		
 		bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
 		bodyB->CreateFixture(&fix); //should recreate it with original hitbox
+
+		blueSlide = false; 
 	}
 
 	if (Input::GetKeyUp(Key::DownArrow)) { //resets player hitbox to original size after key is released for orange
@@ -1443,7 +1669,11 @@ void MainGame::KeyboardHold(){
 		fix.density = 0.08f;
 		fix.friction = 0.35f;//0.3f
 		bodyO->DestroyFixture(bodyO->GetFixtureList());
-		bodyO->CreateFixture(&fix);}
+		bodyO->CreateFixture(&fix);
+
+		orangeSlide = false; 
+	}
+
 }
 
 //keyboard key first pressed input
@@ -1465,34 +1695,22 @@ void MainGame::KeyboardDown(){
 
 	else if (Input::GetKeyDown(Key::M) && listener.GetIt() == 2 && timeSinceTagTriggered > 0.083f ) { //player 2 orange tagging
 		createT(otag);
-		timeSinceTagTriggered = 0.f;}
-	
-	//animations
+		timeSinceTagTriggered = 0.f;
+	}
+
 	if (Input::GetKeyDown(Key::D)){
-		auto& animController = ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer());
-		//Sets active animation
-		animController.SetActiveAnim(2);
 		bright = true;
 	}
 
 	if (Input::GetKeyDown(Key::A)){
-		auto& animController = ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer());
-		//Sets active animation
-		animController.SetActiveAnim(1);
 		bright = false;
 	}
 
 	if (Input::GetKeyDown(Key::RightArrow)) {
-		auto& animController = ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer());
-		//Sets active animation
-		animController.SetActiveAnim(2);
 		oright = true;
 	}
 	
 	if (Input::GetKeyDown(Key::LeftArrow)) {
-		auto& animController = ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer());
-		//Sets active animation
-		animController.SetActiveAnim(1);
 		oright = false;
 	}
 }

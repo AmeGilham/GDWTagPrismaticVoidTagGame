@@ -133,6 +133,12 @@ void Animation::SetSecPerFrame(float sec)
 	Reset();
 }
 
+//sets the current frame
+void Animation::SetCurrentFrameIndex(int index)
+{
+	m_currentFrame = index;
+}
+
 ///////ANIMATION CONTROLLER STUFF STARTS/////////
 
 void AnimationController::InitUVs(std::string fileName)

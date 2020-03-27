@@ -78,6 +78,8 @@ public:
 	void SetRepeating(bool repeating);
 	//Sets the seconds per frame of the animation
 	void SetSecPerFrame(float sec);
+	//set the current frame 
+	void SetCurrentFrameIndex(int index);
 
 private:
 	//Frames

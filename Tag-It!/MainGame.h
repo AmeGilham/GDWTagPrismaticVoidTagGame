@@ -45,6 +45,9 @@ public:
 	void itAnimB();
 	void itAnimO();
 	float round(float var);
+
+	//hud burning y position
+	float hudBurningYPos(double ratio);
 private:
 	//Box2D user data
 	int blue = 0;

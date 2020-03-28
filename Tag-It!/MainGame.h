@@ -102,4 +102,8 @@ private:
 	float maxTime = 90.f; 
 	float blueFuseTimeRemaining = maxTime;
 	float orangeFuseTimeRemaining = maxTime;
+
+	//speed caps, too be adjusted when a player is "it"
+	float blueSpeedCap = 40.f;
+	float orangeSpeedCap = 40.f;
 };

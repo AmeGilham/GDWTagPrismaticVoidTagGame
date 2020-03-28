@@ -182,7 +182,11 @@ void MainGame::Update(){
 		if (listener.GetIt() == 1) {
 			if (itIdentifyingHudEntity != 0){
 				ECS::DestroyEntity(itIdentifyingHudEntity);
-				itIdentifyingHudEntity = 0;}
+				itIdentifyingHudEntity = 0;
+			}
+			//set the speedcaps 
+			orangeSpeedCap = 40.f;
+			blueSpeedCap = 50.f;
 
 			//create entity showing that blue is it
 			{
@@ -210,7 +214,13 @@ void MainGame::Update(){
 		else {
 			if (itIdentifyingHudEntity != 0){
 				ECS::DestroyEntity(itIdentifyingHudEntity);
-				itIdentifyingHudEntity = 0;}
+				itIdentifyingHudEntity = 0;
+			}
+
+			//set the speedcaps 
+			orangeSpeedCap = 50.f;
+			blueSpeedCap = 40.f;
+
 			//create entity showing that orange is it
 			{
 				//creates entity
@@ -1580,11 +1590,11 @@ void MainGame::KeyboardHold() {
 	b2Body* bodyB = tempPhysBodB.GetBody();
 
 	//if Blue's player is pressing A, and their x-velocity isn't above the left cap, apply the run force to the left
-	if (Input::GetKey(Key::A) && bodyB->GetLinearVelocity().x > float32(-40.f) && !(Input::GetKey(Key::S))) {
+	if (Input::GetKey(Key::A) && bodyB->GetLinearVelocity().x > float32(-blueSpeedCap) && !(Input::GetKey(Key::S))) {
 		tempPhysBodB.ApplyForce(-runforce);
 	}
 	//if Blue's player is pressing D, and their x-velocity isn't above the right cap, apply the run force to the right
-	else if (Input::GetKey(Key::D) && bodyB->GetLinearVelocity().x < float32(40.f) && !(Input::GetKey(Key::S))) {
+	else if (Input::GetKey(Key::D) && bodyB->GetLinearVelocity().x < float32(blueSpeedCap) && !(Input::GetKey(Key::S))) {
 		tempPhysBodB.ApplyForce(runforce);
 	}
 
@@ -1624,12 +1634,12 @@ void MainGame::KeyboardHold() {
 	b2Body* bodyO = tempPhysBodO.GetBody();
 
 	//if Orange's player is pressing leftArrow, and their x-velocity isn't above the left cap, apply the run force to the left
-	if (Input::GetKey(Key::LeftArrow) && bodyO->GetLinearVelocity().x > float32(-40.f) && !(Input::GetKey(Key::DownArrow))) {
+	if (Input::GetKey(Key::LeftArrow) && bodyO->GetLinearVelocity().x > float32(-orangeSpeedCap) && !(Input::GetKey(Key::DownArrow))) {
 		tempPhysBodO.ApplyForce(-runforce);
 	}
 
 	//if Orange's player is pressing rightArrow, and their x-velocity isn't above the right cap, apply the run force to the right
-	else if (Input::GetKey(Key::RightArrow) && bodyO->GetLinearVelocity().x < float32(40.f) && !(Input::GetKey(Key::DownArrow))) {
+	else if (Input::GetKey(Key::RightArrow) && bodyO->GetLinearVelocity().x < float32(orangeSpeedCap) && !(Input::GetKey(Key::DownArrow))) {
 		tempPhysBodO.ApplyForce(runforce);
 	}
 

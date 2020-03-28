@@ -82,7 +82,7 @@ private:
 	bool m_motion = false;
 	bool m_click = false;
 	bool m_wheel = false;
-	int level=2;//default(1) is waterfall level
+	int level=1;//default(1) is waterfall level
 	
 };
 

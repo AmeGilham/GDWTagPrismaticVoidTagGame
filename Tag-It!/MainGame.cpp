@@ -1704,12 +1704,12 @@ void MainGame::KeyboardDown(){
 	//create a pointer to Orange's box2d body
 	b2Body* bodyO = tempPhysBodO.GetBody();
 	   
-	if (Input::GetKeyDown(Key::Q) && listener.GetIt() == 1 && timeSinceTagTriggered > 0.166f && !blueSlide) { //player 1 blue tagging
+	if (Input::GetKeyDown(Key::CapsLock) && listener.GetIt() == 1 && timeSinceTagTriggered > 0.166f && !blueSlide) { //player 1 blue tagging
 		createT(btag);
 		timeSinceTagTriggered = 0.f;
 	}
 
-	else if (Input::GetKeyDown(Key::M) && listener.GetIt() == 2 && timeSinceTagTriggered > 0.166f && !orangeSlide) { //player 2 orange tagging
+	else if (Input::GetKeyDown(Key::RightContol) && listener.GetIt() == 2 && timeSinceTagTriggered > 0.166f && !orangeSlide) { //player 2 orange tagging
 		createT(otag);
 		timeSinceTagTriggered = 0.f;
 	}

@@ -46,7 +46,7 @@ void MainMenu::InitScene(float windowWidth, float windowHeight) {
         ECS::AttachComponent<Transform>(entity);
 
         //sets up components
-        std::string fileName = "BG.png";
+        std::string fileName = "menus/play.png";
 
         //sets up sprite and transform components
         ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 10, 5);
@@ -68,7 +68,7 @@ void MainMenu::InitScene(float windowWidth, float windowHeight) {
         ECS::AttachComponent<Transform>(entity);
 
         //sets up components
-        std::string fileName = "back.png";
+        std::string fileName = "menus/BG.png";
 
         //sets up sprite and transform components
         ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 100, 50);
@@ -93,13 +93,13 @@ void MainMenu::MouseMotion(SDL_MouseMotionEvent evnt) {
     if ((float(evnt.x) >= 856.f && float(evnt.x) <= 1063.f) && (float(evnt.y) >= 492.f && float(evnt.y) <= 590.f)) {
         printf("MOVED");
         auto& spr = ECS::GetComponent<Sprite>(EntityIdentifier::MainPlayer());
-        std::string fileName = "play2.png";
+        std::string fileName = "menus/play2.png";
         spr.LoadSprite(fileName, 10, 5);
     }
 
     else {
         auto& spr = ECS::GetComponent<Sprite>(EntityIdentifier::MainPlayer());
-        std::string fileName = "play.png";
+        std::string fileName = "menus/play.png";
         spr.LoadSprite(fileName, 10, 5);}
 
 

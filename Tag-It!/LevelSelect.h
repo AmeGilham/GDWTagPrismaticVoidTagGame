@@ -11,6 +11,8 @@ public:
     void MouseClick(SDL_MouseButtonEvent evnt);
     void MouseMotion(SDL_MouseMotionEvent evnt);
 
-private:
+	void Update() override; 
 
+private:
+	unsigned int levels[4] = { 0,0,0,0 };
 };

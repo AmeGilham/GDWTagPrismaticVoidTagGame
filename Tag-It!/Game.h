@@ -82,8 +82,10 @@ private:
 	bool m_motion = false;
 	bool m_click = false;
 	bool m_wheel = false;
-	int level=1;//default(1) is waterfall level
-	
+
+	//scene and level control variables 
+	int level=1;//1 is waterfall level, 2 is house level, 3 is city level, 4 is pyramid level 
+	int currentScene = 0;//0 is main menu, 1 is level select menu, 2 is main game (levels controller by the above variable) 
 };
 
 

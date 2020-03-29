@@ -40,11 +40,11 @@ void Game::InitGame()
 	m_scenes.push_back(new LevelSelect("Level Menu"));
 	m_scenes.push_back(new MainGame("1v1 Match"));
 	//Sets active scene reference to our scene
-	m_activeScene = m_scenes[2];
+	m_activeScene = m_scenes[currentScene];
 
 	//Intializes the scene
-
-	m_activeScene->InitScene(float(BackEnd::GetWindowWidth()), float(BackEnd::GetWindowHeight()), level);
+	if (currentScene == 2)m_activeScene->InitScene(float(BackEnd::GetWindowWidth()), float(BackEnd::GetWindowHeight()), level);
+	else m_activeScene->InitScene(float(BackEnd::GetWindowWidth()), float(BackEnd::GetWindowHeight()));
 
 	//Sets m_register to point to the register in the active scene
 	m_register = m_activeScene->GetScene();
@@ -194,31 +194,47 @@ void Game::MouseClick(SDL_MouseButtonEvent evnt){
 	//mouse click
 	m_activeScene->MouseClick(evnt);
 
-	//menu switching code (level selector to game\level 1 )
-	if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 366.f && float(evnt.x) <= 906.f) && (float(evnt.y) >= 377.f && float(evnt.y) <= 701.f) && (m_activeScene == m_scenes[1])) {
-		printf("\n LEVEL SELECT \n");
+	//if it's on the level select menu, and they click the area indicating the waterfall level, load it
+	if ((currentScene == 1) && (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 366.f && float(evnt.x) <= 906.f) && (float(evnt.y) >= 377.f && float(evnt.y) <= 701.f)) {
+		//unload the level select scene
 		m_activeScene->Unload();
-		m_activeScene = m_scenes[2];
-		level = 1; //variable to let initscnee know which level to create
+		//set the scene to be the main game
+		currentScene == 2;
+		m_activeScene = m_scenes[currentScene];
+		//set the level to be the waterfall level
+		level = 1; 
+		//initilize the game scene with the apporiate level
 		m_activeScene->InitScene(float(BackEnd::GetWindowWidth()), float(BackEnd::GetWindowHeight()), level);
-		m_register = m_activeScene->GetScene();}
-
-	else if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 1014.f && float(evnt.x) <= 1553.f) && (float(evnt.y) >= 377.f && float(evnt.y) <= 701.f) && (m_activeScene == m_scenes[1])) {
-		printf("\n LEVEL SELECT \n");
+		//set the register to be the correct scene
+		m_register = m_activeScene->GetScene();
+	}
+	//otherwise if it's on the level select menu, and they click the area indicating the house level, load it
+	else if ((currentScene == 1) && (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 1014.f && float(evnt.x) <= 1553.f) && (float(evnt.y) >= 377.f && float(evnt.y) <= 701.f)) {
+		//unload the level select scene
 		m_activeScene->Unload();
-		m_activeScene = m_scenes[2];
-		level = 2; //variable to let initscnee know which level to create
+		//set the scene to be the main game
+		currentScene == 2;
+		m_activeScene = m_scenes[currentScene];
+		//set the level to be the house level
+		level = 2; 
+		//initilize the game scene with the apporiate level
 		m_activeScene->InitScene(float(BackEnd::GetWindowWidth()), float(BackEnd::GetWindowHeight()), level);
+		//set the register to be the correct scene
 		m_register = m_activeScene->GetScene();
 	}
 
-	//main menu to level selector
-	 else if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 856.f && float(evnt.x) <= 1063.f) && (float(evnt.y) >= 492.f && float(evnt.y) <= 590.f) && (m_activeScene == m_scenes[0])) {
-		printf("\n CLICKED");
+	//if it's on the main menu, and they click the play button bring them to the level select menu
+	 else if ((currentScene == 0) && (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 856.f && float(evnt.x) <= 1063.f) && (float(evnt.y) >= 492.f && float(evnt.y) <= 590.f)) {
+		//unload the main menu scene
 		m_activeScene->Unload();
-		m_activeScene = m_scenes[1];
+		//set the scene to be the level select menu 
+		currentScene = 1;
+		m_activeScene = m_scenes[currentScene];
+		//initiliaze the level select menu 
 		m_activeScene->InitScene(float(BackEnd::GetWindowWidth()), float(BackEnd::GetWindowHeight()));
-		m_register = m_activeScene->GetScene();}
+		//set the register to be the correct scene
+		m_register = m_activeScene->GetScene();
+	}
 
 
 	if (m_guiActive)

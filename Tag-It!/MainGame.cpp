@@ -25,12 +25,272 @@ void MainGame::InitScene(float windowWidth, float windowHeight, int level){
 	//Sets up aspect ratio for the camera
 	float aspectRatio = windowWidth / windowHeight;
 
+	//Setup main camera entity
+	{
+		//Creates entity
+		auto entity = ECS::CreateEntity();
+		EntityIdentifier::MainCamera(entity);
+
+		//Creates new orthographic camera
+		ECS::AttachComponent<Camera>(entity);
+		ECS::AttachComponent<Spawn>(entity);
+
+		vec4 temp = ECS::GetComponent<Camera>(entity).GetOrthoSize();
+		ECS::GetComponent<Camera>(entity).SetWindowSize(vec2(float(windowWidth), float(windowHeight)));
+		ECS::GetComponent<Camera>(entity).Orthographic(aspectRatio, temp.x, temp.y, temp.z, temp.w, -100.f, 100.f);
+		ECS::GetComponent<Camera>(entity).Zoom(75.f);
+		vec4 size = ECS::GetComponent<Camera>(entity).GetOrthoSize();
+
+		//Sets up the Identifier
+		unsigned int bitHolder = EntityIdentifier::CameraBit();
+		ECS::SetUpIdentifier(entity, bitHolder, "Main Cam");
+		ECS::SetIsMainCamera(entity, true);
+	}
+
+	//Setup player entities (both orange and blue, cycling blue then orange)
+	for (int i = 0; i < 2; i++) {
+		{
+			//Our JSON animation file
+			auto moving = File::LoadJSON("Player.json");
+
+			//Creates entity
+			auto entity = ECS::CreateEntity();
+
+			//Add components
+			ECS::AttachComponent<Sprite>(entity);
+			ECS::AttachComponent<Transform>(entity);
+			ECS::AttachComponent<AnimationController>(entity);
+			ECS::AttachComponent<PhysicsBody>(entity);
+			ECS::AttachComponent<Spawn>(entity);
+
+			//Sets up components
+			std::string fileName = "orange 2.png"; //set the default sprite sheet to be Orange's
+			if (i == 0) fileName = "blue 2.png"; //if the first player is being created, make it blue
+			//grab a reference to the animation controler
+			auto& animController = ECS::GetComponent<AnimationController>(entity);
+			//set the spritesheet 
+			animController.InitUVs(fileName);
+
+			//setup the sprite and transform compoments 
+			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 17, 17, true, &animController);
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 2.5f, 25.f + 0.1f * i));
+
+			//grab references to the sprite and physic body compoments
+			auto& tempSpr = ECS::GetComponent<Sprite>(entity);
+			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+
+			//calculate the area of the sprite that shouldn't have a physics body attached (empty space, ponytail/necklace, etc.)
+			float shrinkX = tempSpr.GetWidth() / 1.25f;
+			float shrinkY = tempSpr.GetWidth() / 1.45f;
+
+			//setup the dynamic box2d physics body
+			b2Body* tempBody;
+			b2BodyDef tempDef;
+			tempDef.type = b2_dynamicBody;
+			//set the position
+			if (i == 0) tempDef.position.Set(float32(-18.f), float32(-7.5f)); //blue position
+			else tempDef.position.Set(float32(18.f), float32(-7.5f)); //orange position
+
+			//add the physics body to box2D physics world simulator
+			tempBody = m_physicsWorld->CreateBody(&tempDef);
+			tempBody->SetFixedRotation(true);
+			//create a spriteLib physics body using the box2D physics body
+			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY),
+				vec2(0.f, 0.f), false);
+
+			//setup the user data to identify them as players
+			if (i == 0) tempBody->SetUserData(&blue); //blue
+			else tempBody->SetUserData(&orange); //orange
+
+			//add their animations, and make sure they're set to be repeating
+			//IDLE 
+			//idle while facing left
+			animController.AddAnimation(Animation());//0
+			auto& idleLeft = animController.GetAnimation(0);
+			createAnimation(&idleLeft, 0, 0, 250, 250, 6, false, 0.083f, true);
+			//idle while facing right 
+			animController.AddAnimation(Animation());//1
+			auto& idleRight = animController.GetAnimation(1);
+			createAnimation(&idleRight, 0, 0, 250, 250, 6, true, 0.083f, true);
+
+			//RUN 
+			//run while facing left
+			animController.AddAnimation(Animation());//2
+			auto& runLeft = animController.GetAnimation(2);
+			createAnimation(&runLeft, 0, 250, 250, 250, 6, false, 0.083f, true);
+			//run while facing right
+			animController.AddAnimation(Animation());//3
+			auto& runRight = animController.GetAnimation(3);
+			createAnimation(&runRight, 0, 250, 250, 250, 6, true, 0.083f, true);
+
+			//JUMP
+			//jump while facing left
+			animController.AddAnimation(Animation());//4
+			auto& jumpLeft = animController.GetAnimation(4);
+			createAnimation(&jumpLeft, 0, 500, 250, 250, 6, false, 0.083f, true);
+			//jump while facing right
+			animController.AddAnimation(Animation());//5
+			auto& jumpRight = animController.GetAnimation(5);
+			createAnimation(&jumpRight, 0, 500, 250, 250, 6, true, 0.083f, true);
+
+			//TAGGING IDLE
+			//tag while otherwise idle, left
+			animController.AddAnimation(Animation());//6
+			auto& idleTagLeft = animController.GetAnimation(6);
+			createAnimation(&idleTagLeft, 0, 750, 250, 250, 6, false, 0.083f, true);
+			//tag while otherwise idle, right
+			animController.AddAnimation(Animation());//7
+			auto& idleTagRight = animController.GetAnimation(7);
+			createAnimation(&idleTagRight, 0, 750, 250, 250, 6, true, 0.083f, true);
+
+			//TAGGING RUN
+			//tag while running to the left
+			animController.AddAnimation(Animation());//8
+			auto& runTagLeft = animController.GetAnimation(8);
+			createAnimation(&runTagLeft, 0, 1000, 250, 250, 6, false, 0.083f, true);
+			//tag while running to the right
+			animController.AddAnimation(Animation());//9
+			auto& runTagRight = animController.GetAnimation(9);
+			createAnimation(&runTagRight, 0, 1000, 250, 250, 6, true, 0.083f, true);
+
+			//TAGGING Jump
+			//tag while jumping and facing to the left
+			animController.AddAnimation(Animation());//10
+			auto& jumpTagLeft = animController.GetAnimation(10);
+			createAnimation(&jumpTagLeft, 0, 1250, 250, 250, 6, false, 0.083f, true);
+			//tag while jumping and facing to the left
+			animController.AddAnimation(Animation());//11
+			auto& jumpTagRight = animController.GetAnimation(11);
+			createAnimation(&jumpTagRight, 0, 1250, 250, 250, 6, true, 0.083f, true);
+
+			//SLIDING 
+			//slide while facing left
+			animController.AddAnimation(Animation());//12
+			auto& slideLeft = animController.GetAnimation(12);
+			createAnimation(&slideLeft, 0, 1500, 250, 250, 4, false, 0.083f, true);
+			//slide while facing right
+			animController.AddAnimation(Animation());//13
+			auto& slideRight = animController.GetAnimation(13);
+			createAnimation(&slideRight, 0, 1500, 250, 250, 4, true, 0.083f, true);
+
+			//set the active animations so that they're facing the right direction when they spawn
+			if (i == 0) animController.SetActiveAnim(1);
+			else animController.SetActiveAnim(0);
+
+			//Sets up the Identifier
+			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::AnimationBit() | EntityIdentifier::PhysicsBit();
+			ECS::SetUpIdentifier(entity, bitHolder, "Player " + std::to_string(i + 1));
+			std::cout << " ORIINAL " << tempPhsBody.GetHeight() << std::endl;
+			std::cout << " ORIINAL X " << tempPhsBody.GetCenterOffset().x << std::endl;
+			std::cout << " ORIINAL Y " << tempPhsBody.GetCenterOffset().y << std::endl;
+
+
+			//if it's blue
+			if (i == 0)
+			{
+				//set them as the main player
+				ECS::SetIsMainPlayer(entity, true);
+			}
+			//if it's orange
+			else if (i == 1)
+			{
+				//set them as the second player
+				ECS::SetIsSecondPlayer(entity, true);
+			}
+		}
+	}
+
 	if (level == 1) { //code for creating/ init-ing level 1 (waterfall)
 		level1(windowWidth, windowHeight);
 	}
 
 	else if (level == 2) {
 		level2(windowWidth, windowHeight);
+	}
+
+	else if (level == 3) {
+		level3(windowWidth, windowHeight);
+	}
+
+
+
+	//create the bombs part of the HUD 
+	for (int i = 0; i < 2; i++) {
+		{
+			//creates entity
+			auto entity = ECS::CreateEntity();
+
+			//adds components
+			ECS::AttachComponent<Sprite>(entity);
+			ECS::AttachComponent<Transform>(entity);
+			ECS::AttachComponent<AnimationController>(entity);
+
+			//load sprites and set up sprite component
+			std::string fileName = "blue bomb.png";
+			if (i == 1) fileName = "orange bomb.png";
+			//grab a reference to the animation controler
+			auto& animController = ECS::GetComponent<AnimationController>(entity);
+			//set the spritesheet 
+			animController.InitUVs(fileName);
+
+			//setup up sprite
+			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 12, 4, true, &animController);
+			//Setup transform 
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(-15, -17.f, 98.f + (0.01 * i)));
+			if (i == 1) ECS::GetComponent<Transform>(entity).SetPosition(vec3(15, -17.f, 98.f + (0.01 * i)));
+
+			animController.AddAnimation(Animation());
+			auto& anim = animController.GetAnimation(0);
+			anim.AddFrame(vec2(0, 226), vec2(695, 0));
+			animController.SetActiveAnim(0);
+
+			//Setup indentifier 
+			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::AnimationBit();
+			if (i == 0) {
+				ECS::SetUpIdentifier(entity, bitHolder, "blue bomb");
+				bombs[0] = entity;
+			}
+			else {
+				ECS::SetUpIdentifier(entity, bitHolder, "orange bomb");
+				bombs[1] = entity;
+			}
+		}
+	}
+
+	//burning fuse part of the HUD 
+	{
+		//creates entity
+		auto entity = ECS::CreateEntity();
+
+		//Adds components 
+		ECS::AttachComponent<Sprite>(entity);
+		ECS::AttachComponent<Transform>(entity);
+		ECS::AttachComponent<AnimationController>(entity);
+
+		//load sprites and set up sprite component
+		std::string fileName = "fuse burn.png";
+		//grab a reference to the animation controler
+		auto& animController = ECS::GetComponent<AnimationController>(entity);
+		//set the spritesheet 
+		animController.InitUVs(fileName);
+
+		//setup up sprite
+		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 4, 4, true, &animController);
+		//Setup transform, start it in a place noone will be able to see it 
+		ECS::GetComponent<Transform>(entity).SetPosition(vec3(-300, -300.f, 98.2f));
+
+		animController.AddAnimation(Animation());
+		auto& anim = animController.GetAnimation(0);
+		anim.AddFrame(vec2(0, 100), vec2(100, 0));
+		anim.AddFrame(vec2(100, 100), vec2(200, 0));
+		anim.SetSecPerFrame(0.05f);
+		anim.SetRepeating(true);
+		animController.SetActiveAnim(0);
+
+		//Setup indentifier 
+		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::AnimationBit();
+		ECS::SetUpIdentifier(entity, bitHolder, "buring animation");
+		bombs[2] = entity;
 	}
 
 }
@@ -115,17 +375,30 @@ void MainGame::Update(){
 
 	//if Blue has run off the right of the screen, make her appear on the left
 	if (bluetempPhysBod.GetPosition().x > 50.5) {
-		bluetempPhysBod.GetBody()->SetTransform(b2Vec2(-50.5, bluebody->GetPosition().y), float32(0));}
+		bluetempPhysBod.GetBody()->SetTransform(b2Vec2(-50.5, bluebody->GetPosition().y), float32(0));
+	}
 	//if Blue has run off the left of the screen, make her appear on the right
 	else if (bluetempPhysBod.GetPosition().x < -50.5) {
-		bluetempPhysBod.GetBody()->SetTransform(b2Vec2(50.5, bluebody->GetPosition().y), float32(0));}
+		bluetempPhysBod.GetBody()->SetTransform(b2Vec2(50.5, bluebody->GetPosition().y), float32(0));
+	}
 
 	//if Orange has run off the right of the screen, make him appear on the left 
 	if (orangetempPhysBod.GetPosition().x > 50.5) {
-		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(-50.5, orangebody->GetPosition().y), float32(0));}
+		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(-50.5, orangebody->GetPosition().y), float32(0));
+	}
 	//if Orange has run off the left of the screen, make him appear on the right
 	else if (orangetempPhysBod.GetPosition().x < -50.5) {
-		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(50.5, orangebody->GetPosition().y), float32(0));}
+		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(50.5, orangebody->GetPosition().y), float32(0));
+	}
+
+	//if blue has fallen off the bottom of the screen make her appear above the top 
+	if (bluetempPhysBod.GetPosition().y < -30) {
+		bluetempPhysBod.GetBody()->SetTransform(b2Vec2(bluebody->GetPosition().x, 30), float32(0));
+	}
+	//if orange has fallen off the bottom of the screen make him appear above the top 
+	if (orangetempPhysBod.GetPosition().y < -30) {
+		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(orangebody->GetPosition().x, 30), float32(0));
+	}
 
 	//TAGGING
 	if (timeSinceTagTriggered > 0.116f && tagExists) {
@@ -516,28 +789,8 @@ void MainGame::destroyT(){
 //code for level 1 (waterfall level)
 void MainGame::level1(float windowWidth, float windowHeight){
 	float aspectRatio = windowWidth / windowHeight;
-	//Setup main camera entity
-	{
-		//Creates entity
-		auto entity = ECS::CreateEntity();
-		EntityIdentifier::MainCamera(entity);
 
-		//Creates new orthographic camera
-		ECS::AttachComponent<Camera>(entity);
-		ECS::AttachComponent<Spawn>(entity);
-
-		vec4 temp = ECS::GetComponent<Camera>(entity).GetOrthoSize();
-		ECS::GetComponent<Camera>(entity).SetWindowSize(vec2(float(windowWidth), float(windowHeight)));
-		ECS::GetComponent<Camera>(entity).Orthographic(aspectRatio, temp.x, temp.y, temp.z, temp.w, -100.f, 100.f);
-		ECS::GetComponent<Camera>(entity).Zoom(75.f);
-		vec4 size = ECS::GetComponent<Camera>(entity).GetOrthoSize();
-
-		//Sets up the Identifier
-		unsigned int bitHolder = EntityIdentifier::CameraBit();
-		ECS::SetUpIdentifier(entity, bitHolder, "Main Cam");
-		ECS::SetIsMainCamera(entity, true);
-	}
-
+	//setup for the backdrop (static part)
 	{
 		//Creates enetity
 		auto entity = ECS::CreateEntity();
@@ -591,158 +844,6 @@ void MainGame::level1(float windowWidth, float windowHeight){
 		ECS::SetUpIdentifier(entity, bitHolder, "backdrop (dynamic waterflow part");
 	}
 
-	//Setup player entities (both orange and blue, cycling blue then orange)
-	for (int i = 0; i < 2; i++) {
-		{
-			//Our JSON animation file
-			auto moving = File::LoadJSON("Player.json");
-
-			//Creates entity
-			auto entity = ECS::CreateEntity();
-
-			//Add components
-			ECS::AttachComponent<Sprite>(entity);
-			ECS::AttachComponent<Transform>(entity);
-			ECS::AttachComponent<AnimationController>(entity);
-			ECS::AttachComponent<PhysicsBody>(entity);
-			ECS::AttachComponent<Spawn>(entity);
-
-			//Sets up components
-			std::string fileName = "orange 2.png"; //set the default sprite sheet to be Orange's
-			if (i == 0) fileName = "blue 2.png"; //if the first player is being created, make it blue
-			//grab a reference to the animation controler
-			auto& animController = ECS::GetComponent<AnimationController>(entity);
-			//set the spritesheet 
-			animController.InitUVs(fileName);
-
-			//setup the sprite and transform compoments 
-			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 17, 17, true, &animController);
-			ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 2.5f, 25.f + 0.1f * i));
-
-			//grab references to the sprite and physic body compoments
-			auto& tempSpr = ECS::GetComponent<Sprite>(entity);
-			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
-
-			//calculate the area of the sprite that shouldn't have a physics body attached (empty space, ponytail/necklace, etc.)
-			float shrinkX = tempSpr.GetWidth() / 1.25f;
-			float shrinkY = tempSpr.GetWidth() / 1.45f;
-
-			//setup the dynamic box2d physics body
-			b2Body* tempBody;
-			b2BodyDef tempDef;
-			tempDef.type = b2_dynamicBody;
-			//set the position
-			if (i == 0) tempDef.position.Set(float32(-18.f), float32(-7.5f)); //blue position
-			else tempDef.position.Set(float32(18.f), float32(-7.5f)); //orange position
-
-			//add the physics body to box2D physics world simulator
-			tempBody = m_physicsWorld->CreateBody(&tempDef);
-			tempBody->SetFixedRotation(true);
-			//create a spriteLib physics body using the box2D physics body
-			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY),
-				vec2(0.f, 0.f), false);
-
-			//setup the user data to identify them as players
-			if (i == 0) tempBody->SetUserData(&blue); //blue
-			else tempBody->SetUserData(&orange); //orange
-
-			//add their animations, and make sure they're set to be repeating
-			//IDLE 
-			//idle while facing left
-			animController.AddAnimation(Animation());//0
-			auto& idleLeft = animController.GetAnimation(0);
-			createAnimation(&idleLeft, 0, 0, 250, 250, 6, false, 0.083f, true);
-			//idle while facing right 
-			animController.AddAnimation(Animation());//1
-			auto& idleRight = animController.GetAnimation(1);
-			createAnimation(&idleRight, 0, 0, 250, 250, 6, true, 0.083f, true);
-
-			//RUN 
-			//run while facing left
-			animController.AddAnimation(Animation());//2
-			auto& runLeft = animController.GetAnimation(2);
-			createAnimation(&runLeft, 0, 250, 250, 250, 6, false, 0.083f, true);
-			//run while facing right
-			animController.AddAnimation(Animation());//3
-			auto& runRight = animController.GetAnimation(3);
-			createAnimation(&runRight, 0, 250, 250, 250, 6, true, 0.083f, true);
-
-			//JUMP
-			//jump while facing left
-			animController.AddAnimation(Animation());//4
-			auto& jumpLeft = animController.GetAnimation(4);
-			createAnimation(&jumpLeft, 0, 500, 250, 250, 6, false, 0.083f, true);
-			//jump while facing right
-			animController.AddAnimation(Animation());//5
-			auto& jumpRight = animController.GetAnimation(5);
-			createAnimation(&jumpRight, 0, 500, 250, 250, 6, true, 0.083f, true);
-
-			//TAGGING IDLE
-			//tag while otherwise idle, left
-			animController.AddAnimation(Animation());//6
-			auto& idleTagLeft = animController.GetAnimation(6);
-			createAnimation(&idleTagLeft, 0, 750, 250, 250, 6, false, 0.083f, true);
-			//tag while otherwise idle, right
-			animController.AddAnimation(Animation());//7
-			auto& idleTagRight = animController.GetAnimation(7);
-			createAnimation(&idleTagRight, 0, 750, 250, 250, 6, true, 0.083f, true);
-
-			//TAGGING RUN
-			//tag while running to the left
-			animController.AddAnimation(Animation());//8
-			auto& runTagLeft = animController.GetAnimation(8);
-			createAnimation(&runTagLeft, 0, 1000, 250, 250, 6, false, 0.083f, true);
-			//tag while running to the right
-			animController.AddAnimation(Animation());//9
-			auto& runTagRight = animController.GetAnimation(9);
-			createAnimation(&runTagRight, 0, 1000, 250, 250, 6, true, 0.083f, true);
-
-			//TAGGING Jump
-			//tag while jumping and facing to the left
-			animController.AddAnimation(Animation());//10
-			auto& jumpTagLeft = animController.GetAnimation(10);
-			createAnimation(&jumpTagLeft, 0, 1250, 250, 250, 6, false, 0.083f, true);
-			//tag while jumping and facing to the left
-			animController.AddAnimation(Animation());//11
-			auto& jumpTagRight = animController.GetAnimation(11);
-			createAnimation(&jumpTagRight, 0, 1250, 250, 250, 6, true, 0.083f, true);
-
-			//SLIDING 
-			//slide while facing left
-			animController.AddAnimation(Animation());//12
-			auto& slideLeft = animController.GetAnimation(12);
-			createAnimation(&slideLeft, 0, 1500, 250, 250, 4, false, 0.083f, true);
-			//slide while facing right
-			animController.AddAnimation(Animation());//13
-			auto& slideRight = animController.GetAnimation(13);
-			createAnimation(&slideRight, 0, 1500, 250, 250, 4, true, 0.083f, true);
-
-			//set the active animations so that they're facing the right direction when they spawn
-			if (i == 0) animController.SetActiveAnim(1);
-			else animController.SetActiveAnim(0);
-
-			//Sets up the Identifier
-			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::AnimationBit() | EntityIdentifier::PhysicsBit();
-			ECS::SetUpIdentifier(entity, bitHolder, "Player " + std::to_string(i + 1));
-			std::cout << " ORIINAL " << tempPhsBody.GetHeight() << std::endl;
-			std::cout << " ORIINAL X " << tempPhsBody.GetCenterOffset().x << std::endl;
-			std::cout << " ORIINAL Y " << tempPhsBody.GetCenterOffset().y << std::endl;
-
-
-			//if it's blue
-			if (i == 0)
-			{
-				//set them as the main player
-				ECS::SetIsMainPlayer(entity, true);
-			}
-			//if it's orange
-			else if (i == 1)
-			{
-				//set them as the second player
-				ECS::SetIsSecondPlayer(entity, true);
-			}
-		}
-	}
 
 	//plank entities
 	for (int i = 0; i < 50; i++)
@@ -1053,31 +1154,9 @@ void MainGame::level1(float windowWidth, float windowHeight){
 
 }
 
-//placeholder code for level 2
+//code for level 2 (house level)
 void MainGame::level2(float windowWidth, float windowHeight){
 	float aspectRatio = windowWidth / windowHeight;
-
-	//Setup main camera entity
-	{
-		//Creates entity
-		auto entity = ECS::CreateEntity();
-		EntityIdentifier::MainCamera(entity);
-
-		//Creates new orthographic camera
-		ECS::AttachComponent<Camera>(entity);
-		ECS::AttachComponent<Spawn>(entity);
-
-		vec4 temp = ECS::GetComponent<Camera>(entity).GetOrthoSize();
-		ECS::GetComponent<Camera>(entity).SetWindowSize(vec2(float(windowWidth), float(windowHeight)));
-		ECS::GetComponent<Camera>(entity).Orthographic(aspectRatio, temp.x, temp.y, temp.z, temp.w, -100.f, 100.f);
-		ECS::GetComponent<Camera>(entity).Zoom(75.f);
-		vec4 size = ECS::GetComponent<Camera>(entity).GetOrthoSize();
-
-		//Sets up the Identifier
-		unsigned int bitHolder = EntityIdentifier::CameraBit();
-		ECS::SetUpIdentifier(entity, bitHolder, "Main Cam");
-		ECS::SetIsMainCamera(entity, true);
-	}
 
 	//setup backdrop entity
 	{
@@ -1099,207 +1178,6 @@ void MainGame::level2(float windowWidth, float windowHeight){
 		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
 		ECS::SetUpIdentifier(entity, bitHolder, "Backdrop (static)");
 	}
-
-	//Setup player entities (both orange and blue, cycling blue then orange)
-	for (int i = 0; i < 2; i++) {
-		{
-			//Our JSON animation file
-			auto moving = File::LoadJSON("Player.json");
-
-			//Creates entity
-			auto entity = ECS::CreateEntity();
-
-			//Add components
-			ECS::AttachComponent<Sprite>(entity);
-			ECS::AttachComponent<Transform>(entity);
-			ECS::AttachComponent<AnimationController>(entity);
-			ECS::AttachComponent<PhysicsBody>(entity);
-			ECS::AttachComponent<Spawn>(entity);
-
-			//Sets up components
-			std::string fileName = "orange 2.png"; //set the default sprite sheet to be Orange's
-			if (i == 0) fileName = "blue 2.png"; //if the first player is being created, make it blue
-			//grab a reference to the animation controler
-			auto& animController = ECS::GetComponent<AnimationController>(entity);
-			//set the spritesheet 
-			animController.InitUVs(fileName);
-
-			//setup the sprite and transform compoments 
-			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 17, 17, true, &animController);
-			ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 2.5f, 25.f + 0.1f * i));
-
-			//grab references to the sprite and physic body compoments
-			auto& tempSpr = ECS::GetComponent<Sprite>(entity);
-			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
-
-			//calculate the area of the sprite that shouldn't have a physics body attached (empty space, ponytail/necklace, etc.)
-			float shrinkX = tempSpr.GetWidth() / 1.25f;
-			float shrinkY = tempSpr.GetWidth() / 1.45f;
-
-			//setup the dynamic box2d physics body
-			b2Body* tempBody;
-			b2BodyDef tempDef;
-			tempDef.type = b2_dynamicBody;
-			//set the position
-			if (i == 0) tempDef.position.Set(float32(-18.f), float32(-7.5f)); //blue position
-			else tempDef.position.Set(float32(18.f), float32(-7.5f)); //orange position
-
-			//add the physics body to box2D physics world simulator
-			tempBody = m_physicsWorld->CreateBody(&tempDef);
-			tempBody->SetFixedRotation(true);
-			//create a spriteLib physics body using the box2D physics body
-			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY),
-				vec2(0.f, 0.f), false);
-
-			//setup the user data to identify them as players
-			if (i == 0) tempBody->SetUserData(&blue); //blue
-			else tempBody->SetUserData(&orange); //orange
-
-			//add their animations, and make sure they're set to be repeating
-			//IDLE 
-			//idle while facing left
-			animController.AddAnimation(Animation());//0
-			auto& idleLeft = animController.GetAnimation(0);
-			createAnimation(&idleLeft, 0, 0, 250, 250, 6, false, 0.083f, true);
-			//idle while facing right 
-			animController.AddAnimation(Animation());//1
-			auto& idleRight = animController.GetAnimation(1);
-			createAnimation(&idleRight, 0, 0, 250, 250, 6, true, 0.083f, true);
-
-			//RUN 
-			//run while facing left
-			animController.AddAnimation(Animation());//2
-			auto& runLeft = animController.GetAnimation(2);
-			createAnimation(&runLeft, 0, 250, 250, 250, 6, false, 0.083f, true);
-			//run while facing right
-			animController.AddAnimation(Animation());//3
-			auto& runRight = animController.GetAnimation(3);
-			createAnimation(&runRight, 0, 250, 250, 250, 6, true, 0.083f, true);
-
-			//JUMP
-			//jump while facing left
-			animController.AddAnimation(Animation());//4
-			auto& jumpLeft = animController.GetAnimation(4);
-			createAnimation(&jumpLeft, 0, 500, 250, 250, 6, false, 0.083f, true);
-			//jump while facing right
-			animController.AddAnimation(Animation());//5
-			auto& jumpRight = animController.GetAnimation(5);
-			createAnimation(&jumpRight, 0, 500, 250, 250, 6, true, 0.083f, true);
-
-			//TAGGING IDLE
-			//tag while otherwise idle, left
-			animController.AddAnimation(Animation());//6
-			auto& idleTagLeft = animController.GetAnimation(6);
-			createAnimation(&idleTagLeft, 0, 750, 250, 250, 6, false, 0.083f, true);
-			//tag while otherwise idle, right
-			animController.AddAnimation(Animation());//7
-			auto& idleTagRight = animController.GetAnimation(7);
-			createAnimation(&idleTagRight, 0, 750, 250, 250, 6, true, 0.083f, true);
-
-			//TAGGING RUN
-			//tag while running to the left
-			animController.AddAnimation(Animation());//8
-			auto& runTagLeft = animController.GetAnimation(8);
-			createAnimation(&runTagLeft, 0, 1000, 250, 250, 6, false, 0.083f, true);
-			//tag while running to the right
-			animController.AddAnimation(Animation());//9
-			auto& runTagRight = animController.GetAnimation(9);
-			createAnimation(&runTagRight, 0, 1000, 250, 250, 6, true, 0.083f, true);
-
-			//TAGGING Jump
-			//tag while jumping and facing to the left
-			animController.AddAnimation(Animation());//10
-			auto& jumpTagLeft = animController.GetAnimation(10);
-			createAnimation(&jumpTagLeft, 0, 1250, 250, 250, 6, false, 0.083f, true);
-			//tag while jumping and facing to the left
-			animController.AddAnimation(Animation());//11
-			auto& jumpTagRight = animController.GetAnimation(11);
-			createAnimation(&jumpTagRight, 0, 1250, 250, 250, 6, true, 0.083f, true);
-
-			//SLIDING 
-			//slide while facing left
-			animController.AddAnimation(Animation());//12
-			auto& slideLeft = animController.GetAnimation(12);
-			createAnimation(&slideLeft, 0, 1500, 250, 250, 4, false, 0.083f, true);
-			//slide while facing right
-			animController.AddAnimation(Animation());//13
-			auto& slideRight = animController.GetAnimation(13);
-			createAnimation(&slideRight, 0, 1500, 250, 250, 4, true, 0.083f, true);
-
-			//set the active animations so that they're facing the right direction when they spawn
-			if (i == 0) animController.SetActiveAnim(1);
-			else animController.SetActiveAnim(0);
-
-			//Sets up the Identifier
-			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::AnimationBit() | EntityIdentifier::PhysicsBit();
-			ECS::SetUpIdentifier(entity, bitHolder, "Player " + std::to_string(i + 1));
-			std::cout << " ORIINAL " << tempPhsBody.GetHeight() << std::endl;
-			std::cout << " ORIINAL X " << tempPhsBody.GetCenterOffset().x << std::endl;
-			std::cout << " ORIINAL Y " << tempPhsBody.GetCenterOffset().y << std::endl;
-
-
-			//if it's blue
-			if (i == 0)
-			{
-				//set them as the main player
-				ECS::SetIsMainPlayer(entity, true);
-			}
-			//if it's orange
-			else if (i == 1)
-			{
-				//set them as the second player
-				ECS::SetIsSecondPlayer(entity, true);
-			}
-		}
-	}
-
-	/*
-	for (int i = 0; i < 4; i++) {
-		{
-			//Creates entity
-			auto entity = ECS::CreateEntity();
-
-			//adds components 
-			ECS::AttachComponent<Sprite>(entity);
-			ECS::AttachComponent<Transform>(entity);
-			ECS::AttachComponent<PhysicsBody>(entity);
-
-			//loadsprite sheet and set up sprite component
-			std::string fileName = "vert planks.png";
-			if (i < 2)ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 2, 10);
-			else ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 3, 10);
-			//setup transform component
-			ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 14.f + 0.01 * i));
-
-			//grab references to the sprite and physics body components
-			auto& tempSpr = ECS::GetComponent<Sprite>(entity);
-			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
-
-			//calculate the area of the sprite that shouldn't have a physics body attached (empty space, etc.)
-			float shrinkX = 0.f;
-			float shrinkY = 0.f;
-
-			//setup the static box2d physics body
-			b2Body* tempBody;
-			b2BodyDef tempDef;
-			tempDef.type = b2_staticBody;
-			//set the position
-			if (i < 2) tempDef.position.Set(float32(-1.f + (2.f * i)), float32(-3.f));
-			else tempDef.position.Set(float32(-2.f + (3.f * (i - 2))), float32(24.f));
-			//add the physics body to box2D physics world simulator
-			tempBody = m_physicsWorld->CreateBody(&tempDef);
-
-			//create a spriteLib physics body using the box2D physics body
-			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX + 0.5f), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, 0.0f), false);
-
-			//set up user data to indentify as a border (players can't jump through the bottom)
-			tempBody->SetUserData(&border);
-
-			//Setup indentifier 
-			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
-			ECS::SetUpIdentifier(entity, bitHolder, "Vertical plank " + std::to_string(i + 1));
-		}	
-	}*/
 
 	//wood platform  entities
 	for (int i = 0; i < 4; i++) {
@@ -1498,8 +1376,34 @@ void MainGame::level2(float windowWidth, float windowHeight){
 			ECS::SetUpIdentifier(entity, bitHolder, "bricks " + std::to_string(i + 1));
 		}
 	}
+}
 
-	//create the bombs part of the HUD 
+void MainGame::level3(float windowWidth, float windowHeight)
+{
+	float aspectRatio = windowWidth / windowHeight;
+
+	//setup backdrop entity
+	{
+		//Creates enetity
+		auto entity = ECS::CreateEntity();
+
+		//Adds components
+		ECS::AttachComponent<Sprite>(entity);
+		ECS::AttachComponent<Transform>(entity);
+
+		//sets up components 
+		std::string fileName = "city/backdrop.jpg";
+
+		//sets up sprite and transform components
+		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 90, 50);
+		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 0.f));
+
+		//Setup indentifier 
+		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
+		ECS::SetUpIdentifier(entity, bitHolder, "Backdrop");
+	}
+
+	//steel bar entities
 	for (int i = 0; i < 2; i++) {
 		{
 			//creates entity
@@ -1508,74 +1412,232 @@ void MainGame::level2(float windowWidth, float windowHeight){
 			//adds components
 			ECS::AttachComponent<Sprite>(entity);
 			ECS::AttachComponent<Transform>(entity);
-			ECS::AttachComponent<AnimationController>(entity);
+			ECS::AttachComponent<PhysicsBody>(entity);
 
-			//load sprites and set up sprite component
-			std::string fileName = "blue bomb.png";
-			if (i == 1) fileName = "orange bomb.png";
-			//grab a reference to the animation controler
-			auto& animController = ECS::GetComponent<AnimationController>(entity);
-			//set the spritesheet 
-			animController.InitUVs(fileName);
+			//loadsprite sheet and set up sprite component
+			std::string fileName = "city/steelbar.png";
+			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 20, 2);
+			//setup transform component
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(2.5f, 0.f, 12.f + (0.01f * i)));
 
-			//setup up sprite
-			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 12, 4, true, &animController);
-			//Setup transform 
-			ECS::GetComponent<Transform>(entity).SetPosition(vec3(-15, -17.f, 98.f + (0.01 * i)));
-			if (i == 1) ECS::GetComponent<Transform>(entity).SetPosition(vec3(15, -17.f, 98.f + (0.01 * i)));
+			//grab references to the sprite and physics body components
+			auto& tempSpr = ECS::GetComponent<Sprite>(entity);
+			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
 
-			animController.AddAnimation(Animation());
-			auto& anim = animController.GetAnimation(0);
-			anim.AddFrame(vec2(0, 226), vec2(695, 0));
-			animController.SetActiveAnim(0);
+			//calculate the area of the sprite that shouldn't have a physics body attached (empty space, etc.)
+			float shrinkX = 0.f;
+			float shrinkY = 0.f;
+
+			//setup the static box2d physics body
+			b2Body* tempBody;
+			b2BodyDef tempDef;
+			tempDef.type = b2_staticBody;
+			//Sets positions for each platform 
+			if (i == 0)tempDef.position.Set(float32(-25.f), float32(12.8f));
+			else if (i == 1)tempDef.position.Set(float32(25.f), float32(12.8f));
+
+			//add the physics body to box2D physics world simulator
+			tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+			//create a spriteLib physics body using the box2D physics body
+			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, 0.f), false);
+
+			//set up user data to indentify as a border (players can't jump through the bottom)
+			tempBody->SetUserData(&border);
 
 			//Setup indentifier 
-			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::AnimationBit();
-			if (i == 0) {
-				ECS::SetUpIdentifier(entity, bitHolder, "blue bomb");
-				bombs[0] = entity;
-			}
-			else {
-				ECS::SetUpIdentifier(entity, bitHolder, "orange bomb");
-				bombs[1] = entity;
-			}
+			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
+			ECS::SetUpIdentifier(entity, bitHolder, "steel bar " + std::to_string(i + 1));
 		}
 	}
 
-	//burning fuse part of the HUD 
+	//pale border entities 
+	for (int i = 0; i < 4; i++) {
+		{
+			//creates entity
+			auto entity = ECS::CreateEntity();
+
+			//adds components
+			ECS::AttachComponent<Sprite>(entity);
+			ECS::AttachComponent<Transform>(entity);
+			ECS::AttachComponent<PhysicsBody>(entity);
+
+			//loadsprite sheet and set up sprite component
+			std::string fileName = "city/platform_thing.png";
+			if(i < 2) ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 17, 2);
+			else if (i == 2) ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 16, 2);
+			else if (i == 3) ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 26, 2);
+
+			//setup transform component
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(2.5f, 0.f, 12.f + (0.01f * i)));
+
+			//grab references to the sprite and physics body components
+			auto& tempSpr = ECS::GetComponent<Sprite>(entity);
+			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+
+			//calculate the area of the sprite that shouldn't have a physics body attached (empty space, etc.)
+			float shrinkX = 0.f;
+			float shrinkY = 0.f;
+
+			//setup the static box2d physics body
+			b2Body* tempBody;
+			b2BodyDef tempDef;
+			tempDef.type = b2_staticBody;
+			//Sets positions for each platform 
+			if (i == 0)tempDef.position.Set(float32(-27.6f), float32(-8.5f));
+			else if (i == 1)tempDef.position.Set(float32(27.6f), float32(-8.5f));
+			else if (i == 2)tempDef.position.Set(float32(-0.2f), float32(7.f));
+			else if (i == 3)tempDef.position.Set(float32(0.f), float32(-13.5f));
+
+			//add the physics body to box2D physics world simulator
+			tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+			//create a spriteLib physics body using the box2D physics body
+			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, 0.f), false);
+
+			//set up user data to indentify as a border (players can't jump through the bottom)
+			tempBody->SetUserData(&border);
+
+			//Setup indentifier 
+			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
+			ECS::SetUpIdentifier(entity, bitHolder, "pale border " + std::to_string(i + 1));
+		}
+	}
+
+	//pale platform entity
 	{
 		//creates entity
 		auto entity = ECS::CreateEntity();
 
-		//Adds components 
+		//adds components
 		ECS::AttachComponent<Sprite>(entity);
 		ECS::AttachComponent<Transform>(entity);
-		ECS::AttachComponent<AnimationController>(entity);
+		ECS::AttachComponent<PhysicsBody>(entity);
 
-		//load sprites and set up sprite component
-		std::string fileName = "fuse burn.png";
-		//grab a reference to the animation controler
-		auto& animController = ECS::GetComponent<AnimationController>(entity);
-		//set the spritesheet 
-		animController.InitUVs(fileName);
+		//loadsprite sheet and set up sprite component
+		std::string fileName = "city/platform.png";
+		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 26, 3);
+		//setup transform component
+		ECS::GetComponent<Transform>(entity).SetPosition(vec3(2.5f, -6.f, 12.f));
 
-		//setup up sprite
-		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 4, 4, true, &animController);
-		//Setup transform, start it in a place noone will be able to see it 
-		ECS::GetComponent<Transform>(entity).SetPosition(vec3(-300, -300.f, 98.2f));
+		//grab references to the sprite and physics body components
+		auto& tempSpr = ECS::GetComponent<Sprite>(entity);
+		auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
 
-		animController.AddAnimation(Animation());
-		auto& anim = animController.GetAnimation(0);
-		anim.AddFrame(vec2(0, 100), vec2(100, 0));
-		anim.AddFrame(vec2(100, 100), vec2(200, 0));
-		anim.SetSecPerFrame(0.05f);
-		anim.SetRepeating(true);
-		animController.SetActiveAnim(0);
+		//calculate the area of the sprite that shouldn't have a physics body attached (empty space, etc.)
+		float shrinkX = 0.f;
+		float shrinkY = 1.f + (tempSpr.GetHeight() / 3.f);
+
+		//setup the static box2d physics body
+		b2Body* tempBody;
+		b2BodyDef tempDef;
+		tempDef.type = b2_staticBody;
+		//Sets positions for each platform 
+		tempDef.position.Set(float32(0.f), float32(-5.5f));
+
+		//add the physics body to box2D physics world simulator
+		tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+		//create a spriteLib physics body using the box2D physics body
+		tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, tempSpr.GetHeight() / 3.f), false);
+
+		//set up user data to indentify as a platform (players can jump through the bottom)
+		tempBody->SetUserData(&platform);
 
 		//Setup indentifier 
-		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::AnimationBit();
-		ECS::SetUpIdentifier(entity, bitHolder, "buring animation");
-		bombs[2] = entity;
+		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
+		ECS::SetUpIdentifier(entity, bitHolder, "pale platform");
+	}
+
+	//construction beam platform entities 
+	for (int i = 0; i < 2; i++) {
+		{
+			//creates entity
+			auto entity = ECS::CreateEntity();
+
+			//adds components
+			ECS::AttachComponent<Sprite>(entity);
+			ECS::AttachComponent<Transform>(entity);
+			ECS::AttachComponent<PhysicsBody>(entity);
+
+			//loadsprite sheet and set up sprite component
+			std::string fileName = "city/crane.png";
+			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 25, 3);
+			//setup transform component
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(2.5f, 0.f, 12.f + (0.01f * i)));
+
+			//grab references to the sprite and physics body components
+			auto& tempSpr = ECS::GetComponent<Sprite>(entity);
+			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+
+			//calculate the area of the sprite that shouldn't have a physics body attached (empty space, etc.)
+			float shrinkX = 0.f;
+			float shrinkY = 0.f;
+
+			//setup the static box2d physics body
+			b2Body* tempBody;
+			b2BodyDef tempDef;
+			tempDef.type = b2_staticBody;
+			//Sets positions for each platform 
+			if (i == 0)tempDef.position.Set(float32(-27.5f), float32(1.2f));
+			else if (i == 1)tempDef.position.Set(float32(27.5f), float32(1.2f));
+
+			//add the physics body to box2D physics world simulator
+			tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+			//create a spriteLib physics body using the box2D physics body
+			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, 0.f), false);
+
+			//set up user data to indentify as a platform (players can jump through the bottom)
+			tempBody->SetUserData(&platform);
+
+			//Setup indentifier 
+			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
+			ECS::SetUpIdentifier(entity, bitHolder, "steel bar " + std::to_string(i + 1));
+		}
+	}
+
+	//create the crane end entities (just asethic)
+	for (int i = 0; i < 2; i++)
+	{
+		//Creates entity
+		auto entity = ECS::CreateEntity();
+
+		//adds components 
+		ECS::AttachComponent<Sprite>(entity);
+		ECS::AttachComponent<Transform>(entity);
+
+		//load sprites and set up sprite component
+		std::string fileName = "city/crane end.png";
+		if(i == 0) fileName = "city/crane end flipped.png";
+		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 2, 3);
+		//setup transform component
+		ECS::GetComponent<Transform>(entity).SetPosition(vec3(-14.f, 1.2f, 40.f));
+		if (i == 0)ECS::GetComponent<Transform>(entity).SetPosition(vec3(14.f, 1.2f, 40.f));
+		//Setup indentifier 
+		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
+		ECS::SetUpIdentifier(entity, bitHolder, "crane end");
+	}
+
+	//create the part that's holding the steel beams in place (just asethtic) 
+	for (int i = 0; i < 2; i++)
+	{
+		//Creates entity
+		auto entity = ECS::CreateEntity();
+
+		//adds components 
+		ECS::AttachComponent<Sprite>(entity);
+		ECS::AttachComponent<Transform>(entity);
+
+		//load sprites and set up sprite component
+		std::string fileName = "city/steel graber.png";
+		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 9, 3);
+		//setup transform component
+		ECS::GetComponent<Transform>(entity).SetPosition(vec3(-24.8f, 13.f, 80.f));
+		if(i==0) ECS::GetComponent<Transform>(entity).SetPosition(vec3(24.8f, 13.f, 80.f));
+		//Setup indentifier 
+		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
+		ECS::SetUpIdentifier(entity, bitHolder, "crane end");
 	}
 }
 

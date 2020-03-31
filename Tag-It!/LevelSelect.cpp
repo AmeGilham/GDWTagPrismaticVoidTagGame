@@ -109,7 +109,7 @@ void LevelSelect::InitScene(float windowWidth, float windowHeight) {
         ECS::AttachComponent<Transform>(entity);
 
         //sets up components
-        std::string fileName = "menus/screenshot.png";
+        std::string fileName = "menus/level 1 unselected.png";
 
         //sets up sprite and transform components
         ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 25, 15);
@@ -131,7 +131,7 @@ void LevelSelect::InitScene(float windowWidth, float windowHeight) {
         ECS::AttachComponent<Transform>(entity);
 
         //sets up components
-        std::string fileName = "menus/screenshot.png";
+        std::string fileName = "menus/level 2 unselected.png";
 
         //sets up sprite and transform components
         ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 25, 15);
@@ -153,7 +153,7 @@ void LevelSelect::InitScene(float windowWidth, float windowHeight) {
 		ECS::AttachComponent<Transform>(entity);
 
 		//sets up components
-		std::string fileName = "menus/screenshot.png";
+		std::string fileName = "menus/level 3 unselected.png";
 
 		//sets up sprite and transform components
 		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 25, 15);
@@ -175,7 +175,7 @@ void LevelSelect::InitScene(float windowWidth, float windowHeight) {
 		ECS::AttachComponent<Transform>(entity);
 
 		//sets up components
-		std::string fileName = "menus/screenshot.png";
+		std::string fileName = "menus/level 4 unselected.png";
 
 		//sets up sprite and transform components
 		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 25, 15);
@@ -198,12 +198,12 @@ void LevelSelect::MouseMotion(SDL_MouseMotionEvent evnt) {
     if ((float(evnt.x) >= 250.f && float(evnt.x) <= 790.f) && (float(evnt.y) >= 243.2f && float(evnt.y) <= 567.2f)) {
       //  printf("MOVED");
         auto& spr = ECS::GetComponent<Sprite>(levels[0]);
-        std::string fileName = "menus/level1H.png";
+        std::string fileName = "menus/level 1 selected.png";
         spr.LoadSprite(fileName, 25, 15);
     }
     else {
         auto& spr = ECS::GetComponent<Sprite>(levels[0]);
-        std::string fileName = "menus/screenshot.png";
+        std::string fileName = "menus/level 1 unselected.png";
         spr.LoadSprite(fileName, 25, 15);
     }
 
@@ -211,25 +211,25 @@ void LevelSelect::MouseMotion(SDL_MouseMotionEvent evnt) {
     if ((float(evnt.x) >= 1130.f && float(evnt.x) <= 1670.f) && (float(evnt.y) >= 243.2f && float(evnt.y) <= 567.2f)) {
         //  printf("MOVED");
         auto& spr = ECS::GetComponent<Sprite>(levels[1]);
-        std::string fileName = "menus/level1H.png";
-        spr.LoadSprite(fileName, 25, 15);
+		std::string fileName = "menus/level 2 selected.png";
+		spr.LoadSprite(fileName, 25, 15);
     }
     else {
         auto& spr = ECS::GetComponent<Sprite>(levels[1]);
-        std::string fileName = "menus/screenshot.png";
-        spr.LoadSprite(fileName, 25, 15);
+		std::string fileName = "menus/level 2 unselected.png";
+		spr.LoadSprite(fileName, 25, 15);
     }
 
 	//city level
 	if ((float(evnt.x) >= 250.f && float(evnt.x) <= 790.f) && (float(evnt.y) >= 676.4f && float(evnt.y) <= 1000.4f)) {
 		//  printf("MOVED");
 		auto& spr = ECS::GetComponent<Sprite>(levels[2]);
-		std::string fileName = "menus/level1H.png";
+		std::string fileName = "menus/level 3 selected.png";
 		spr.LoadSprite(fileName, 25, 15);
 	}
 	else {
 		auto& spr = ECS::GetComponent<Sprite>(levels[2]);
-		std::string fileName = "menus/screenshot.png";
+		std::string fileName = "menus/level 3 unselected.png";
 		spr.LoadSprite(fileName, 25, 15);
 	}
 
@@ -237,13 +237,13 @@ void LevelSelect::MouseMotion(SDL_MouseMotionEvent evnt) {
 	if ((float(evnt.x) >= 1130.f && float(evnt.x) <= 1670.f) && (float(evnt.y) >= 676.4f && float(evnt.y) <= 1000.4f)) {
 		//  printf("MOVED");
 		auto& spr = ECS::GetComponent<Sprite>(levels[3]);
-		std::string fileName = "menus/level1H.png";
+		std::string fileName = "menus/level 4 selected.png";
 		spr.LoadSprite(fileName, 25, 15);
 	}
 
 	else {
 		auto& spr = ECS::GetComponent<Sprite>(levels[3]);
-		std::string fileName = "menus/screenshot.png";
+		std::string fileName = "menus/level 4 unselected.png";
 		spr.LoadSprite(fileName, 25, 15);
 	}
 

@@ -48,6 +48,9 @@ void myListener::PreSolve(b2Contact* contact, const b2Manifold* oldManifold){
 	int* uda = reinterpret_cast<int*>(fixa->GetBody()->GetUserData()); 
 	int* udb = reinterpret_cast<int*>(fixb->GetBody()->GetUserData());
 	
+	//if the not it objective is colliding with a platform or a border 
+	if ((*uda == 5 && (*udb == 2 || *udb == 3)) || (*udb == 5 && (*uda == 2 || *uda == 3))) contact->SetEnabled(false);
+
 	//if any of the objects are a tag box 
 	if (*uda == 4 || *uda == 6 || *udb == 4 || *udb == 6) {
 		contact->SetEnabled(false);

@@ -25,6 +25,7 @@ public:
 	void level1(float windowWidth, float windowHeight);
 	void level2(float windowWidth, float windowHeight);
 	void level3(float windowWidth, float windowHeight);
+	void level4(float windowWidth, float windowHeight);
 
 	//Gamepad input
 	void GamepadStroke(XInputController* con) override;
@@ -59,8 +60,6 @@ private:
 	int otag = 6; //tag box for orange
 	int notItObjective = 5; 
 
-	bool objective = true;
-
 	bool bright = true; //is blue facing right?
 	bool oright = false; //is orange facing right?
 
@@ -86,6 +85,9 @@ private:
 	unsigned int tagEntity = 0;
 	//variable to store the entity number of the "It!" Hud object
 	unsigned int itIdentifyingHudEntity = 0;
+	//variable to store the entity number of the not-it objective 
+	unsigned int notitEntity = 0;
+
 	float itTime = 5.f;
 	float animTime = itTime;
 	float timeLeft;
@@ -93,6 +95,7 @@ private:
 	float animTimeO = itTime;
 	float timeLeftO;
 
+	float timeSinceGameStart = 0.f;
 
 	//Hud bomb entity numbers, 0 is blue, 1 is orange, 2 is the burning fuse sprite
 	unsigned int bombs[3];

@@ -200,6 +200,54 @@ void MainGame::InitScene(float windowWidth, float windowHeight, int level){
 		}
 	}
 
+	//NOT IT OBJECTIVE
+	{
+		auto entity = ECS::CreateEntity();
+		//adds components 
+		ECS::AttachComponent<Sprite>(entity);
+		ECS::AttachComponent<Transform>(entity);
+		ECS::AttachComponent<PhysicsBody>(entity);
+		ECS::AttachComponent<Spawn>(entity);
+
+		//setup components 
+		std::string fileName = "Not-It!.png";
+		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 8, 2);
+		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 17.35f, 30.f));
+		ECS::GetComponent<Spawn>(entity).SetObj(true);
+
+		//grab references to the sprite and physics body components
+		auto& tempSpr = ECS::GetComponent<Sprite>(entity);
+		auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+
+		//calculate the area of the sprite that shouldn't have a physics body attached (empty space, etc.)
+		float shrinkX = tempSpr.GetWidth() / 4; //still off, adjust
+		float shrinkY = 0;
+
+		//setup the static box2d physics body
+		b2Body* tempBody;
+		b2BodyDef tempDef;
+		tempDef.type = b2_dynamicBody;
+		//set the position
+		tempDef.position.Set(float32(0.f), float32(17.f));
+
+		//add the physics body to box2D physics world simulator
+		tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+		//create a spriteLib physics body using the box2D physics body
+		tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, 0.f), false); //still off, adjust
+
+		tempBody->SetFixedRotation(true);
+
+		//set up user data to indentify as a border (players can't jump through the bottom)
+		tempBody->SetUserData(&notItObjective);
+
+		//Setup indentifier 
+		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
+		ECS::SetUpIdentifier(entity, bitHolder, "Not-It! obejctive");
+		ECS::SetIsNotItObjective(entity, true);
+		notitEntity = entity;
+	}
+
 	if (level == 1) { //code for creating/ init-ing level 1 (waterfall)
 		level1(windowWidth, windowHeight);
 	}
@@ -212,7 +260,9 @@ void MainGame::InitScene(float windowWidth, float windowHeight, int level){
 		level3(windowWidth, windowHeight);
 	}
 
-
+	else if (level == 4) {
+		level4(windowWidth, windowHeight);
+	}
 
 	//create the bombs part of the HUD 
 	for (int i = 0; i < 2; i++) {
@@ -297,55 +347,6 @@ void MainGame::InitScene(float windowWidth, float windowHeight, int level){
 
 //Update the scene, every frame
 void MainGame::Update(){
-	//NOT IT OBJECTIVE
-	if (objective == true) {
-		objective = false;
-
-		auto entity = ECS::CreateEntity();
-		//adds components 
-		ECS::AttachComponent<Sprite>(entity);
-		ECS::AttachComponent<Transform>(entity);
-		ECS::AttachComponent<PhysicsBody>(entity);
-		ECS::AttachComponent<Spawn>(entity);
-
-		//setup components 
-		std::string fileName = "Not-It!.png";
-		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 8, 2);
-		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 17.35f, 30.f));
-		ECS::GetComponent<Spawn>(entity).SetObj(true);
-
-		//grab references to the sprite and physics body components
-		auto& tempSpr = ECS::GetComponent<Sprite>(entity);
-		auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
-
-		//calculate the area of the sprite that shouldn't have a physics body attached (empty space, etc.)
-		float shrinkX = tempSpr.GetWidth() / 4; //still off, adjust
-		float shrinkY = 0;
-
-		//setup the static box2d physics body
-		b2Body* tempBody;
-		b2BodyDef tempDef;
-		tempDef.type = b2_dynamicBody;
-		//set the position
-		tempDef.position.Set(float32(0.f), float32(17.35f));
-
-		//add the physics body to box2D physics world simulator
-		tempBody = m_physicsWorld->CreateBody(&tempDef);
-
-		//create a spriteLib physics body using the box2D physics body
-		tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, 0.f), false); //still off, adjust
-
-		tempBody->SetFixedRotation(true);
-
-		//set up user data to indentify as a border (players can't jump through the bottom)
-		tempBody->SetUserData(&notItObjective);
-
-		//Setup indentifier 
-		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
-		ECS::SetUpIdentifier(entity, bitHolder, "Not-It! obejctive");
-		ECS::SetIsNotItObjective(entity, true);
-	}
-
 	//grab blue's physics body info
 	auto& bluetempPhysBod = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
 	b2Body* bluebody = bluetempPhysBod.GetBody();
@@ -358,6 +359,8 @@ void MainGame::Update(){
 	auto& blueAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer());
 	auto& orangeAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer());
 	
+	//add the change in time to the time since the game has started 
+	timeSinceGameStart += Timer::deltaTime;
 	//add the change in time to the time since blue and orange last jumped (used to control jumping with platforms reseting jumps)
 	blueTimeSinceLastJump += Timer::deltaTime;
 	orangeTimeSinceLastJump += Timer::deltaTime;
@@ -371,7 +374,12 @@ void MainGame::Update(){
 	bluetempPhysBod.ApplyForce(vec3(0.f, -300.f * 60.f * Timer::deltaTime, 0.f));
 	orangetempPhysBod.ApplyForce(vec3(0.f, -300.f * 60.f * Timer::deltaTime, 0.f));
 
-
+	//if the not-it objective exists, make it bounce a bit
+	if (listener.GetNotItObjExists()) {
+		auto& notItphysBod = ECS::GetComponent<PhysicsBody>(notitEntity); 
+		if ((int)timeSinceGameStart % 2 == 0) notItphysBod.GetBody()->SetLinearVelocity(b2Vec2(0.f, 1.f));
+		else notItphysBod.GetBody()->SetLinearVelocity(b2Vec2(0.f, -1.f));;
+	}
 
 	//if Blue has run off the right of the screen, make her appear on the left
 	if (bluetempPhysBod.GetPosition().x > 50.5) {
@@ -636,16 +644,7 @@ void MainGame::Update(){
 
 //to destroy the not it objective
 void MainGame::destroy(){
-	auto view = m_sceneReg->view<EntityIdentifier>();
-
-	for (auto entity : view) {
-
-		if (m_sceneReg->has<Spawn>(entity)) {
-			if (ECS::GetComponent<Spawn>(entity).GetObj()) { //objective
-				ECS::DestroyEntity(entity);
-			}
-		}
-	}
+	ECS::DestroyEntity(notitEntity);
 }
 
 void MainGame::createT(int ud){
@@ -1378,6 +1377,7 @@ void MainGame::level2(float windowWidth, float windowHeight){
 	}
 }
 
+//code for level 3 (city level)
 void MainGame::level3(float windowWidth, float windowHeight)
 {
 	float aspectRatio = windowWidth / windowHeight;
@@ -1639,6 +1639,289 @@ void MainGame::level3(float windowWidth, float windowHeight)
 		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
 		ECS::SetUpIdentifier(entity, bitHolder, "crane end");
 	}
+
+	//reposition the players and not-it objective using their physics bodies 
+	auto& blueTempPhysBod = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
+	auto& orangeTempPhysBod = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
+	auto& notItTempPhysBod = ECS::GetComponent<PhysicsBody>(notitEntity);
+
+	blueTempPhysBod.GetBody()->SetTransform(b2Vec2(-30.f,14.f), 0.f);
+	orangeTempPhysBod.GetBody()->SetTransform(b2Vec2(30.f,14.f), 0.f);
+	notItTempPhysBod.GetBody()->SetTransform(b2Vec2(0.f, -12.f), 0.f);
+}
+
+//code for level 4 (pyramid level)
+void MainGame::level4(float windowWidth, float windowHeight)
+{
+	float aspectRatio = windowWidth / windowHeight;
+
+	//setup backdrop entity
+	{
+		//Creates enetity
+		auto entity = ECS::CreateEntity();
+
+		//Adds components
+		ECS::AttachComponent<Sprite>(entity);
+		ECS::AttachComponent<Transform>(entity);
+
+		//sets up components 
+		std::string fileName = "pyramid/backdrop.jpg";
+
+		//sets up sprite and transform components
+		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 90, 50);
+		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 0.f));
+
+		//Setup indentifier 
+		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
+		ECS::SetUpIdentifier(entity, bitHolder, "Backdrop");
+	}
+
+	//setup ground entities
+	for (int i = 0; i < 12; i++)
+	{
+		{
+			//Creates entity
+			auto entity = ECS::CreateEntity();
+
+			//adds components 
+			ECS::AttachComponent<Transform>(entity);
+			ECS::AttachComponent<PhysicsBody>(entity);
+
+			//setup transform component
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 10.f + 0.01 * i));
+
+			//grab references to the sprite and physics body components
+			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+
+			//calculate the area of the sprite that shouldn't have a physics body attached (empty space, etc.)
+			float shrinkX = 0.f;
+			float shrinkY = 0.f;
+
+			//setup the static box2d physics body
+			b2Body* tempBody;
+			b2BodyDef tempDef;
+			tempDef.type = b2_staticBody;
+			//set the position
+			if (i < 12) tempDef.position.Set(float32(-60.f + (10.f * i)), float32(-15.f));
+			//add the physics body to box2D physics world simulator
+			tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+			//create a spriteLib physics body using the box2D physics body
+			tempPhsBody = PhysicsBody(tempBody, float(10 - shrinkX), float(2 - shrinkY), vec2(0.f, 0.45f), false);
+
+			//set up user data to indentify as a border (players can't jump through the bottom)
+			tempBody->SetUserData(&border);
+
+			//Setup indentifier 
+			unsigned int bitHolder = EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
+			ECS::SetUpIdentifier(entity, bitHolder, "Ground " + std::to_string(i + 1));
+		}
+	}
+
+	//setup sandstone (horizontal) entities 
+	for (int i = 0; i < 6; i++) {
+		{
+			//creates entity
+			auto entity = ECS::CreateEntity();
+
+			//adds components
+			ECS::AttachComponent<Sprite>(entity);
+			ECS::AttachComponent<Transform>(entity);
+			ECS::AttachComponent<PhysicsBody>(entity);
+
+			//loadsprite sheet and set up sprite component
+			std::string fileName = "pyramid/sandstone.png";
+			if(i < 4 || i == 5) ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 13, 2);
+			else if (i == 4) ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 7, 4);
+			//setup transform component
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(2.5f, 0.f, 12.f + (0.01f * i)));
+
+			//grab references to the sprite and physics body components
+			auto& tempSpr = ECS::GetComponent<Sprite>(entity);
+			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+
+			//calculate the area of the sprite that shouldn't have a physics body attached (empty space, etc.)
+			float shrinkX = 0.f;
+			float shrinkY = 0.f;
+
+			//setup the static box2d physics body
+			b2Body* tempBody;
+			b2BodyDef tempDef;
+			tempDef.type = b2_staticBody;
+			//Sets positions for each platform 
+			if (i == 0)tempDef.position.Set(float32(-36.5f), float32(-5.f));
+			else if (i == 1)tempDef.position.Set(float32(36.5f), float32(-5.f));
+			else if (i == 2)tempDef.position.Set(float32(-18.f), float32(-6.f));
+			else if (i == 3)tempDef.position.Set(float32(18.f), float32(-6.f));
+			else if (i == 4)tempDef.position.Set(float32(0.f), float32(24.f));
+			else if (i == 5)tempDef.position.Set(float32(0.f), float32(22.f));
+			//add the physics body to box2D physics world simulator
+			tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+			//create a spriteLib physics body using the box2D physics body
+			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, 0.f), false);
+
+			//set up user data to indentify as a platform (players can jump through the bottom)
+			tempBody->SetUserData(&border);
+
+			//Setup indentifier 
+			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
+			ECS::SetUpIdentifier(entity, bitHolder, "sandstone " + std::to_string(i + 1));
+		}
+	}
+
+	//setup sandstone (vertical) entities 
+	for (int i = 0; i < 2; i++) {
+		{
+			//creates entity
+			auto entity = ECS::CreateEntity();
+
+			//adds components
+			ECS::AttachComponent<Sprite>(entity);
+			ECS::AttachComponent<Transform>(entity);
+			ECS::AttachComponent<PhysicsBody>(entity);
+
+			//loadsprite sheet and set up sprite component
+			std::string fileName = "pyramid/sandstone vert.png";
+			if (i < 2) ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 1, 5);
+			//setup transform component
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(2.5f, 0.f, 12.f + (0.01f * i)));
+
+			//grab references to the sprite and physics body components
+			auto& tempSpr = ECS::GetComponent<Sprite>(entity);
+			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+
+			//calculate the area of the sprite that shouldn't have a physics body attached (empty space, etc.)
+			float shrinkX = 0.f;
+			float shrinkY = 0.f;
+
+			//setup the static box2d physics body
+			b2Body* tempBody;
+			b2BodyDef tempDef;
+			tempDef.type = b2_staticBody;
+			//Sets positions for each platform 
+			if (i == 0)tempDef.position.Set(float32(-4.5f), float32(6.f));
+			else if (i == 1)tempDef.position.Set(float32(4.5f), float32(6.f));
+			//add the physics body to box2D physics world simulator
+			tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+			//create a spriteLib physics body using the box2D physics body
+			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, 0.f), false);
+
+			//set up user data to indentify as a platform (players can jump through the bottom)
+			tempBody->SetUserData(&border);
+
+			//Setup indentifier 
+			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
+			ECS::SetUpIdentifier(entity, bitHolder, "sandstone " + std::to_string(i + 1));
+		}
+	}
+
+	//setup wooden platform entities 
+	for (int i = 0; i < 4; i++) {
+		{
+			//creates entity
+			auto entity = ECS::CreateEntity();
+
+			//adds components
+			ECS::AttachComponent<Sprite>(entity);
+			ECS::AttachComponent<Transform>(entity);
+			ECS::AttachComponent<PhysicsBody>(entity);
+
+			//loadsprite sheet and set up sprite component
+			std::string fileName = "pyramid/wood 1.png";
+			if (i < 2) ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 13, 2);
+			else ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 7, 2);
+			//setup transform component
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(2.5f, 0.f, 12.f + (0.01f * i)));
+
+			//grab references to the sprite and physics body components
+			auto& tempSpr = ECS::GetComponent<Sprite>(entity);
+			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+
+			//calculate the area of the sprite that shouldn't have a physics body attached (empty space, etc.)
+			float shrinkX = 0.f;
+			float shrinkY = 1.f + (tempSpr.GetHeight() / 3.f);
+
+			//setup the static box2d physics body
+			b2Body* tempBody;
+			b2BodyDef tempDef;
+			tempDef.type = b2_staticBody;
+			//Sets positions for each platform 
+			if (i == 0)tempDef.position.Set(float32(0.f), float32(10.f));
+			else if (i == 1)tempDef.position.Set(float32(0.f), float32(-5.f));
+			else if (i == 2)tempDef.position.Set(float32(-12.f), float32(6.f));
+			else if (i == 3)tempDef.position.Set(float32(12.f), float32(6.f));
+			//add the physics body to box2D physics world simulator
+			tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+			//create a spriteLib physics body using the box2D physics body
+			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, tempSpr.GetHeight() / 3.f), false);
+
+			//set up user data to indentify as a platform (players can jump through the bottom)
+			tempBody->SetUserData(&platform);
+
+			//Setup indentifier 
+			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
+			ECS::SetUpIdentifier(entity, bitHolder, "sandstone " + std::to_string(i + 1));
+		}
+	}
+
+	//setup supported wooden platform entities 
+	for (int i = 0; i < 2; i++) {
+		{
+			//creates entity
+			auto entity = ECS::CreateEntity();
+
+			//adds components
+			ECS::AttachComponent<Sprite>(entity);
+			ECS::AttachComponent<Transform>(entity);
+			ECS::AttachComponent<PhysicsBody>(entity);
+
+			//loadsprite sheet and set up sprite component
+			std::string fileName = "pyramid/wood 2.png";
+			if (i < 2) ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 10, 2);
+			//setup transform component
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(2.5f, 0.f, 12.f + (0.01f * i)));
+
+			//grab references to the sprite and physics body components
+			auto& tempSpr = ECS::GetComponent<Sprite>(entity);
+			auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+
+			//calculate the area of the sprite that shouldn't have a physics body attached (empty space, etc.)
+			float shrinkX = 0.f;
+			float shrinkY = 0.f;
+
+			//setup the static box2d physics body
+			b2Body* tempBody;
+			b2BodyDef tempDef;
+			tempDef.type = b2_staticBody;
+			//Sets positions for each platform 
+			if (i == 0)tempDef.position.Set(float32(-36.5f), float32(4.f));
+			else if (i == 1)tempDef.position.Set(float32(36.5f), float32(4.f));
+			//add the physics body to box2D physics world simulator
+			tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+			//create a spriteLib physics body using the box2D physics body
+			tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, 0.f), false);
+
+			//set up user data to indentify as a platform (players can jump through the bottom)
+			tempBody->SetUserData(&platform);
+
+			//Setup indentifier 
+			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
+			ECS::SetUpIdentifier(entity, bitHolder, "sandstone " + std::to_string(i + 1));
+		}
+	}
+
+	//reposition the players and not-it objective using their physics bodies 
+	auto& blueTempPhysBod = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
+	auto& orangeTempPhysBod = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
+	auto& notItTempPhysBod = ECS::GetComponent<PhysicsBody>(notitEntity);
+
+	blueTempPhysBod.GetBody()->SetTransform(b2Vec2(-36.5f, 6.f), 0.f);
+	orangeTempPhysBod.GetBody()->SetTransform(b2Vec2(36.5f, 6.f), 0.f);
+	notItTempPhysBod.GetBody()->SetTransform(b2Vec2(0.f, 6.f), 0.f);
 }
 
 //keyboard key held down input

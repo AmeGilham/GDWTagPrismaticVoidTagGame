@@ -22,11 +22,17 @@ public:
 	//Each scene will need to have a different
 	//init, as each scene's contents will be different
 	virtual void InitScene(float windowWidth, float windowHeight) { printf("windowwidth: %f, windowHeight: %f", windowWidth, windowHeight); };
-	virtual void InitScene(float windowWidth, float windowHeight, int level) { printf("windowwidth: %f, windowHeight: %f", windowWidth, windowHeight); };
+	virtual void InitScene(float windowWidth, float windowHeight, int level) { 
+		printf("windowwidth: %f, windowHeight: %f", windowWidth, windowHeight); 
+		m_physicsWorld = new b2World(m_gravity);
+	};
 
 
 	//each frame update function
 	virtual void Update() {}
+
+	//output the current game state
+	virtual int GetGameState() { return -1; };
 
 	//gamepad input
 	virtual void GamepadStroke(XInputController* con) { };

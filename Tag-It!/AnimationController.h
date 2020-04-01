@@ -72,6 +72,8 @@ public:
 	float GetSecPerFrame() const;
 	//get the index of the current frame
 	int GetCurrentFrameIndex();
+	//get wheter or not the animation is currently paused
+	bool GetPaused();
 
 	//Setters
 	//Set if the animation repeats
@@ -80,6 +82,8 @@ public:
 	void SetSecPerFrame(float sec);
 	//set the current frame 
 	void SetCurrentFrameIndex(int index);
+	//set wheter or not the animation is paused
+	void SetPaused(bool paused);
 
 private:
 	//Frames
@@ -89,6 +93,9 @@ private:
 	
 	//Is the animation done?
 	bool m_done = false;
+
+	//Is the animation paused?
+	bool m_paused = false; 
 
 	//Seconds that need to pass per frame, by default it's 2.f
 	//But that's a bit big and you should really set it to something lower
@@ -123,6 +130,11 @@ public:
 	//Updates the UVS
 	//*Based on the "current frame" of the active animation
 	void UpdateUVs();
+
+	//pauses the animations
+	void Pause();
+	//unpauses the animations
+	void Unpause();
 
 	//Getters
 	//Grabs a reference to the animation at anim

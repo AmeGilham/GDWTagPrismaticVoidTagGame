@@ -41,35 +41,38 @@ void Animation::AddFrame(vec2 BL, vec2 TR)
 
 void Animation::Update(float dt)
 {
-	//Subtract delta time from
-	//Frame time
-	m_frameTime -= dt;
-	
-	//If frametime is less than or equal to zero
-		//Increase the frame and reset frametime
-	if (m_frameTime <= 0.f)
-	{
-		m_currentFrame++;
-		m_frameTime = m_secPerFrame;
-		//If animation repeating
-			//Check for reset
-		if (m_repeating)
+	//make sure the animation isn't paused first 
+	if (!m_paused) {
+		//Subtract delta time from
+		//Frame time
+		m_frameTime -= dt;
+
+		//If frametime is less than or equal to zero
+			//Increase the frame and reset frametime
+		if (m_frameTime <= 0.f)
 		{
-			//If current frame is greater than or equal to total num frames
-				//Reset current frame to zero
-			if (m_currentFrame >= m_frames.size())
+			m_currentFrame++;
+			m_frameTime = m_secPerFrame;
+			//If animation repeating
+				//Check for reset
+			if (m_repeating)
 			{
-				m_currentFrame = 0;
+				//If current frame is greater than or equal to total num frames
+					//Reset current frame to zero
+				if (m_currentFrame >= m_frames.size())
+				{
+					m_currentFrame = 0;
+				}
 			}
-		}
-		else
-		{
-			//If current frame is greater than or equal to total num frames
-				//Reset to last frame
-			if (m_currentFrame >= m_frames.size())
+			else
 			{
-				m_currentFrame = int(m_frames.size() - 1);
-				m_done = true;
+				//If current frame is greater than or equal to total num frames
+					//Reset to last frame
+				if (m_currentFrame >= m_frames.size())
+				{
+					m_currentFrame = int(m_frames.size() - 1);
+					m_done = true;
+				}
 			}
 		}
 	}
@@ -120,6 +123,11 @@ int Animation::GetCurrentFrameIndex()
 	return m_currentFrame;
 }
 
+bool Animation::GetPaused()
+{
+	return m_paused;
+}
+
 void Animation::SetRepeating(bool repeating)
 {
 	m_repeating = repeating;
@@ -137,6 +145,11 @@ void Animation::SetSecPerFrame(float sec)
 void Animation::SetCurrentFrameIndex(int index)
 {
 	m_currentFrame = index;
+}
+
+void Animation::SetPaused(bool paused)
+{
+	m_paused = paused;
 }
 
 ///////ANIMATION CONTROLLER STUFF STARTS/////////
@@ -217,6 +230,22 @@ void AnimationController::UpdateUVs()
 	
 	//We just buffer subdata now
 	glBufferSubData(GL_ARRAY_BUFFER, 0, texCoordSize, VBO_DATA);
+}
+
+void AnimationController::Pause()
+{
+	//cycle through each animation pausing them 
+	for (int i = 0; i < m_animations.size(); i++) {
+		m_animations[i].SetPaused(true);
+	}
+}
+
+void AnimationController::Unpause()
+{
+	//cycle through each animation unpausing them 
+	for (int i = 0; i < m_animations.size(); i++) {
+		m_animations[i].SetPaused(false);
+	}
 }
 
 Animation& AnimationController::GetAnimation(int anim)

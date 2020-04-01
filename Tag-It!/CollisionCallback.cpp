@@ -158,6 +158,11 @@ void myListener::SetNotItObjExists(bool exists){
 	NotItObjExists = exists;
 }
 
+void myListener::SetIt(int _it)
+{
+	it = _it;
+}
+
 //called by Box2D when two objects stop colliding
 void myListener::EndContact (b2Contact* contact){
 	//end contact code

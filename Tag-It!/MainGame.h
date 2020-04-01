@@ -15,8 +15,21 @@ public:
 	//initilizes the scene
 	void InitScene(float windowWidth, float windowHeight, int level) override;
 
+	void ResetScene(); //restores the game to the state it was in at the beginning
+
+	//return the gamestate variable 
+	int GetGameState() override;
+
 	//updates the scene every frame
 	void Update() override;
+
+	//main gameplay code for when nothing's paused, nobody's changed whose it recently, and everything is running normally 
+	void UpdateMain();
+	//code for when a match has ended, and one of the players bombs is going off
+	void UpdateGameEnd();
+
+	//create entities for the stage of the game after a player has lost 
+	void CreateEndOfMatchEntities();
 
 	void destroy();
 	void createT(int ud);
@@ -51,6 +64,12 @@ public:
 	//hud burning y position
 	float hudBurningYPos(double ratio);
 private:
+	//variable to store which level the game is playing 
+	int stage = 1;
+
+	//variable to determine the current state of the game, 0 is game starting, 1 is game running, 2 is it change, 3 is paused, 4 is game ending, 5 is options after game end 
+	int gameState = 1;
+
 	//Box2D user data
 	int blue = 0;
 	int orange = 1;
@@ -60,21 +79,30 @@ private:
 	int otag = 6; //tag box for orange
 	int notItObjective = 5; 
 
+	//stores wheter or not the players are facing right
 	bool bright = true; //is blue facing right?
 	bool oright = false; //is orange facing right?
 
+	//TIMERS 
+	float timeSinceGameStart = 0.f;
+	float timeSinceGameEnd = 0.f;
 	//time since jump timers
 	float blueTimeSinceLastJump = 0.f;
 	float orangeTimeSinceLastJump = 0.f;
-
 	//time since each player hit the "Tag button" 
 	float timeSinceTagTriggered = 0.f;
-	//store the index of the frame for the animation that's being swapped out with the tagging animation
-	int tagFrame = -1; 
-
 	//time since palyer last slid
 	float timeSinceSlideB = 0.f;
 	float timeSinceSlideO = 0.f;
+	//time each player has left as the one "it"
+	float maxTime = 90.f;
+	float blueFuseTimeRemaining = maxTime;
+	float orangeFuseTimeRemaining = maxTime;
+
+
+	//store the index of the frame for the animation that's being swapped out with the tagging animation
+	int tagFrame = -1; 
+
 	//are the players current sliding 
 	bool blueSlide = false; 
 	bool orangeSlide = false; 
@@ -95,17 +123,16 @@ private:
 	float animTimeO = itTime;
 	float timeLeftO;
 
-	float timeSinceGameStart = 0.f;
+
 
 	//Hud bomb entity numbers, 0 is blue, 1 is orange, 2 is the burning fuse sprite
 	unsigned int bombs[3];
+	//Entities numbers for all the entities important to after the match has ended
+	unsigned int EndOfMatch[6];
 
 	//last player to trigger a tag, 1 is blue, 2 is orange
 	int  playerWhoTriggedTag = 0;
-	//time each player has left as the one "it"
-	float maxTime = 90.f; 
-	float blueFuseTimeRemaining = maxTime;
-	float orangeFuseTimeRemaining = maxTime;
+
 
 	//speed caps, too be adjusted when a player is "it"
 	float blueSpeedCap = 40.f;

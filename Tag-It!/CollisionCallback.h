@@ -28,6 +28,8 @@ public:
 	bool GetNotItObjExists();
 	//sets if the not it objective exist
 	void SetNotItObjExists(bool exists);
+	//set the player currently it 
+	void SetIt(int _it);
 
 	void jumpThrough(b2Contact* contact, b2Fixture* playFix);
 	void jumpReset(int* ud);

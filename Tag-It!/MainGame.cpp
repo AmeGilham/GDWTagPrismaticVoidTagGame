@@ -15,12 +15,22 @@ MainGame::MainGame(std::string name)
 
 //Initlize the scene
 void MainGame::InitScene(float windowWidth, float windowHeight, int level){
+	Scene::InitScene(windowWidth, windowHeight, level);
 	//Dynamically allocates the register (so when you unload the scene when you switch between scenes
 	//you can later reInit this scene
 	m_sceneReg = new entt::registry;
 
 	//Attach the register
 	ECS::AttachRegister(m_sceneReg);
+
+	//copy the level number
+	stage = level;
+
+	//reset the gamestate 
+	gameState = 1;
+
+	listener = myListener();
+	m_physicsWorld->SetContactListener(&listener);
 
 	//Sets up aspect ratio for the camera
 	float aspectRatio = windowWidth / windowHeight;
@@ -343,10 +353,228 @@ void MainGame::InitScene(float windowWidth, float windowHeight, int level){
 		bombs[2] = entity;
 	}
 
+	//set it so the contact listener knows the not-it objective exists
+	listener.SetNotItObjExists(true);
+	//set it so no-one is it
+	listener.SetIt(0);
+
+	//reset all the timers
+	timeSinceGameStart = 0.f;
+	timeSinceGameEnd = 0.f;
+	//time since jump timers
+	blueTimeSinceLastJump = 0.f;
+	orangeTimeSinceLastJump = 0.f;
+	//time since each player hit the "Tag button" 
+	timeSinceTagTriggered = 0.f;
+	//time since palyer last slid
+	timeSinceSlideB = 0.f;
+	timeSinceSlideO = 0.f;
+	//time each player has left as the one "it"
+	maxTime = 90.f;
+	blueFuseTimeRemaining = maxTime;
+	orangeFuseTimeRemaining = maxTime;
+
+	//reset player max speeds 
+	blueSpeedCap = 40.f;
+	orangeSpeedCap = 40.f;
+
+	//other variable resets 
+	itTime = 5.f;
+	animTime = itTime;
+	animTimeO = itTime;
+}
+
+void MainGame::ResetScene()
+{
+	//reset all the timers
+	timeSinceGameStart = 0.f;
+	timeSinceGameEnd = 0.f;
+	//time since jump timers
+	blueTimeSinceLastJump = 0.f;
+	orangeTimeSinceLastJump = 0.f;
+	//time since each player hit the "Tag button" 
+	timeSinceTagTriggered = 0.f;
+	//time since palyer last slid
+	timeSinceSlideB = 0.f;
+	timeSinceSlideO = 0.f;
+	//time each player has left as the one "it"
+	maxTime = 90.f;
+	blueFuseTimeRemaining = maxTime;
+	orangeFuseTimeRemaining = maxTime;
+
+	//reset player max speeds 
+	blueSpeedCap = 40.f; 
+	orangeSpeedCap = 40.f;
+
+	//other variable resets 
+	itTime = 5.f;
+	animTime = itTime;
+	animTimeO = itTime;
+
+	//reset player animations
+	ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer()).SetActiveAnim(1);
+	ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer()).SetActiveAnim(0);
+
+	//recreate not-it objective 
+	{
+		auto entity = ECS::CreateEntity();
+		//adds components 
+		ECS::AttachComponent<Sprite>(entity);
+		ECS::AttachComponent<Transform>(entity);
+		ECS::AttachComponent<PhysicsBody>(entity);
+		ECS::AttachComponent<Spawn>(entity);
+
+		//setup components 
+		std::string fileName = "Not-It!.png";
+		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 8, 2);
+		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 17.35f, 30.f));
+		ECS::GetComponent<Spawn>(entity).SetObj(true);
+
+		//grab references to the sprite and physics body components
+		auto& tempSpr = ECS::GetComponent<Sprite>(entity);
+		auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
+
+		//calculate the area of the sprite that shouldn't have a physics body attached (empty space, etc.)
+		float shrinkX = tempSpr.GetWidth() / 4; //still off, adjust
+		float shrinkY = 0;
+
+		//setup the static box2d physics body
+		b2Body* tempBody;
+		b2BodyDef tempDef;
+		tempDef.type = b2_dynamicBody;
+		//set the position
+		tempDef.position.Set(float32(0.f), float32(17.f));
+
+		//add the physics body to box2D physics world simulator
+		tempBody = m_physicsWorld->CreateBody(&tempDef);
+
+		//create a spriteLib physics body using the box2D physics body
+		tempPhsBody = PhysicsBody(tempBody, float(tempSpr.GetWidth() - shrinkX), float(tempSpr.GetHeight() - shrinkY), vec2(0.f, 0.f), false); //still off, adjust
+
+		tempBody->SetFixedRotation(true);
+
+		//set up user data to indentify as a border (players can't jump through the bottom)
+		tempBody->SetUserData(&notItObjective);
+
+		//Setup indentifier 
+		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::PhysicsBit();
+		ECS::SetUpIdentifier(entity, bitHolder, "Not-It! obejctive");
+		ECS::SetIsNotItObjective(entity, true);
+		notitEntity = entity;
+	}
+
+	//reset player and not-it positions positions 
+	//waterfall or house level
+	if (stage == 1 || stage == 2) {
+		ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer()).GetBody()->SetTransform(b2Vec2(-18.f, -7.5f), 0.f);
+		ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer()).GetBody()->SetTransform(b2Vec2(18.f, -7.5f), 0.f);
+	}
+	//city level
+	else if (stage == 3) {
+		ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer()).GetBody()->SetTransform(b2Vec2(-30.f, 14.f), 0.f);
+		ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer()).GetBody()->SetTransform(b2Vec2(30.f, 14.f), 0.f);
+		ECS::GetComponent<PhysicsBody>(notitEntity).GetBody()->SetTransform(b2Vec2(0.f, -12.f), 0.f);
+	}
+	//pyramid level
+	else if (stage == 4) {
+		ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer()).GetBody()->SetTransform(b2Vec2(-36.5f, 6.f), 0.f);
+		ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer()).GetBody()->SetTransform(b2Vec2(36.5f, 6.f), 0.f);
+		ECS::GetComponent<PhysicsBody>(notitEntity).GetBody()->SetTransform(b2Vec2(0.f, 6.f), 0.f);
+	}
+
+	//unpause the player animations 
+	ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer()).Unpause();
+	ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer()).Unpause();
+
+	//reset it so the contact listener knows the not-it objective exists again
+	listener.SetNotItObjExists(true);
+	//reset it so no-one is it
+	listener.SetIt(0);
+
+	//destroy and recreate the bombs 
+	ECS::DestroyEntity(bombs[0]);
+	ECS::DestroyEntity(bombs[1]);
+	for (int i = 0; i < 2; i++) {
+		{
+			//creates entity
+			auto entity = ECS::CreateEntity();
+
+			//adds components
+			ECS::AttachComponent<Sprite>(entity);
+			ECS::AttachComponent<Transform>(entity);
+			ECS::AttachComponent<AnimationController>(entity);
+
+			//load sprites and set up sprite component
+			std::string fileName = "blue bomb.png";
+			if (i == 1) fileName = "orange bomb.png";
+			//grab a reference to the animation controler
+			auto& animController = ECS::GetComponent<AnimationController>(entity);
+			//set the spritesheet 
+			animController.InitUVs(fileName);
+
+			//setup up sprite
+			ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 12, 4, true, &animController);
+			//Setup transform 
+			ECS::GetComponent<Transform>(entity).SetPosition(vec3(-15, -17.f, 98.f + (0.01 * i)));
+			if (i == 1) ECS::GetComponent<Transform>(entity).SetPosition(vec3(15, -17.f, 98.f + (0.01 * i)));
+
+			animController.AddAnimation(Animation());
+			auto& anim = animController.GetAnimation(0);
+			anim.AddFrame(vec2(0, 226), vec2(695, 0));
+			animController.SetActiveAnim(0);
+
+			//Setup indentifier 
+			unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::AnimationBit();
+			if (i == 0) {
+				ECS::SetUpIdentifier(entity, bitHolder, "blue bomb");
+				bombs[0] = entity;
+			}
+			else {
+				ECS::SetUpIdentifier(entity, bitHolder, "orange bomb");
+				bombs[1] = entity;
+			}
+		}
+	}
+
+	//reset the position and size of the burning fuse 
+	ECS::GetComponent<Transform>(bombs[2]).SetPositionX(-300.f);
+	ECS::GetComponent<Transform>(bombs[2]).SetPositionY(-300.f);
+	ECS::GetComponent<Sprite>(bombs[2]).SetWidth(4);
+	ECS::GetComponent<Sprite>(bombs[2]).SetHeight(4);
+
+	//delete all the end of match entities 
+	for (int i = 0; i < 6; i++) {
+		ECS::DestroyEntity(EndOfMatch[i]);
+		EndOfMatch[i] = 0;
+	}
+
+	//reset the gamestate
+	gameState = 1;
+}
+
+int MainGame::GetGameState()
+{
+	return gameState;
 }
 
 //Update the scene, every frame
-void MainGame::Update(){
+void MainGame::Update() {
+	//if the game is running, it's not paused, noone has been tagged recently, etc. then run the normal update code 
+	if (gameState == 1) {
+		UpdateMain();
+	}
+
+	else if (gameState == 4 || gameState == 5) {
+		UpdateGameEnd();
+	}
+	
+	//print out current framerate
+	printf("%f\n", 1.0 / Timer::deltaTime);
+}
+
+//main update code, executed in the Update() function
+void MainGame::UpdateMain()
+{
 	//grab blue's physics body info
 	auto& bluetempPhysBod = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
 	b2Body* bluebody = bluetempPhysBod.GetBody();
@@ -358,7 +586,7 @@ void MainGame::Update(){
 	//grab both's animation controller
 	auto& blueAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer());
 	auto& orangeAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer());
-	
+
 	//add the change in time to the time since the game has started 
 	timeSinceGameStart += Timer::deltaTime;
 	//add the change in time to the time since blue and orange last jumped (used to control jumping with platforms reseting jumps)
@@ -376,7 +604,7 @@ void MainGame::Update(){
 
 	//if the not-it objective exists, make it bounce a bit
 	if (listener.GetNotItObjExists()) {
-		auto& notItphysBod = ECS::GetComponent<PhysicsBody>(notitEntity); 
+		auto& notItphysBod = ECS::GetComponent<PhysicsBody>(notitEntity);
 		if ((int)timeSinceGameStart % 2 == 0) notItphysBod.GetBody()->SetLinearVelocity(b2Vec2(0.f, 1.f));
 		else notItphysBod.GetBody()->SetLinearVelocity(b2Vec2(0.f, -1.f));;
 	}
@@ -461,7 +689,7 @@ void MainGame::Update(){
 
 		//check if blue is now it 
 		if (listener.GetIt() == 1) {
-			if (itIdentifyingHudEntity != 0){
+			if (itIdentifyingHudEntity != 0) {
 				ECS::DestroyEntity(itIdentifyingHudEntity);
 				itIdentifyingHudEntity = 0;
 			}
@@ -477,23 +705,23 @@ void MainGame::Update(){
 				//adds components
 				ECS::AttachComponent<Sprite>(entity);
 				ECS::AttachComponent<Transform>(entity);
-				
+
 				std::string fileName = "Blue It.png";
 				//setup up sprite
 				ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 18, 17);
 				//Setup transform 
 				ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 99.f));
-		
+
 				//Setup indentifier 
 				unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
 				ECS::SetUpIdentifier(entity, bitHolder, "Blue It Hud");
-				itIdentifyingHudEntity = entity;}
+				itIdentifyingHudEntity = entity; }
 
 			/*fill rest of code about showing that blue is now it*/
 		}
 		//if not, then orange must now be it 
 		else {
-			if (itIdentifyingHudEntity != 0){
+			if (itIdentifyingHudEntity != 0) {
 				ECS::DestroyEntity(itIdentifyingHudEntity);
 				itIdentifyingHudEntity = 0;
 			}
@@ -543,7 +771,7 @@ void MainGame::Update(){
 			ECS::GetComponent<Sprite>(bombs[0]).SetWidth(4 + std::round(8 * timeLeftRatio));
 			ECS::GetComponent<Transform>(bombs[0]).SetPosition(vec3(-15.f - 0.5f * (12 - ECS::GetComponent<Sprite>(bombs[0]).GetWidth()), -17.f, 98.f));
 		}
-		ECS::GetComponent<Transform>(bombs[2]).SetPosition (  vec3 (-17.f + (8.f * timeLeftRatio),hudBurningYPos(timeLeftRatio),98.8f) );
+		ECS::GetComponent<Transform>(bombs[2]).SetPosition(vec3(-17.f + (8.f * timeLeftRatio), hudBurningYPos(timeLeftRatio), 98.8f));
 		itAnimB(); //function for it animation
 	}
 	//Or if Orange is currently it 
@@ -562,8 +790,8 @@ void MainGame::Update(){
 			ECS::GetComponent<Sprite>(bombs[1]).SetWidth(4 + std::round(8 * timeLeftRatio));
 			ECS::GetComponent<Transform>(bombs[1]).SetPosition(vec3(15.f + 0.5f * (12 - ECS::GetComponent<Sprite>(bombs[1]).GetWidth()), -17.f, 98.f));
 		}
-	ECS::GetComponent<Transform>(bombs[2]).SetPosition(vec3(17.f - (8.f * timeLeftRatio), hudBurningYPos(timeLeftRatio), 98.8f));
-	itAnimO();
+		ECS::GetComponent<Transform>(bombs[2]).SetPosition(vec3(17.f - (8.f * timeLeftRatio), hudBurningYPos(timeLeftRatio), 98.8f));
+		itAnimO();
 	}
 
 	//PLAYER ANIMATIONS 
@@ -605,7 +833,7 @@ void MainGame::Update(){
 	//blue
 	if (timeSinceSlideB > 0.332f && blueSlide) {
 		//say blue is no longer sliding
-		blueSlide = false; 
+		blueSlide = false;
 		//reform her hithox
 		bluetempPhysBod.SetCenterOffset(vec2(0.f, 0.f));
 		bluetempPhysBod.SetHeight(17.f - (17.f / 1.45f));
@@ -639,7 +867,153 @@ void MainGame::Update(){
 		orangebody->CreateFixture(&fix); //recreates it with smaller hitbox
 	}
 
-	//printf("%f\n", 1.0 / Timer::deltaTime);
+	//if the game has ended, begin the end of match code 
+	if (blueFuseTimeRemaining < 0 || orangeFuseTimeRemaining < 0) {
+		blueAnimController.Pause();
+		orangeAnimController.Pause();
+		bluetempPhysBod.GetBody()->SetLinearVelocity(b2Vec2(0.f,0.f));
+		orangetempPhysBod.GetBody()->SetLinearVelocity(b2Vec2(0.f, 0.f));
+		ECS::DestroyEntity(itIdentifyingHudEntity);
+		itIdentifyingHudEntity = 0;
+		CreateEndOfMatchEntities();
+		gameState = 4;
+	}
+}
+
+//update code for when a match has ended, and one of the players bombs is going off
+void MainGame::UpdateGameEnd(){
+	//increase the time since the game has ended
+	timeSinceGameEnd += Timer::deltaTime;
+
+	//increase the size of the buring fuse sprite to simulate an expolsion 
+	auto& tempBurningSprite = ECS::GetComponent<Sprite>(bombs[2]);
+	tempBurningSprite.SetWidth(tempBurningSprite.GetWidth() + (480 * Timer::deltaTime));
+	tempBurningSprite.SetHeight(tempBurningSprite.GetWidth() + (480 * Timer::deltaTime));
+	
+	//grab a reference to the sprite of the background 
+	auto& tempBgSprite = ECS::GetComponent<Sprite>(EndOfMatch[0]);
+
+	//set the opacity of the background 
+	if (tempBgSprite.GetTransparency() + (Timer::deltaTime / 2) < 1.f) {
+		tempBgSprite.SetTransparency(tempBgSprite.GetTransparency() + (Timer::deltaTime / 2));
+	}
+	else {
+		tempBgSprite.SetTransparency(1.f);
+	}
+
+	//if the time since the end of the match is greater than 2 seconds, start to display the player who won
+	if (timeSinceGameEnd > 2.f) {
+		auto& tempWinnerSprite = ECS::GetComponent<Sprite>(EndOfMatch[1]);
+		if (tempWinnerSprite.GetTransparency() + 2 * Timer::deltaTime < 1.f) {
+			tempWinnerSprite.SetTransparency(tempWinnerSprite.GetTransparency() + 2 * Timer::deltaTime);
+		}
+		else {
+			tempWinnerSprite.SetTransparency(1.f);
+		}
+	}
+
+	//if the time since the end of the match is greater than 3 seconds, start to move the buttons up 
+	if (timeSinceGameEnd > 2.f) {
+		auto& playAgainTransform = ECS::GetComponent<Transform>(EndOfMatch[2]); //play again button
+		auto& newStageTransform = ECS::GetComponent<Transform>(EndOfMatch[3]); //new stage button 
+		auto& mainMenuTransform = ECS::GetComponent<Transform>(EndOfMatch[4]); //main menu button
+		auto& exitTransform = ECS::GetComponent<Transform>(EndOfMatch[5]); //exit game button
+
+		//move play again button into place 
+		if(playAgainTransform.GetPositionY() < -12.5f) playAgainTransform.SetPositionY(playAgainTransform.GetPositionY() + 40.f * Timer::deltaTime); 
+		//move new stage button into place 
+		if (newStageTransform.GetPositionY() < -12.5f) newStageTransform.SetPositionY(newStageTransform.GetPositionY() + 40.f * Timer::deltaTime);
+		//move main menu button into place 
+		if (mainMenuTransform.GetPositionY() < -12.5f) mainMenuTransform.SetPositionY(mainMenuTransform.GetPositionY() + 40.f * Timer::deltaTime);
+		//move exit button into place
+		if (exitTransform.GetPositionY() < -12.5f) exitTransform.SetPositionY(exitTransform.GetPositionY() + 40.f * Timer::deltaTime);
+	}
+
+	if (timeSinceGameEnd > 2.5f) {
+		gameState = 5;
+	}
+}
+
+void MainGame::CreateEndOfMatchEntities()
+{
+	//create the backdrop entity
+	{
+		//creates entity
+		auto entity = ECS::CreateEntity();
+
+		//adds components
+		ECS::AttachComponent<Sprite>(entity);
+		ECS::AttachComponent<Transform>(entity);
+
+		//load sprites and set up sprite component
+		std::string fileName = "end of match/bg.png";
+
+		//setup up sprite
+		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 90, 50);
+		ECS::GetComponent<Sprite>(entity).SetTransparency(0.f);
+		//Setup transform 
+		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 99.f));
+
+		//Setup indentifier 
+		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
+		ECS::SetUpIdentifier(entity, bitHolder, "end of match bg");
+		EndOfMatch[0] = entity;
+	}
+
+	//create the entity showing which player won 
+	{
+		//creates entity
+		auto entity = ECS::CreateEntity();
+
+		//adds components
+		ECS::AttachComponent<Sprite>(entity);
+		ECS::AttachComponent<Transform>(entity);
+
+		//load sprites and set up sprite component
+		std::string fileName;
+		if (blueFuseTimeRemaining > 0) fileName = "end of match/blue wins.png";
+		else fileName = "end of match/orange wins!.png";
+
+		//setup up sprite
+		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 48, 8);
+		ECS::GetComponent<Sprite>(entity).SetTransparency(0.f);
+		//Setup transform 
+		ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 15.f, 99.1f));
+
+		//Setup indentifier 
+		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
+		ECS::SetUpIdentifier(entity, bitHolder, "player who won");
+		EndOfMatch[1] = entity;
+	}
+
+	for (int i = 2; i < 6; i++) {
+		//creates entity
+		auto entity = ECS::CreateEntity();
+
+		//adds components
+		ECS::AttachComponent<Sprite>(entity);
+		ECS::AttachComponent<Transform>(entity);
+
+		//load sprites and set up sprite component
+		std::string fileName;
+		if (i == 2) fileName = "end of match/play again unselected.png";
+		else if (i == 3) fileName = "end of match/new stage unselected.png";
+		else if (i == 4) fileName = "end of match/main menu unselected.png";
+		else if (i == 5) fileName = "end of match/exit unselected.png";
+
+		//setup up sprite
+		ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 10, 5);
+		//Setup transform 
+		if(i == 2)ECS::GetComponent<Transform>(entity).SetPosition(vec3(-33.3f, -42.5f, 99.2f));
+		else if (i == 3)ECS::GetComponent<Transform>(entity).SetPosition(vec3(-11.1f, -52.5f, 99.21f));
+		else if (i == 4)ECS::GetComponent<Transform>(entity).SetPosition(vec3(11.1f, -62.5f, 99.22f));
+		else if (i == 5)ECS::GetComponent<Transform>(entity).SetPosition(vec3(33.3f, -72.5f, 99.23f));
+
+		//Setup indentifier 
+		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
+		ECS::SetUpIdentifier(entity, bitHolder, "button " + std::to_string(i - 1));
+		EndOfMatch[i] = entity;
+	}
 }
 
 //to destroy the not it objective
@@ -1847,251 +2221,256 @@ void MainGame::level4(float windowWidth, float windowHeight)
 
 //keyboard key held down input
 void MainGame::KeyboardHold() {
-	//vector with the force for the player's x movement
-	vec3 runforce = vec3(1000.f * 60.f * Timer::deltaTime, 0.f, 0.f);
+	if (gameState == 1) {
 
-	//grab a reference to blue's physics body
-	auto& tempPhysBodB = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
-	//create a pointer to Blue's box2d body
-	b2Body* bodyB = tempPhysBodB.GetBody();
 
-	//if Blue's player is pressing A, and their x-velocity isn't above the left cap, apply the run force to the left
-	if (Input::GetKey(Key::A) && bodyB->GetLinearVelocity().x > float32(-blueSpeedCap) && !(Input::GetKey(Key::S))) {
-		tempPhysBodB.ApplyForce(-runforce);
-	}
-	//if Blue's player is pressing D, and their x-velocity isn't above the right cap, apply the run force to the right
-	else if (Input::GetKey(Key::D) && bodyB->GetLinearVelocity().x < float32(blueSpeedCap) && !(Input::GetKey(Key::S))) {
-		tempPhysBodB.ApplyForce(runforce);
-	}
+		//vector with the force for the player's x movement
+		vec3 runforce = vec3(1000.f * 60.f * Timer::deltaTime, 0.f, 0.f);
 
-	//otherwise blue isn't moving on the x-axis
-	else {
-		//so if she's still moving right, subtract from velocity from her motion
-		if (bodyB->GetLinearVelocity().x > float32(0.f))
-		{
-			//if her velocity is above 5, subtract 5
-			if (bodyB->GetLinearVelocity().x > float32(5.f)) {
+		//grab a reference to blue's physics body
+		auto& tempPhysBodB = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
+		//create a pointer to Blue's box2d body
+		b2Body* bodyB = tempPhysBodB.GetBody();
 
-				bodyB->SetLinearVelocity(b2Vec2(bodyB->GetLinearVelocity().x - 5, bodyB->GetLinearVelocity().y));
+		//if Blue's player is pressing A, and their x-velocity isn't above the left cap, apply the run force to the left
+		if (Input::GetKey(Key::A) && bodyB->GetLinearVelocity().x > float32(-blueSpeedCap) && !(Input::GetKey(Key::S))) {
+			tempPhysBodB.ApplyForce(-runforce);
+		}
+		//if Blue's player is pressing D, and their x-velocity isn't above the right cap, apply the run force to the right
+		else if (Input::GetKey(Key::D) && bodyB->GetLinearVelocity().x < float32(blueSpeedCap) && !(Input::GetKey(Key::S))) {
+			tempPhysBodB.ApplyForce(runforce);
+		}
+
+		//otherwise blue isn't moving on the x-axis
+		else {
+			//so if she's still moving right, subtract from velocity from her motion
+			if (bodyB->GetLinearVelocity().x > float32(0.f))
+			{
+				//if her velocity is above 5, subtract 5
+				if (bodyB->GetLinearVelocity().x > float32(5.f)) {
+
+					bodyB->SetLinearVelocity(b2Vec2(bodyB->GetLinearVelocity().x - 5, bodyB->GetLinearVelocity().y));
+				}
+				//otherwise it's between 0 and 5, so just set it to 0
+				else {
+					bodyB->SetLinearVelocity(b2Vec2(0, bodyB->GetLinearVelocity().y));
+				}
 			}
-			//otherwise it's between 0 and 5, so just set it to 0
-			else {
-				bodyB->SetLinearVelocity(b2Vec2(0, bodyB->GetLinearVelocity().y));
+			//and if she's still moving left, add velocity to her motion (bringing her to 0 and thus not moving)
+			else if (bodyB->GetLinearVelocity().x < float32(0.f))
+			{
+				//if her velocity is below -5, add 5
+				if (bodyB->GetLinearVelocity().x < float32(-5.f)) {
+
+					bodyB->SetLinearVelocity(b2Vec2(bodyB->GetLinearVelocity().x + 5, bodyB->GetLinearVelocity().y));
+				}
+				//otherwise it's between -5 and 0, so just set it to 0
+				else {
+					bodyB->SetLinearVelocity(b2Vec2(0, bodyB->GetLinearVelocity().y));
+				}
 			}
 		}
-		//and if she's still moving left, add velocity to her motion (bringing her to 0 and thus not moving)
-		else if (bodyB->GetLinearVelocity().x < float32(0.f))
-		{
-			//if her velocity is below -5, add 5
-			if (bodyB->GetLinearVelocity().x < float32(-5.f)) {
 
-				bodyB->SetLinearVelocity(b2Vec2(bodyB->GetLinearVelocity().x + 5, bodyB->GetLinearVelocity().y));
+		//grab a reference to orange's physics body
+		auto& tempPhysBodO = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
+		//create a pointer to Orange's box2d body
+		b2Body* bodyO = tempPhysBodO.GetBody();
+
+		//if Orange's player is pressing leftArrow, and their x-velocity isn't above the left cap, apply the run force to the left
+		if (Input::GetKey(Key::LeftArrow) && bodyO->GetLinearVelocity().x > float32(-orangeSpeedCap) && !(Input::GetKey(Key::DownArrow))) {
+			tempPhysBodO.ApplyForce(-runforce);
+		}
+
+		//if Orange's player is pressing rightArrow, and their x-velocity isn't above the right cap, apply the run force to the right
+		else if (Input::GetKey(Key::RightArrow) && bodyO->GetLinearVelocity().x < float32(orangeSpeedCap) && !(Input::GetKey(Key::DownArrow))) {
+			tempPhysBodO.ApplyForce(runforce);
+		}
+
+		//otherwise Orange isn't moving on the x-axis
+		else {
+			//so if he's still moving right, subtract from velocity from his motion
+			if (bodyO->GetLinearVelocity().x > float32(0.f))
+			{
+				//if his velocity is above 5, subtract 5
+				if (bodyO->GetLinearVelocity().x > float32(5.f)) {
+
+					bodyO->SetLinearVelocity(b2Vec2(bodyO->GetLinearVelocity().x - 5, bodyO->GetLinearVelocity().y));
+				}
+				//otherwise it's between 0 and 5, so just set it to 0
+				else {
+					bodyO->SetLinearVelocity(b2Vec2(0, bodyO->GetLinearVelocity().y));
+				}
 			}
-			//otherwise it's between -5 and 0, so just set it to 0
-			else {
-				bodyB->SetLinearVelocity(b2Vec2(0, bodyB->GetLinearVelocity().y));
+			//and if he's still moving left, add velocity to his motion (bringing him to 0 and thus not moving)
+			else if (bodyO->GetLinearVelocity().x < float32(0.f))
+			{
+				//if his velocity is below -5, add 5
+				if (bodyO->GetLinearVelocity().x < float32(-5.f)) {
+
+					bodyO->SetLinearVelocity(b2Vec2(bodyO->GetLinearVelocity().x + 5, bodyO->GetLinearVelocity().y));
+				}
+				//otherwise it's between -5 and 0, so just set it to 0
+				else {
+					bodyO->SetLinearVelocity(b2Vec2(0, bodyO->GetLinearVelocity().y));
+				}
 			}
 		}
-	}
 
-	//grab a reference to orange's physics body
-	auto& tempPhysBodO = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
-	//create a pointer to Orange's box2d body
-	b2Body* bodyO = tempPhysBodO.GetBody();
+		//vector for the force of player's jumping
+		vec3 jump = vec3(0.f, 5750.f * 60.f * Timer::deltaTime, 0.f);
 
-	//if Orange's player is pressing leftArrow, and their x-velocity isn't above the left cap, apply the run force to the left
-	if (Input::GetKey(Key::LeftArrow) && bodyO->GetLinearVelocity().x > float32(-orangeSpeedCap) && !(Input::GetKey(Key::DownArrow))) {
-		tempPhysBodO.ApplyForce(-runforce);
-	}
-
-	//if Orange's player is pressing rightArrow, and their x-velocity isn't above the right cap, apply the run force to the right
-	else if (Input::GetKey(Key::RightArrow) && bodyO->GetLinearVelocity().x < float32(orangeSpeedCap) && !(Input::GetKey(Key::DownArrow))) {
-		tempPhysBodO.ApplyForce(runforce);
-	}
-
-	//otherwise Orange isn't moving on the x-axis
-	else {
-		//so if he's still moving right, subtract from velocity from his motion
-		if (bodyO->GetLinearVelocity().x > float32(0.f))
-		{
-			//if his velocity is above 5, subtract 5
-			if (bodyO->GetLinearVelocity().x > float32(5.f)) {
-
-				bodyO->SetLinearVelocity(b2Vec2(bodyO->GetLinearVelocity().x - 5, bodyO->GetLinearVelocity().y));
-			}
-			//otherwise it's between 0 and 5, so just set it to 0
-			else {
-				bodyO->SetLinearVelocity(b2Vec2(0, bodyO->GetLinearVelocity().y));
+		//if blue's player has pressed W, and she can jump, make her jump
+		if (Input::GetKey(Key::W) && !(Input::GetKey(Key::S))) {
+			//Check if Blue can jump 
+			if (listener.getJumpB() && blueTimeSinceLastJump > 0.4f) {
+				//if she can, set it so she can't 
+				listener.setJumpB(false);
+				blueTimeSinceLastJump = 0.f;
+				//and apply the upward force of the jump
+				tempPhysBodB.ApplyForce(jump);
 			}
 		}
-		//and if he's still moving left, add velocity to his motion (bringing him to 0 and thus not moving)
-		else if (bodyO->GetLinearVelocity().x < float32(0.f))
-		{
-			//if his velocity is below -5, add 5
-			if (bodyO->GetLinearVelocity().x < float32(-5.f)) {
 
-				bodyO->SetLinearVelocity(b2Vec2(bodyO->GetLinearVelocity().x + 5, bodyO->GetLinearVelocity().y));
+		//if orange's player has pressed upArrow, and he can jump, make him jump
+		if (Input::GetKey(Key::UpArrow) && !(Input::GetKey(Key::DownArrow))) {
+			//Check if Orange can jump 
+			if (listener.getJumpO() && orangeTimeSinceLastJump > 0.4f) {
+				//if he can, set it so he can't 
+				listener.setJumpO(false);
+				orangeTimeSinceLastJump = 0.f;
+				//and apply the upward force of the jump
+				tempPhysBodO.ApplyForce(jump);
 			}
-			//otherwise it's between -5 and 0, so just set it to 0
-			else {
-				bodyO->SetLinearVelocity(b2Vec2(0, bodyO->GetLinearVelocity().y));
-			}
-		}
-	}
-
-	//vector for the force of player's jumping
-	vec3 jump = vec3(0.f, 5750.f * 60.f * Timer::deltaTime, 0.f);
-
-	//if blue's player has pressed W, and she can jump, make her jump
-	if (Input::GetKey(Key::W) && !(Input::GetKey(Key::S))) {
-		//Check if Blue can jump 
-		if (listener.getJumpB() && blueTimeSinceLastJump > 0.4f) {
-			//if she can, set it so she can't 
-			listener.setJumpB(false);
-			blueTimeSinceLastJump = 0.f;
-			//and apply the upward force of the jump
-			tempPhysBodB.ApplyForce(jump);
-		}
-	}
-
-	//if orange's player has pressed upArrow, and he can jump, make him jump
-	if (Input::GetKey(Key::UpArrow) && !(Input::GetKey(Key::DownArrow))) {
-		//Check if Orange can jump 
-		if (listener.getJumpO() && orangeTimeSinceLastJump > 0.4f) {
-			//if he can, set it so he can't 
-			listener.setJumpO(false);
-			orangeTimeSinceLastJump = 0.f;
-			//and apply the upward force of the jump
-			tempPhysBodO.ApplyForce(jump);
 		}
 	}
 }
 
 //keyboard key first pressed input
 void MainGame::KeyboardDown(){
+	if (gameState == 1) {
+		//grab a reference to blue's physics body
+		auto& tempPhysBodB = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
+		//create a pointer to Blue's box2d body
+		b2Body* bodyB = tempPhysBodB.GetBody();
 
-	//grab a reference to blue's physics body
-	auto& tempPhysBodB = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
-	//create a pointer to Blue's box2d body
-	b2Body* bodyB = tempPhysBodB.GetBody();
+		//grab a reference to orange's physics body
+		auto& tempPhysBodO = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
+		//create a pointer to Orange's box2d body
+		b2Body* bodyO = tempPhysBodO.GetBody();
 
-	//grab a reference to orange's physics body
-	auto& tempPhysBodO = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
-	//create a pointer to Orange's box2d body
-	b2Body* bodyO = tempPhysBodO.GetBody();
-	   
-	if (Input::GetKeyDown(Key::CapsLock) && listener.GetIt() == 1 && timeSinceTagTriggered > 0.166f && !blueSlide) { //player 1 blue tagging
-		createT(btag);
-		timeSinceTagTriggered = 0.f;
-	}
+		if (Input::GetKeyDown(Key::CapsLock) && listener.GetIt() == 1 && timeSinceTagTriggered > 0.166f && !blueSlide) { //player 1 blue tagging
+			createT(btag);
+			timeSinceTagTriggered = 0.f;
+		}
 
-	else if (Input::GetKeyDown(Key::RightContol) && listener.GetIt() == 2 && timeSinceTagTriggered > 0.166f && !orangeSlide) { //player 2 orange tagging
-		createT(otag);
-		timeSinceTagTriggered = 0.f;
-	}
+		else if (Input::GetKeyDown(Key::RightContol) && listener.GetIt() == 2 && timeSinceTagTriggered > 0.166f && !orangeSlide) { //player 2 orange tagging
+			createT(otag);
+			timeSinceTagTriggered = 0.f;
+		}
 
-	if (Input::GetKeyDown(Key::D)){
-		bright = true;
-	}
+		if (Input::GetKeyDown(Key::D)) {
+			bright = true;
+		}
 
-	if (Input::GetKeyDown(Key::A)){
-		bright = false;
-	}
+		if (Input::GetKeyDown(Key::A)) {
+			bright = false;
+		}
 
-	if (Input::GetKeyDown(Key::RightArrow)) {
-		oright = true;
-	}
-	
-	if (Input::GetKeyDown(Key::LeftArrow)) {
-		oright = false;
-	}
+		if (Input::GetKeyDown(Key::RightArrow)) {
+			oright = true;
+		}
+
+		if (Input::GetKeyDown(Key::LeftArrow)) {
+			oright = false;
+		}
 
 
-	//SLIDING MECHANIC CODE
-	//grab animation controller
-	auto& blueAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer());
-	auto& orangeAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer());
+		//SLIDING MECHANIC CODE
+		//grab animation controller
+		auto& blueAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer());
+		auto& orangeAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer());
 
-	//blue slide
-	if ((Input::GetKeyDown(Key::S) && !bright && timeSinceSlideB > 1.f)) {
-		tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
-		tempPhysBodB.SetHeight(2.f);
+		//blue slide
+		if ((Input::GetKeyDown(Key::S) && !bright && timeSinceSlideB > 1.f)) {
+			tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
+			tempPhysBodB.SetHeight(2.f);
 
-		//recreating the box2d collision box
-		b2PolygonShape tempShape;
-		tempShape.SetAsBox(float32(tempPhysBodB.GetWidth() / 2.f), float32(tempPhysBodB.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
-		b2FixtureDef fix;
-		fix.shape = &tempShape;
-		fix.density = 0.08f;
-		fix.friction = 0.35f;//0.3f
-		bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
-		bodyB->CreateFixture(&fix); //recreates it with smaller hitbox
+			//recreating the box2d collision box
+			b2PolygonShape tempShape;
+			tempShape.SetAsBox(float32(tempPhysBodB.GetWidth() / 2.f), float32(tempPhysBodB.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
+			b2FixtureDef fix;
+			fix.shape = &tempShape;
+			fix.density = 0.08f;
+			fix.friction = 0.35f;//0.3f
+			bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
+			bodyB->CreateFixture(&fix); //recreates it with smaller hitbox
 
-		tempPhysBodB.ApplyForce(vec3(-6000.f, 0.f, 0.f));
-		timeSinceSlideB = 0.f;
-		blueSlide = true;
-		blueAnimController.SetActiveAnim(12);
+			tempPhysBodB.ApplyForce(vec3(-6000.f, 0.f, 0.f));
+			timeSinceSlideB = 0.f;
+			blueSlide = true;
+			blueAnimController.SetActiveAnim(12);
 
-	}
-	else if ((Input::GetKeyDown(Key::S) && bright && timeSinceSlideB > 1.f)) {
-		tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
-		tempPhysBodB.SetHeight(2.f);
+		}
+		else if ((Input::GetKeyDown(Key::S) && bright && timeSinceSlideB > 1.f)) {
+			tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
+			tempPhysBodB.SetHeight(2.f);
 
-		//recreating the box2d collision box
-		b2PolygonShape tempShape;
-		tempShape.SetAsBox(float32(tempPhysBodB.GetWidth() / 2.f), float32(tempPhysBodB.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
-		b2FixtureDef fix;
-		fix.shape = &tempShape;
-		fix.density = 0.08f;
-		fix.friction = 0.35f;//0.3f
-		bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
-		bodyB->CreateFixture(&fix); //recreates it with smaller hitbox
+			//recreating the box2d collision box
+			b2PolygonShape tempShape;
+			tempShape.SetAsBox(float32(tempPhysBodB.GetWidth() / 2.f), float32(tempPhysBodB.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
+			b2FixtureDef fix;
+			fix.shape = &tempShape;
+			fix.density = 0.08f;
+			fix.friction = 0.35f;//0.3f
+			bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
+			bodyB->CreateFixture(&fix); //recreates it with smaller hitbox
 
-		tempPhysBodB.ApplyForce(vec3(6000.f, 0.f, 0.f));
-		blueSlide = true;
-		blueAnimController.SetActiveAnim(13);
-		timeSinceSlideB = 0.f;
-	}
+			tempPhysBodB.ApplyForce(vec3(6000.f, 0.f, 0.f));
+			blueSlide = true;
+			blueAnimController.SetActiveAnim(13);
+			timeSinceSlideB = 0.f;
+		}
 
-	//orange slide
-	if ((Input::GetKeyDown(Key::DownArrow) && !oright && timeSinceSlideO > 1.f)) {
-		tempPhysBodO.SetCenterOffset(vec2(0.f, -1.5f));
-		tempPhysBodO.SetHeight(2.f);
+		//orange slide
+		if ((Input::GetKeyDown(Key::DownArrow) && !oright && timeSinceSlideO > 1.f)) {
+			tempPhysBodO.SetCenterOffset(vec2(0.f, -1.5f));
+			tempPhysBodO.SetHeight(2.f);
 
-		//recreating the box2d collision box
-		b2PolygonShape tempShape;
-		tempShape.SetAsBox(float32(tempPhysBodO.GetWidth() / 2.f), float32(tempPhysBodO.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodO.GetCenterOffset().x), float32(tempPhysBodO.GetCenterOffset().y)), float32(0.f));
-		b2FixtureDef fix;
-		fix.shape = &tempShape;
-		fix.density = 0.08f;
-		fix.friction = 0.35f;//0.3f
-		bodyO->DestroyFixture(bodyO->GetFixtureList()); //destroys body's fixture
-		bodyO->CreateFixture(&fix); //recreates it with smaller hitbox
+			//recreating the box2d collision box
+			b2PolygonShape tempShape;
+			tempShape.SetAsBox(float32(tempPhysBodO.GetWidth() / 2.f), float32(tempPhysBodO.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodO.GetCenterOffset().x), float32(tempPhysBodO.GetCenterOffset().y)), float32(0.f));
+			b2FixtureDef fix;
+			fix.shape = &tempShape;
+			fix.density = 0.08f;
+			fix.friction = 0.35f;//0.3f
+			bodyO->DestroyFixture(bodyO->GetFixtureList()); //destroys body's fixture
+			bodyO->CreateFixture(&fix); //recreates it with smaller hitbox
 
-		tempPhysBodO.ApplyForce(vec3(-6000.f, 0.f, 0.f));
-		timeSinceSlideO = 0.f;
-		orangeSlide = true;
-		orangeAnimController.SetActiveAnim(12);
+			tempPhysBodO.ApplyForce(vec3(-6000.f, 0.f, 0.f));
+			timeSinceSlideO = 0.f;
+			orangeSlide = true;
+			orangeAnimController.SetActiveAnim(12);
 
-	}
-	else if ((Input::GetKeyDown(Key::DownArrow) && oright && timeSinceSlideO > 1.f)) {
-		tempPhysBodO.SetCenterOffset(vec2(0.f, -1.5f));
-		tempPhysBodO.SetHeight(2.f);
+		}
+		else if ((Input::GetKeyDown(Key::DownArrow) && oright && timeSinceSlideO > 1.f)) {
+			tempPhysBodO.SetCenterOffset(vec2(0.f, -1.5f));
+			tempPhysBodO.SetHeight(2.f);
 
-		//recreating the box2d collision box
-		b2PolygonShape tempShape;
-		tempShape.SetAsBox(float32(tempPhysBodO.GetWidth() / 2.f), float32(tempPhysBodO.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodO.GetCenterOffset().x), float32(tempPhysBodO.GetCenterOffset().y)), float32(0.f));
-		b2FixtureDef fix;
-		fix.shape = &tempShape;
-		fix.density = 0.08f;
-		fix.friction = 0.35f;//0.3f
-		bodyO->DestroyFixture(bodyO->GetFixtureList()); //destroys body's fixture
-		bodyO->CreateFixture(&fix); //recreates it with smaller hitbox
+			//recreating the box2d collision box
+			b2PolygonShape tempShape;
+			tempShape.SetAsBox(float32(tempPhysBodO.GetWidth() / 2.f), float32(tempPhysBodO.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodO.GetCenterOffset().x), float32(tempPhysBodO.GetCenterOffset().y)), float32(0.f));
+			b2FixtureDef fix;
+			fix.shape = &tempShape;
+			fix.density = 0.08f;
+			fix.friction = 0.35f;//0.3f
+			bodyO->DestroyFixture(bodyO->GetFixtureList()); //destroys body's fixture
+			bodyO->CreateFixture(&fix); //recreates it with smaller hitbox
 
-		tempPhysBodO.ApplyForce(vec3(6000.f, 0.f, 0.f));
-		timeSinceSlideO = 0.f;
-		orangeSlide = true;
-		orangeAnimController.SetActiveAnim(13);
+			tempPhysBodO.ApplyForce(vec3(6000.f, 0.f, 0.f));
+			timeSinceSlideO = 0.f;
+			orangeSlide = true;
+			orangeAnimController.SetActiveAnim(13);
+		}
 	}
 }
 
@@ -2103,11 +2482,64 @@ void MainGame::KeyboardUp()
 //mouse moved input
 void MainGame::MouseMotion(SDL_MouseMotionEvent evnt)
 {
+	if (gameState == 5) {
+		//play again button
+		if ((float(evnt.x) >= 131.76f && float(evnt.x) <= 347.76f) && (float(evnt.y) >= 756.f && float(evnt.y) <= 864.f)) {
+			auto& spr = ECS::GetComponent<Sprite>(EndOfMatch[2]);
+			std::string fileName = "end of match/play again selected.png";
+			spr.LoadSprite(fileName, 10, 5);
+		}
+		else {
+			auto& spr = ECS::GetComponent<Sprite>(EndOfMatch[2]);
+			std::string fileName = "end of match/play again unselected.png";
+			spr.LoadSprite(fileName, 10, 5);
+		}
+
+		//new stage button
+		if ((float(evnt.x) >= 611.28 && float(evnt.x) <= 827.28) && (float(evnt.y) >= 756.f && float(evnt.y) <= 864.f)) {
+			auto& spr = ECS::GetComponent<Sprite>(EndOfMatch[3]);
+			std::string fileName = "end of match/new stage selected.png";
+			spr.LoadSprite(fileName, 10, 5);
+		}
+		else {
+			auto& spr = ECS::GetComponent<Sprite>(EndOfMatch[3]);
+			std::string fileName = "end of match/new stage unselected.png";
+			spr.LoadSprite(fileName, 10, 5);
+		}
+
+		//main menu button
+		if ((float(evnt.x) >= 1092.72f && float(evnt.x) <= 1308.72f) && (float(evnt.y) >= 756.f && float(evnt.y) <= 864.f)) {
+			auto& spr = ECS::GetComponent<Sprite>(EndOfMatch[4]);
+			std::string fileName = "end of match/main menu selected.png";
+			spr.LoadSprite(fileName, 10, 5);
+		}
+		else {
+			auto& spr = ECS::GetComponent<Sprite>(EndOfMatch[4]);
+			std::string fileName = "end of match/main menu unselected.png";
+			spr.LoadSprite(fileName, 10, 5);
+		}
+
+		//exit game button
+		if ((float(evnt.x) >= 1572.24 && float(evnt.x) <= 1788.24) && (float(evnt.y) >= 756.f && float(evnt.y) <= 864.f)) {
+			auto& spr = ECS::GetComponent<Sprite>(EndOfMatch[5]);
+			std::string fileName = "end of match/exit selected.png";
+			spr.LoadSprite(fileName, 10, 5);
+		}
+		else {
+			auto& spr = ECS::GetComponent<Sprite>(EndOfMatch[5]);
+			std::string fileName = "end of match/exit unselected.png";
+			spr.LoadSprite(fileName, 10, 5);
+		}
+	}
 }
 
 //mouse click input
 void MainGame::MouseClick(SDL_MouseButtonEvent evnt)
 {
+	//if the game has ended and the player has decided to play again, reset the scene to the start of the match 
+	if (gameState == 5) {
+		if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 131.76f && float(evnt.x) <= 347.76f) && (float(evnt.y) >= 756.f && float(evnt.y) <= 864.f)) ResetScene();
+	}
 }
 
 //mouse wheel input

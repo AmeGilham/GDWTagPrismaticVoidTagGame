@@ -142,6 +142,13 @@ void Game::AcceptInput()
 
 void Game::KeyboardHold(){
 	//keyboard button held 
+	if (Input::GetKey(Key::Z)) {    //zoom in 
+		m_register->get<Camera>(EntityIdentifier::MainCamera()).Zoom(1);
+	}
+	if (Input::GetKey(Key::X)) {    //zoom out 
+		m_register->get<Camera>(EntityIdentifier::MainCamera()).Zoom(-1);
+	}
+
 	m_activeScene->KeyboardHold();
 }
 

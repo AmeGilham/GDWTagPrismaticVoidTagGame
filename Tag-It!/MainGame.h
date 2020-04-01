@@ -46,7 +46,7 @@ public:
 	void createAnimation(Animation* anim, int x, int y, int width, int height, int frames, bool flipped, float lenghtOfFrame, bool repeating);
 	void itAnimB();
 	void itAnimO();
-	float round(float var);
+	void cam();
 
 	//hud burning y position
 	float hudBurningYPos(double ratio);

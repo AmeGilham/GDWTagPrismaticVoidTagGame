@@ -449,6 +449,7 @@ void MainGame::Update(){
 
 	//if the person whose it has changed
 	if (listener.GetItChange()) {
+		cam();
 		listener.SetItChange(false);
 
 		//check if it was through the not it objective 
@@ -2012,46 +2013,46 @@ void MainGame::KeyboardDown(){
 	auto& blueAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer());
 	auto& orangeAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer());
 
-	//blue slide
-	if ((Input::GetKeyDown(Key::S) && !bright && timeSinceSlideB > 1.f)) {
-		tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
-		tempPhysBodB.SetHeight(2.f);
+		//blue slide
+		if ((Input::GetKeyDown(Key::S) && !bright && timeSinceSlideB > 1.f)) {
+			tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
+			tempPhysBodB.SetHeight(2.f);
 
-		//recreating the box2d collision box
-		b2PolygonShape tempShape;
-		tempShape.SetAsBox(float32(tempPhysBodB.GetWidth() / 2.f), float32(tempPhysBodB.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
-		b2FixtureDef fix;
-		fix.shape = &tempShape;
-		fix.density = 0.08f;
-		fix.friction = 0.35f;//0.3f
-		bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
-		bodyB->CreateFixture(&fix); //recreates it with smaller hitbox
+			//recreating the box2d collision box
+			b2PolygonShape tempShape;
+			tempShape.SetAsBox(float32(tempPhysBodB.GetWidth() / 2.f), float32(tempPhysBodB.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
+			b2FixtureDef fix;
+			fix.shape = &tempShape;
+			fix.density = 0.08f;
+			fix.friction = 0.35f;//0.3f
+			bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
+			bodyB->CreateFixture(&fix); //recreates it with smaller hitbox
 
-		tempPhysBodB.ApplyForce(vec3(-6000.f, 0.f, 0.f));
-		timeSinceSlideB = 0.f;
-		blueSlide = true;
-		blueAnimController.SetActiveAnim(12);
+			tempPhysBodB.ApplyForce(vec3(-6000.f, 0.f, 0.f));
+			timeSinceSlideB = 0.f;
+			blueSlide = true;
+			blueAnimController.SetActiveAnim(12);
 
-	}
-	else if ((Input::GetKeyDown(Key::S) && bright && timeSinceSlideB > 1.f)) {
-		tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
-		tempPhysBodB.SetHeight(2.f);
+		}
+		else if ((Input::GetKeyDown(Key::S) && bright && timeSinceSlideB > 1.f)) {
+			tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
+			tempPhysBodB.SetHeight(2.f);
 
-		//recreating the box2d collision box
-		b2PolygonShape tempShape;
-		tempShape.SetAsBox(float32(tempPhysBodB.GetWidth() / 2.f), float32(tempPhysBodB.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
-		b2FixtureDef fix;
-		fix.shape = &tempShape;
-		fix.density = 0.08f;
-		fix.friction = 0.35f;//0.3f
-		bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
-		bodyB->CreateFixture(&fix); //recreates it with smaller hitbox
+			//recreating the box2d collision box
+			b2PolygonShape tempShape;
+			tempShape.SetAsBox(float32(tempPhysBodB.GetWidth() / 2.f), float32(tempPhysBodB.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
+			b2FixtureDef fix;
+			fix.shape = &tempShape;
+			fix.density = 0.08f;
+			fix.friction = 0.35f;//0.3f
+			bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
+			bodyB->CreateFixture(&fix); //recreates it with smaller hitbox
 
-		tempPhysBodB.ApplyForce(vec3(6000.f, 0.f, 0.f));
-		blueSlide = true;
-		blueAnimController.SetActiveAnim(13);
-		timeSinceSlideB = 0.f;
-	}
+			tempPhysBodB.ApplyForce(vec3(6000.f, 0.f, 0.f));
+			blueSlide = true;
+			blueAnimController.SetActiveAnim(13);
+			timeSinceSlideB = 0.f;
+		}
 
 	//orange slide
 	if ((Input::GetKeyDown(Key::DownArrow) && !oright && timeSinceSlideO > 1.f)) {
@@ -2151,58 +2152,21 @@ void MainGame::itAnimB() {
 	std::string fileName = "Blue It.png";
 	auto& sprite = ECS::GetComponent<Sprite>(itIdentifyingHudEntity);
 	auto& trans = ECS::GetComponent<Transform>(itIdentifyingHudEntity);
-	//(trans.GetPositionX() >= -22.5f && trans.GetPositionY() >= -18.f)
 
 	if (listener.GetIt() == 1) {
 		animTimeO = itTime;
 		animTime -= Timer::deltaTime;
 		timeLeft = animTime / maxTime;}
-
-	//else if (listener.GetIt() == 2) {
-	//	animTime = itTime;
-	//}
-	///*else {
-	//	animTime = 5.f;
-	//	float timeLeft = animTime / itTime;}*/
-
-	float i = 0.f;
-	float num = 0.f;
-	float q = 0.f;
-
-	//for (int i = 0; i < 15; i++) {
-	//	trans.SetPosition (vec3 (trans.GetPositionX() -1.5f, trans.GetPositionY() -1.2f, 99.f) );
-	//	sprite.SetHeight(sprite.GetHeight() - 1);
-	//	sprite.SetWidth(sprite.GetWidth() - 1);
-	////	sprite.LoadSprite (fileName, sprite.GetHeight() - 1, sprite.GetWidth() - 1);
-	//}
-	std::cout << animTime << std::endl;
-	/*if (trans.GetPositionX() >= -22.5f && trans.GetPositionY() >= -18.f) {
-		trans.SetPosition(vec3(trans.GetPositionX() - (3.55f * timeLeft), trans.GetPositionY() - (2.8f * timeLeft), 99.f));}*/
-
+	
 	if (trans.GetPositionX() >= -22.5f) {
 		trans.SetPositionX(trans.GetPositionX() - (7.5f * timeLeft));}
 
 	if (trans.GetPositionY() >= -18.f) {
 		trans.SetPositionY(trans.GetPositionY() - (5.99f * timeLeft));	}
 
-
-
 	if (sprite.GetHeight() > 3 && sprite.GetWidth() > 2)
 	sprite.LoadSprite(fileName, sprite.GetHeight() - (0.5 * timeLeft), sprite.GetWidth() - (0.5 * timeLeft) );
 
-	//if ((q > 3.f) && trans.GetPositionX() != -22.5f ) {
-	//	do {
-	//		trans.SetPosition(vec3(trans.GetPositionX() - 1.5f, trans.GetPositionY() - 1.2f, 99.f));
-	//		//sprite.LoadSprite(fileName, sprite.GetHeight() - 1, sprite.GetWidth() - 1);
-	//		
-	//		num = Timer::deltaTime * 10.5f;
-	//		i += round(num);
-	//		std::cout << round(num) << "\n";
-	//	} while (i <= 2.9f);
-	//	q = 0.f;
-	//}
-	//ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 3, 2);
-	//ECS::GetComponent<Transform>(entity).SetPosition(vec3(-22.5f, -18.f, 99.f));
 }
 
 void MainGame::itAnimO(){
@@ -2214,17 +2178,12 @@ void MainGame::itAnimO(){
 		animTime = itTime;
 		animTimeO -= Timer::deltaTime;
 		timeLeftO = animTimeO / maxTime;
-		std::cout << "YO"<< animTimeO << std::endl;
 	}
 	else if (listener.GetIt() == 1){
 		animTimeO = itTime;}
 	
-
 	if (sprite.GetHeight() > 3 && sprite.GetWidth() > 2) 
 		sprite.LoadSprite(fileName, sprite.GetHeight() - (0.5 * timeLeftO), sprite.GetWidth() - (0.5 * timeLeftO));
-
-	/*if (trans.GetPositionX() <= 22.5f && trans.GetPositionY() >= -18.f) {
-		trans.SetPosition(vec3(trans.GetPositionX() + (6.16f * timeLeftO), trans.GetPositionY() - (5.89f * timeLeftO), 99.f));}*/
 
 	if (trans.GetPositionX() <= 22.5f) {
 		trans.SetPositionX(trans.GetPositionX() + (7.5f * timeLeftO));}
@@ -2232,16 +2191,27 @@ void MainGame::itAnimO(){
 	if (trans.GetPositionY() >= -18.f) {
 		trans.SetPositionY(trans.GetPositionY() - (5.99f * timeLeftO));}
 
+}
+
+void MainGame::cam(){
+	float camx = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetPositionX();
+	float camy = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetPositionY();
+	vec4 zoom = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetOrthoSize();
+
+	//while (zoom.x < 125.f)
+	//ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).Zoom(1);
+
+	if (camx != 0.f) {
+		ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPositionX(camx + 1);
+	}
+
+	if (camy != 17.35f) {
+		ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPositionX(camy - 1);
+	}
 
 }
 
-float MainGame::round(float var){
-	float value = (int)(var * 10 + .5);
-	return (float)value / 10;
-}
-
-float MainGame::hudBurningYPos(double ratio)
-{
+float MainGame::hudBurningYPos(double ratio){
 	//determine the y-position of the burning hud 
 	//goes down from ratio = 1 to ratio = 0.666...
 	if (ratio > 0.666f) {

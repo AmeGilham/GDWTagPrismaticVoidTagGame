@@ -84,7 +84,6 @@ void Camera::Update()
 	m_viewMatrix = mat4::FastInverse(m_localToWorldMatrix);
 }
 
-
 void Camera::Zoom(float zoom)
 {
 	m_orthoSize = vec4(m_orthoSize.x + (zoom), m_orthoSize.y - (zoom), m_orthoSize.z + (zoom), m_orthoSize.w - (zoom));

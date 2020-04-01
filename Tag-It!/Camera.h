@@ -38,7 +38,7 @@ public:
 		float zNear, float zFar);
 
 	//Creates an Orthographic projection matrix
-	//*is the default projection type used for the framework
+	//*is the default projection type used for the frameworks
 	//*Used for 2D games
 	void Orthographic(float aspectRatio,
 		float left, float right,

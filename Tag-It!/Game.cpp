@@ -141,14 +141,24 @@ void Game::AcceptInput()
 }
 
 void Game::KeyboardHold(){
+	float camx = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetPositionX();
+	float camy = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetPosition().y;
+	float camz = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetPosition().z;
+	vec4 zoom = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetOrthoSize();
+
 	//keyboard button held 
 	if (Input::GetKey(Key::Z)) {    //zoom in 
-		m_register->get<Camera>(EntityIdentifier::MainCamera()).Zoom(1);
-	}
+		m_register->get<Camera>(EntityIdentifier::MainCamera()).Zoom(1);}
 	if (Input::GetKey(Key::X)) {    //zoom out 
-		m_register->get<Camera>(EntityIdentifier::MainCamera()).Zoom(-1);
+		m_register->get<Camera>(EntityIdentifier::MainCamera()).Zoom(-1);}
+
+	if (Input::GetKey(Key::C)) {    //zoom in 
+		ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx+1, camy, camz));}
+	if (Input::GetKey(Key::V)) {    //zoom out 
+		ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy+1, camz) );
 	}
 
+	
 	m_activeScene->KeyboardHold();
 }
 

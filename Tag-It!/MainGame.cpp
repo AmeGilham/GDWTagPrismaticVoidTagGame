@@ -347,6 +347,7 @@ void MainGame::InitScene(float windowWidth, float windowHeight, int level){
 
 //Update the scene, every frame
 void MainGame::Update(){
+	cam();
 	//grab blue's physics body info
 	auto& bluetempPhysBod = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
 	b2Body* bluebody = bluetempPhysBod.GetBody();
@@ -369,6 +370,7 @@ void MainGame::Update(){
 	//add the change in time to the time since the player last slid
 	timeSinceSlideB += Timer::deltaTime;
 	timeSinceSlideO += Timer::deltaTime;
+	camTime += Timer::deltaTime/3;
 
 	//apply gravity to both characters 
 	bluetempPhysBod.ApplyForce(vec3(0.f, -300.f * 60.f * Timer::deltaTime, 0.f));
@@ -449,7 +451,7 @@ void MainGame::Update(){
 
 	//if the person whose it has changed
 	if (listener.GetItChange()) {
-		cam();
+		
 		listener.SetItChange(false);
 
 		//check if it was through the not it objective 
@@ -530,6 +532,7 @@ void MainGame::Update(){
 	//HUD 
 	//if Blue is currently it
 	if (listener.GetIt() == 1) {
+		
 		/*fill in code about showing blue is it, and having her bomb fuse burn*/
 		blueFuseTimeRemaining -= Timer::deltaTime;
 		float timeLeftRatio = blueFuseTimeRemaining / maxTime;
@@ -1970,7 +1973,6 @@ void MainGame::KeyboardHold() {
 
 //keyboard key first pressed input
 void MainGame::KeyboardDown(){
-
 	//grab a reference to blue's physics body
 	auto& tempPhysBodB = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
 	//create a pointer to Blue's box2d body
@@ -1983,30 +1985,35 @@ void MainGame::KeyboardDown(){
 	   
 	if (Input::GetKeyDown(Key::CapsLock) && listener.GetIt() == 1 && timeSinceTagTriggered > 0.166f && !blueSlide) { //player 1 blue tagging
 		createT(btag);
-		timeSinceTagTriggered = 0.f;
-	}
+		timeSinceTagTriggered = 0.f;}
 
 	else if (Input::GetKeyDown(Key::RightContol) && listener.GetIt() == 2 && timeSinceTagTriggered > 0.166f && !orangeSlide) { //player 2 orange tagging
 		createT(otag);
-		timeSinceTagTriggered = 0.f;
-	}
+		timeSinceTagTriggered = 0.f;}
 
 	if (Input::GetKeyDown(Key::D)){
-		bright = true;
-	}
+		bright = true;}
 
 	if (Input::GetKeyDown(Key::A)){
-		bright = false;
-	}
+		bright = false;}
 
 	if (Input::GetKeyDown(Key::RightArrow)) {
-		oright = true;
-	}
+		oright = true;}
 	
 	if (Input::GetKeyDown(Key::LeftArrow)) {
-		oright = false;
-	}
+		oright = false;}
 
+	if (Input::GetKeyDown(Key::L)) {
+		float camx = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetPositionX();
+		float camy = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetPositionY();
+		float camz = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetPositionZ();
+		vec4 zoom = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetOrthoSize();
+
+		std::cout << zoom.x << zoom.y << zoom.z << zoom.w << std::endl;
+		std::cout << camx << std::endl;
+		std::cout << camy << std::endl;
+		std::cout << camz << std::endl;
+	}
 
 	//SLIDING MECHANIC CODE
 	//grab animation controller
@@ -2153,19 +2160,19 @@ void MainGame::itAnimB() {
 	auto& sprite = ECS::GetComponent<Sprite>(itIdentifyingHudEntity);
 	auto& trans = ECS::GetComponent<Transform>(itIdentifyingHudEntity);
 
-	if (listener.GetIt() == 1) {
+	/*if (listener.GetIt() == 1) {
 		animTimeO = itTime;
 		animTime -= Timer::deltaTime;
 		timeLeft = animTime / maxTime;}
-	
+	*/
 	if (trans.GetPositionX() >= -22.5f) {
-		trans.SetPositionX(trans.GetPositionX() - (7.5f * timeLeft));}
+		trans.SetPositionX(trans.GetPositionX() - (7.5f * 0.05));}
 
 	if (trans.GetPositionY() >= -18.f) {
-		trans.SetPositionY(trans.GetPositionY() - (5.99f * timeLeft));	}
+		trans.SetPositionY(trans.GetPositionY() - (5.99f *0.05));	}
 
 	if (sprite.GetHeight() > 3 && sprite.GetWidth() > 2)
-	sprite.LoadSprite(fileName, sprite.GetHeight() - (0.5 * timeLeft), sprite.GetWidth() - (0.5 * timeLeft) );
+	sprite.LoadSprite(fileName, sprite.GetHeight() - (0.5 * 0.05), sprite.GetWidth() - (0.5 * 0.05) );
 
 }
 
@@ -2174,40 +2181,73 @@ void MainGame::itAnimO(){
 	auto& sprite = ECS::GetComponent<Sprite>(itIdentifyingHudEntity);
 	auto& trans = ECS::GetComponent<Transform>(itIdentifyingHudEntity);
 
-	if (listener.GetIt() == 2 ) {
+	/*if (listener.GetIt() == 2 ) {
 		animTime = itTime;
 		animTimeO -= Timer::deltaTime;
 		timeLeftO = animTimeO / maxTime;
 	}
 	else if (listener.GetIt() == 1){
-		animTimeO = itTime;}
+		animTimeO = itTime;}*/
 	
 	if (sprite.GetHeight() > 3 && sprite.GetWidth() > 2) 
-		sprite.LoadSprite(fileName, sprite.GetHeight() - (0.5 * timeLeftO), sprite.GetWidth() - (0.5 * timeLeftO));
+		sprite.LoadSprite(fileName, sprite.GetHeight() - (0.5 * 0.05), sprite.GetWidth() - (0.5 * 0.05));
 
 	if (trans.GetPositionX() <= 22.5f) {
-		trans.SetPositionX(trans.GetPositionX() + (7.5f * timeLeftO));}
+		trans.SetPositionX(trans.GetPositionX() + (7.5f * 0.05));}
 
 	if (trans.GetPositionY() >= -18.f) {
-		trans.SetPositionY(trans.GetPositionY() - (5.99f * timeLeftO));}
+		trans.SetPositionY(trans.GetPositionY() - (5.99f * 0.05));}
 
 }
 
 void MainGame::cam(){
-	float camx = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetPositionX();
-	float camy = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetPositionY();
+	float camx = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetPosition().x;
+	float camy = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetPosition().y;
+	float camz = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetPosition().z;
+
 	vec4 zoom = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetOrthoSize();
+	//moves to not it objective
+	if (camTime < 1.55f) {
+		if (zoom.x != -10.f && zoom.z != -10.f) {
+			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).Zoom(1);}
 
-	//while (zoom.x < 125.f)
-	//ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).Zoom(1);
+		if (camx < 0.f) {
+			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx + 1, camy, camz));}
 
-	if (camx != 0.f) {
-		ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPositionX(camx + 1);
+		if (camy <= 17.5f) {
+			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy + 1, camz));}
 	}
 
-	if (camy != 17.35f) {
-		ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPositionX(camy - 1);
+	std::cout << camTime<<std::endl;
+
+	//blue
+	if (camTime < 3.f && camTime > 1.55f) {
+		if (camx > -18.f - zoom.x/2 ) {
+			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx - 1, camy, camz));}
+
+		if (camy > -7.5f) {
+			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy - 1, camz));}
 	}
+
+	//orange
+	if (camTime < 3.55f && camTime > 3.f) {
+		if (camx < 18.f + zoom.x/2) {
+			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx + 1, camy, camz));}
+	}
+
+	if (camTime > 4.f) {
+		if (zoom.x != -25.f && zoom.z != -25.f) {
+			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).Zoom(-1);}
+
+		if (camx > 0.f && camx != 0.f) {
+			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx - 1, camy, camz));}
+
+		if (camy < 0.f && camy != 0.f) {
+			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy + 1, camz));}
+		std::cout << notitEntity << std::endl;
+
+	}
+
 
 }
 

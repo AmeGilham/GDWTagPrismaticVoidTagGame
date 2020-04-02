@@ -88,6 +88,7 @@ private:
 	//variable to store the entity number of the not-it objective 
 	unsigned int notitEntity = 0;
 
+	float camTime = 0.f;
 	float itTime = 5.f;
 	float animTime = itTime;
 	float timeLeft;

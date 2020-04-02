@@ -250,19 +250,20 @@ void MainGame::InitScene(float windowWidth, float windowHeight, int level){
 
 	if (level == 1) { //code for creating/ init-ing level 1 (waterfall)
 		level1(windowWidth, windowHeight);
+		levels = 1;
 	}
 
 	else if (level == 2) {
 		level2(windowWidth, windowHeight);
-	}
+		levels = 2;}
 
 	else if (level == 3) {
 		level3(windowWidth, windowHeight);
-	}
+		levels = 3;}
 
 	else if (level == 4) {
 		level4(windowWidth, windowHeight);
-	}
+		levels = 4;}
 
 	//create the bombs part of the HUD 
 	for (int i = 0; i < 2; i++) {
@@ -2208,13 +2209,131 @@ void MainGame::cam(){
 	float orangex = ECS::GetComponent<Transform>(EntityIdentifier::SecondPlayer()).GetPositionX();
 	float orangey = ECS::GetComponent<Transform>(EntityIdentifier::SecondPlayer()).GetPositionY();
 
-
+	if (Input::GetKey(Key::C)) {    //zoom in 
+	std::cout << "Blue" << bluex << std::endl;
+	std::cout << bluey << std::endl;
+	std::cout <<"Orange"<< orangex << std::endl;
+	std::cout << orangey << std::endl;}
+	
 	float camx = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetPosition().x;
 	float camy = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetPosition().y;
 	float camz = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetPosition().z;
 
 	vec4 zoom = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetOrthoSize();
 	
+	if (levels == 1 || levels == 2) {
+		//moves to not it objective
+		if (camTime < 1.65f) {
+			inputs = false;
+			if (zoom.x != -9.f && zoom.z != -9.f) {
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).Zoom(1);
+			}
+
+			if (camx < notitx) {
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx + 1, camy, camz));
+			}
+
+			if (camy < notity) {
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy + 1, camz));
+			}
+		}
+
+		//moves to blue 
+		if (camTime < 2.25f && camTime > 1.65f) {
+			inputs = false;
+
+			if (camx > bluex - zoom.x / 1.1f /*-18.f - zoom.x/2*/) {
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx - 1, camy, camz));
+			}
+
+			if (camy > bluey /*-7.5f*/) {
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy - 1, camz));
+			}
+		}
+
+		//moves to orange 
+		if (camTime < 2.7f && camTime > 2.25f) {
+			inputs = false;
+
+			if (camx < orangex + zoom.x / 1.1f/*18.f + zoom.x/2*/) {
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx + 1, camy, camz));
+			}
+		}
+
+		//afterwards goes back ot initial camera position
+		if (camTime > 2.7f) {
+			inputs = true;
+
+			if (camx > 0.f && camx != 0.f) {
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx - 1, camy, camz));
+			}
+
+			if (camy < 0.f && camy != 0.f) {
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy + 1, camz));
+			}
+
+			if (zoom.x != -25.f && zoom.z != -25.f) {
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).Zoom(-1);}
+		}
+	}
+
+	//modified code for level 3
+	else if (levels == 3) {
+		//moves to not it objective
+		if (camTime < 1.65f) {
+			inputs = false;
+			if (zoom.x != -9.f && zoom.z != -9.f) {
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).Zoom(1);}
+
+			if (camx < notitx) {
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx + 1, camy, camz));}
+
+			if (camy > notity) {
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy - 1, camz));}
+		}
+
+		//moves to blue 
+		if (camTime < 2.25f && camTime > 1.65f) {
+			inputs = false;
+
+			if (camx > bluex - zoom.x / 1.1f /*-18.f - zoom.x/2*/) {
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx - 1, camy, camz));
+			}
+
+			if (camy < bluey /*-7.5f*/) {
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy + 1, camz));
+			}
+		}
+
+		//moves to orange 
+		if (camTime < 2.7f && camTime > 2.25f) {
+			inputs = false;
+
+			if (camx < orangex + zoom.x / 1.1f/*18.f + zoom.x/2*/) {
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx + 1, camy, camz));
+			}
+		}
+
+		//afterwards goes back ot initial camera position
+		if (camTime > 2.7f) {
+			inputs = true;
+
+			if (camx > 0.f && camx != 0.f) {
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx - 1, camy, camz));
+			}
+
+			if (camy > 0.f && camy != 0.f) {
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy - 1, camz));
+			}
+
+			if (zoom.x != -25.f && zoom.z != -25.f) {
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).Zoom(-1);
+			}
+		}
+	}
+
+	//modifiied code for level 4
+	else if (levels == 4) {
 	//moves to not it objective
 	if (camTime < 1.65f) {
 		inputs = false;
@@ -2232,19 +2351,22 @@ void MainGame::cam(){
 	if (camTime < 2.25f && camTime > 1.65f) {
 		inputs = false;
 
-		if (camx > bluex - zoom.x/1.1f /*-18.f - zoom.x/2*/ ) {
-			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx - 1, camy, camz));}
+		if (camx > bluex - zoom.x / 1.5f /*-18.f - zoom.x/2*/) {
+			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx - 1, camy, camz));
+		}
 
-		if (camy > bluey /*-7.5f*/) {
-			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy - 1, camz));}
+		if (camy < bluey /*-7.5f*/) {
+			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy + 1, camz));
+		}
 	}
 
 	//moves to orange 
 	if (camTime < 2.7f && camTime > 2.25f) {
 		inputs = false;
 
-		if (camx < orangex + zoom.x/1.1f/*18.f + zoom.x/2*/) {
-			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx + 1, camy, camz));}
+		if (camx < orangex + zoom.x / 1.5f/*18.f + zoom.x/2*/) {
+			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx + 1, camy, camz));
+		}
 	}
 
 	//afterwards goes back ot initial camera position
@@ -2252,14 +2374,22 @@ void MainGame::cam(){
 		inputs = true;
 
 		if (camx > 0.f && camx != 0.f) {
-			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx - 1, camy, camz));}
+			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx - 1, camy, camz));
+		}
 
-		if (camy < 0.f && camy != 0.f) {
-			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy + 1, camz));}
+		if (camy > 0.f && camy != 0.f) {
+			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy - 1, camz));
+		}
 
 		if (zoom.x != -25.f && zoom.z != -25.f) {
-			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).Zoom(-1);}
+			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).Zoom(-1);
+		}
 	}
+	
+}
+
+
+
 
 }
 

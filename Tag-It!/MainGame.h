@@ -64,6 +64,7 @@ private:
 	bool bright = true; //is blue facing right?
 	bool oright = false; //is orange facing right?
 
+	int levels = 0;
 	//time since jump timers
 	float blueTimeSinceLastJump = 0.f;
 	float orangeTimeSinceLastJump = 0.f;

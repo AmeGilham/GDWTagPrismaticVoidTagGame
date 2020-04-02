@@ -50,6 +50,7 @@ public:
 
 	//hud burning y position
 	float hudBurningYPos(double ratio);
+	bool inputs = true;
 private:
 	//Box2D user data
 	int blue = 0;

@@ -23,8 +23,7 @@ Game::~Game()
 	}
 }
 
-void Game::InitGame()
-{
+void Game::InitGame(){
 	//Scene names and clear colors
 	m_name = "Tag-It!";
 	m_clearColor = vec4(0.15f, 0.33f, 0.58f, 1.f);
@@ -41,7 +40,6 @@ void Game::InitGame()
 	m_scenes.push_back(new MainGame("1v1 Match"));
 	//Sets active scene reference to our scene
 	m_activeScene = m_scenes[currentScene];
-
 	//Intializes the scene
 	if (currentScene == 2)m_activeScene->InitScene(float(BackEnd::GetWindowWidth()), float(BackEnd::GetWindowHeight()), level);
 	else m_activeScene->InitScene(float(BackEnd::GetWindowWidth()), float(BackEnd::GetWindowHeight()));
@@ -77,8 +75,7 @@ bool Game::Run()
 		CheckEvents();
 
 		//does the window have keyboard focus?
-		if (Input::m_windowFocus)
-		{
+		if (Input::m_windowFocus){
 			//Accept all input
 			AcceptInput();
 		}
@@ -95,7 +92,9 @@ void Game::Update(){
 	//Update Physics System
 	PhysicsSystem::Update(m_register, m_activeScene->GetPhysicsWorld());
 	//Update the current scene 
+	//camTime += Timer::deltaTime / 3; was trying to use to pause inputs
 	m_activeScene->Update();
+
 }
 
 void Game::GUI()

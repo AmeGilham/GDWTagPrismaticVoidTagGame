@@ -451,9 +451,8 @@ void MainGame::Update(){
 
 	//if the person whose it has changed
 	if (listener.GetItChange()) {
-		
 		listener.SetItChange(false);
-
+		Sleep(500);
 		//check if it was through the not it objective 
 		if (listener.GetNotItObjExists()) {
 			//if it was, set the not it objective to not exist
@@ -471,7 +470,6 @@ void MainGame::Update(){
 			//set the speedcaps 
 			orangeSpeedCap = 40.f;
 			blueSpeedCap = 50.f;
-
 			//create entity showing that blue is it
 			{
 				//creates entity
@@ -2159,7 +2157,7 @@ void MainGame::itAnimB() {
 	std::string fileName = "Blue It.png";
 	auto& sprite = ECS::GetComponent<Sprite>(itIdentifyingHudEntity);
 	auto& trans = ECS::GetComponent<Transform>(itIdentifyingHudEntity);
-
+	//Sleep(10);
 	/*if (listener.GetIt() == 1) {
 		animTimeO = itTime;
 		animTime -= Timer::deltaTime;
@@ -2201,53 +2199,68 @@ void MainGame::itAnimO(){
 }
 
 void MainGame::cam(){
+	float notitx = ECS::GetComponent<Transform>(notitEntity).GetPositionX();
+	float notity = ECS::GetComponent<Transform>(notitEntity).GetPositionY();
+
+	float bluex = ECS::GetComponent<Transform>(EntityIdentifier::MainPlayer()).GetPositionX();
+	float bluey = ECS::GetComponent<Transform>(EntityIdentifier::MainPlayer()).GetPositionY();
+
+	float orangex = ECS::GetComponent<Transform>(EntityIdentifier::SecondPlayer()).GetPositionX();
+	float orangey = ECS::GetComponent<Transform>(EntityIdentifier::SecondPlayer()).GetPositionY();
+
+
 	float camx = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetPosition().x;
 	float camy = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetPosition().y;
 	float camz = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetPosition().z;
 
 	vec4 zoom = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetOrthoSize();
+	
 	//moves to not it objective
-	if (camTime < 1.55f) {
-		if (zoom.x != -10.f && zoom.z != -10.f) {
+	if (camTime < 1.65f) {
+		inputs = false;
+		if (zoom.x != -9.f && zoom.z != -9.f) {
 			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).Zoom(1);}
 
-		if (camx < 0.f) {
+		if (camx < notitx) {
 			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx + 1, camy, camz));}
 
-		if (camy <= 17.5f) {
+		if (camy < notity) {
 			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy + 1, camz));}
 	}
 
 	std::cout << camTime<<std::endl;
 
 	//blue
-	if (camTime < 3.f && camTime > 1.55f) {
-		if (camx > -18.f - zoom.x/2 ) {
+	if (camTime < 2.25f && camTime > 1.65f) {
+		inputs = false;
+
+		if (camx > bluex - zoom.x/1.1f /*-18.f - zoom.x/2*/ ) {
 			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx - 1, camy, camz));}
 
-		if (camy > -7.5f) {
+		if (camy > bluey /*-7.5f*/) {
 			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy - 1, camz));}
 	}
 
 	//orange
-	if (camTime < 3.55f && camTime > 3.f) {
-		if (camx < 18.f + zoom.x/2) {
+	if (camTime < 2.7f && camTime > 2.25f) {
+		inputs = false;
+
+		if (camx < orangex + zoom.x/1.1f/*18.f + zoom.x/2*/) {
 			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx + 1, camy, camz));}
 	}
 
-	if (camTime > 4.f) {
-		if (zoom.x != -25.f && zoom.z != -25.f) {
-			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).Zoom(-1);}
+	if (camTime > 2.7f) {
+		inputs = true;
 
 		if (camx > 0.f && camx != 0.f) {
 			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx - 1, camy, camz));}
 
 		if (camy < 0.f && camy != 0.f) {
 			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy + 1, camz));}
-		std::cout << notitEntity << std::endl;
 
+		if (zoom.x != -25.f && zoom.z != -25.f) {
+			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).Zoom(-1);}
 	}
-
 
 }
 

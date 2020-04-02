@@ -2695,17 +2695,268 @@ float MainGame::hudBurningYPos(double ratio)
 	}
 }
 
-//Stroke of the gamepad input
-void MainGame::GamepadStroke(XInputController* con)
+void MainGame::GamepadInput()
 {
+	bool blueTaken = false; 
+	bool orangeTaken = false; 
+	XInputController* blueCon; 
+	XInputController* orangeCon;
+	//check if any controllers are connected, the first controls blue, the second will control orange
+	for (int i = 0; i < 3; i++) {
+		if (XInputManager::ControllerConnected(i))
+		{
+			//if blue isn't yet connected to a controller
+			if (!blueTaken) {
+				//connect her to this one 
+				blueCon = XInputManager::GetController(i);
+				blueTaken = true;
+				blueCon->SetStickDeadZone(0.1f);
+				//and run all the input checks 
+				GamepadStroke(blueCon, 1);
+				GamepadUp(blueCon, 1);
+				GamepadDown(blueCon, 1);
+				GamepadStick(blueCon, 1);
+				GamepadTrigger(blueCon, 1);
+			}
+			//otherwise blue must be connected, so if Orange isn't connected to a controller
+			else if (!orangeTaken) {
+				//Connect him to this one 
+				orangeCon = XInputManager::GetController(i);
+				orangeTaken = true;
+				orangeCon->SetStickDeadZone(0.1f);
+				//and run all the input checks 
+				GamepadStroke(orangeCon, 2);
+				GamepadUp(orangeCon, 2);
+				GamepadDown(orangeCon, 2);
+				GamepadStick(orangeCon, 2);
+				GamepadTrigger(orangeCon, 2);
+			}
+			else break;
+		}
+	}
+}
+
+//Stroke of the gamepad input
+void MainGame::GamepadStroke(XInputController* con, int player)
+{
+}
+
+void MainGame::GamepadUp(XInputController* con, int player)
+{
+}
+
+void MainGame::GamepadDown(XInputController* con, int player)
+{
+	if (gameState == 1)
+	{
+		//vector for the force of player's jumping
+		vec3 jump = vec3(0.f, 5750.f * 60.f * Timer::deltaTime, 0.f);
+
+		//grab a reference to blue's physics body
+		auto& tempPhysBodB = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
+		//create a pointer to Blue's box2d body
+		b2Body* bodyB = tempPhysBodB.GetBody();
+
+		//grab a reference to orange's physics body
+		auto& tempPhysBodO = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
+		//create a pointer to Orange's box2d body
+		b2Body* bodyO = tempPhysBodO.GetBody();
+
+		//if blue's player has pressed A, and she can jump, make her jump
+		if (con->IsButtonPressed(Buttons::A) && player == 1) {
+			//Check if Blue can jump 
+			if (listener.getJumpB() && blueTimeSinceLastJump > 0.4f) {
+				//if she can, set it so she can't 
+				listener.setJumpB(false);
+				blueTimeSinceLastJump = 0.f;
+				//and apply the upward force of the jump
+				tempPhysBodB.ApplyForce(jump);
+			}
+		}
+
+		//if orange's player has pressed A, and he can jump, make him jump
+		if (con->IsButtonPressed(Buttons::A) && player == 2) {
+			//Check if Orange can jump 
+			if (listener.getJumpO() && orangeTimeSinceLastJump > 0.4f) {
+				//if he can, set it so he can't 
+				listener.setJumpO(false);
+				orangeTimeSinceLastJump = 0.f;
+				//and apply the upward force of the jump
+				tempPhysBodO.ApplyForce(jump);
+			}
+		}
+	}
 }
 
 //Gamepad stick input
-void MainGame::GamepadStick(XInputController* con)
+void MainGame::GamepadStick(XInputController* con, int player)
 {
+	//Gamepad stick stuff 
+	Stick sticks[2];
+	con->GetSticks(sticks);
+
+	//vector with the force for the player's x movement
+	vec3 runforce = vec3(1000.f * 60.f * Timer::deltaTime, 0.f, 0.f);
+
+	//grab a reference to the physics body
+	PhysicsBody* tempPhysBod = &ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
+	if(player == 1) tempPhysBod = &ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
+
+	//create a pointer to the box2d body
+	b2Body* body = tempPhysBod->GetBody();
+	printf("lstick \t\t %f \n", sticks[0].x);
+	printf("rstick \t\t %f \n", sticks[1].x);
+	if (sticks[1].x < -0.1f) {
+		tempPhysBod->ApplyForce(-runforce);
+		printf("Left pointing\n");
+	}
+	else if (sticks[1].x > 0.1f) {
+		tempPhysBod->ApplyForce(runforce);
+	}
+	else {
+		//so if she's still moving right, subtract from velocity from her motion
+		if (body->GetLinearVelocity().x > float32(0.f))
+		{
+			//if her velocity is above 5, subtract 5
+			if (body->GetLinearVelocity().x > float32(5.f)) {
+
+				body->SetLinearVelocity(b2Vec2(body->GetLinearVelocity().x - 5, body->GetLinearVelocity().y));
+			}
+			//otherwise it's between 0 and 5, so just set it to 0
+			else {
+				body->SetLinearVelocity(b2Vec2(0, body->GetLinearVelocity().y));
+			}
+		}
+		//and if she's still moving left, add velocity to her motion (bringing her to 0 and thus not moving)
+		else if (body->GetLinearVelocity().x < float32(0.f))
+		{
+			//if her velocity is below -5, add 5
+			if (body->GetLinearVelocity().x < float32(-5.f)) {
+
+				body->SetLinearVelocity(b2Vec2(body->GetLinearVelocity().x + 5, body->GetLinearVelocity().y));
+			}
+			//otherwise it's between -5 and 0, so just set it to 0
+			else {
+				body->SetLinearVelocity(b2Vec2(0, body->GetLinearVelocity().y));
+			}
+		}
+	}
 }
 
 //Gamepad trigger button input
-void MainGame::GamepadTrigger(XInputController* con)
+void MainGame::GamepadTrigger(XInputController* con, int player)
 {
+	Triggers triggers; 
+	con->GetTriggers(triggers);
+	if (gameState == 1) {
+		//Tagging blue
+		if (triggers.RT > 0.5f && player == 1 && listener.GetIt() == 1 && timeSinceTagTriggered > 0.166f && !blueSlide) { //player 1 blue tagging
+			createT(btag);
+			timeSinceTagTriggered = 0.f;
+		}
+		//Tagging orange
+		else if (triggers.RT > 0.5f && player == 2 && listener.GetIt() == 2 && timeSinceTagTriggered > 0.166f && !orangeSlide) { //player 2 orange tagging
+			createT(otag);
+			timeSinceTagTriggered = 0.f;
+		}
+
+		//SLIDING 
+
+		//grab a reference to blue's physics body
+		auto& tempPhysBodB = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
+		//create a pointer to Blue's box2d body
+		b2Body* bodyB = tempPhysBodB.GetBody();
+
+		//grab a reference to orange's physics body
+		auto& tempPhysBodO = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
+		//create a pointer to Orange's box2d body
+		b2Body* bodyO = tempPhysBodO.GetBody();
+
+		//SLIDING MECHANIC CODE
+		//grab animation controller
+		auto& blueAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer());
+		auto& orangeAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer());
+
+		//blue slide
+		if (triggers.LT > 0.5f && player == 1 && !bright && timeSinceSlideB > 1.f) {
+			tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
+			tempPhysBodB.SetHeight(2.f);
+
+			//recreating the box2d collision box
+			b2PolygonShape tempShape;
+			tempShape.SetAsBox(float32(tempPhysBodB.GetWidth() / 2.f), float32(tempPhysBodB.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
+			b2FixtureDef fix;
+			fix.shape = &tempShape;
+			fix.density = 0.08f;
+			fix.friction = 0.35f;//0.3f
+			bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
+			bodyB->CreateFixture(&fix); //recreates it with smaller hitbox
+
+			tempPhysBodB.ApplyForce(vec3(-6000.f, 0.f, 0.f));
+			timeSinceSlideB = 0.f;
+			blueSlide = true;
+			blueAnimController.SetActiveAnim(12);
+
+		}
+		else if (triggers.LT > 0.5f && player == 1 && bright && timeSinceSlideB > 1.f) {
+			tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
+			tempPhysBodB.SetHeight(2.f);
+
+			//recreating the box2d collision box
+			b2PolygonShape tempShape;
+			tempShape.SetAsBox(float32(tempPhysBodB.GetWidth() / 2.f), float32(tempPhysBodB.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
+			b2FixtureDef fix;
+			fix.shape = &tempShape;
+			fix.density = 0.08f;
+			fix.friction = 0.35f;//0.3f
+			bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
+			bodyB->CreateFixture(&fix); //recreates it with smaller hitbox
+
+			tempPhysBodB.ApplyForce(vec3(6000.f, 0.f, 0.f));
+			blueSlide = true;
+			blueAnimController.SetActiveAnim(13);
+			timeSinceSlideB = 0.f;
+		}
+
+		//orange slide
+		if (triggers.LT > 0.5f && player == 2 && !oright && timeSinceSlideO > 1.f) {
+			tempPhysBodO.SetCenterOffset(vec2(0.f, -1.5f));
+			tempPhysBodO.SetHeight(2.f);
+
+			//recreating the box2d collision box
+			b2PolygonShape tempShape;
+			tempShape.SetAsBox(float32(tempPhysBodO.GetWidth() / 2.f), float32(tempPhysBodO.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodO.GetCenterOffset().x), float32(tempPhysBodO.GetCenterOffset().y)), float32(0.f));
+			b2FixtureDef fix;
+			fix.shape = &tempShape;
+			fix.density = 0.08f;
+			fix.friction = 0.35f;//0.3f
+			bodyO->DestroyFixture(bodyO->GetFixtureList()); //destroys body's fixture
+			bodyO->CreateFixture(&fix); //recreates it with smaller hitbox
+
+			tempPhysBodO.ApplyForce(vec3(-6000.f, 0.f, 0.f));
+			timeSinceSlideO = 0.f;
+			orangeSlide = true;
+			orangeAnimController.SetActiveAnim(12);
+
+		}
+		else if (triggers.LT > 0.5f && player == 2 && oright && timeSinceSlideO > 1.f) {
+			tempPhysBodO.SetCenterOffset(vec2(0.f, -1.5f));
+			tempPhysBodO.SetHeight(2.f);
+
+			//recreating the box2d collision box
+			b2PolygonShape tempShape;
+			tempShape.SetAsBox(float32(tempPhysBodO.GetWidth() / 2.f), float32(tempPhysBodO.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodO.GetCenterOffset().x), float32(tempPhysBodO.GetCenterOffset().y)), float32(0.f));
+			b2FixtureDef fix;
+			fix.shape = &tempShape;
+			fix.density = 0.08f;
+			fix.friction = 0.35f;//0.3f
+			bodyO->DestroyFixture(bodyO->GetFixtureList()); //destroys body's fixture
+			bodyO->CreateFixture(&fix); //recreates it with smaller hitbox
+
+			tempPhysBodO.ApplyForce(vec3(6000.f, 0.f, 0.f));
+			timeSinceSlideO = 0.f;
+			orangeSlide = true;
+			orangeAnimController.SetActiveAnim(13);
+		}
+	}
 }

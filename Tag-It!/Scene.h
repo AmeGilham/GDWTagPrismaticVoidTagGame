@@ -35,6 +35,7 @@ public:
 	virtual int GetGameState() { return -1; };
 
 	//gamepad input
+	virtual void GamepadInput() { }; 
 	virtual void GamepadStroke(XInputController* con) { };
 	virtual void GamepadUp(XInputController* con) { };
 	virtual void GamepadDown(XInputController* con) { };

@@ -54,6 +54,8 @@ public:
 	void KeyboardHold();
 	void KeyboardDown();
 	void KeyboardUp();
+	//controller input
+	void GamepadInput();
 	//Mouse input
 	void MouseMotion(SDL_MouseMotionEvent evnt);
 	void MouseClick(SDL_MouseButtonEvent evnt);

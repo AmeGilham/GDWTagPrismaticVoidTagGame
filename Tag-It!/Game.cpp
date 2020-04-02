@@ -130,10 +130,16 @@ void Game::CheckEvents(){
 
 void Game::AcceptInput()
 {
+	//update x-input manager
+	XInputManager::Update();
+
 	//Just calls all the other input functions 
 	KeyboardHold();
 	KeyboardDown();
 	KeyboardUp();
+
+	//just calls all the other controller input functions 
+	GamepadInput();
 
 	//Resets the key flags
 	//Must be done once per frame for input to work
@@ -170,6 +176,11 @@ void Game::KeyboardUp()
 	}
 }
 
+void Game::GamepadInput()
+{
+	XInputController* orangeCon;
+	m_activeScene->GamepadInput();
+}
 
 void Game::MouseMotion(SDL_MouseMotionEvent evnt)
 {

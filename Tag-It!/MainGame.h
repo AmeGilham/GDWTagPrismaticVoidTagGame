@@ -40,10 +40,13 @@ public:
 	void level3(float windowWidth, float windowHeight);
 	void level4(float windowWidth, float windowHeight);
 
-	//Gamepad input
-	void GamepadStroke(XInputController* con) override;
-	void GamepadStick(XInputController* con) override;
-	void GamepadTrigger(XInputController* con) override;
+	//Gamepad input, player variable tells it if it's orange or blue 
+	void GamepadInput() override; 
+	void GamepadStroke(XInputController* con, int player);
+	void GamepadUp(XInputController* con, int player);
+	void GamepadDown(XInputController* con, int player);
+	void GamepadStick(XInputController* con, int player);
+	void GamepadTrigger(XInputController* con, int player);
 
 	//Keyboard Input
 	void KeyboardHold() override;
@@ -137,4 +140,8 @@ private:
 	//speed caps, too be adjusted when a player is "it"
 	float blueSpeedCap = 40.f;
 	float orangeSpeedCap = 40.f;
+
+	//booleans to track if the movement input for each player has been registered this frame (used to balance input with both controller and keyboard) 
+	bool blueMoved = false; 
+	bool orangeMoved = false; 
 };

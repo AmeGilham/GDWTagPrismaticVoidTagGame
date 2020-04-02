@@ -2228,9 +2228,7 @@ void MainGame::cam(){
 			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy + 1, camz));}
 	}
 
-	std::cout << camTime<<std::endl;
-
-	//blue
+	//moves to blue 
 	if (camTime < 2.25f && camTime > 1.65f) {
 		inputs = false;
 
@@ -2241,7 +2239,7 @@ void MainGame::cam(){
 			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy - 1, camz));}
 	}
 
-	//orange
+	//moves to orange 
 	if (camTime < 2.7f && camTime > 2.25f) {
 		inputs = false;
 
@@ -2249,6 +2247,7 @@ void MainGame::cam(){
 			ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx + 1, camy, camz));}
 	}
 
+	//afterwards goes back ot initial camera position
 	if (camTime > 2.7f) {
 		inputs = true;
 

@@ -64,12 +64,12 @@ public:
 
 	//Sets this specific controller's index
 	void SetControllerIndex(int index);
-	
+
 	//Updates the controller's state
 	void Update();
 
 	void PrintControllerInfo();
-	
+
 	//Button functions
 	int GetButtonBitmask();
 	bool IsButtonPressed(int bitmask);
@@ -80,24 +80,29 @@ public:
 	//Setters
 	void SetStickDeadZone(float deadZone);
 	void SetTriggerDeadZone(float deadZone);
-	
+	void SetRumble(int controllerIndex, float intensity);
+	void SetIsRumbling(bool rumbleState);
+
 	//Getters
 	void GetSticks(Stick sticks[2]);
-	void GetTriggers(Triggers &triggers);
+	void GetTriggers(Triggers& triggers);
 	float GetStickDeadZone();
 	float GetTriggerDeadZone();
+	bool GetIsRumbling();
 
 private:
 	int m_index;
 	float m_deadZoneStick;
 	float m_deadZoneTrigger;
 
+	bool isRumbling = false;
+
 	XINPUT_STATE m_info;
 
 	std::unordered_map<int, bool> m_stroke;
 };
 
-class XInputManager abstract
+class XInputManager
 {
 public:
 	XInputManager();
@@ -120,3 +125,4 @@ private:
 };
 
 #endif // !__XINPUT_H__
+

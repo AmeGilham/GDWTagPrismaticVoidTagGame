@@ -116,11 +116,26 @@ void XInputController::SetTriggerDeadZone(float deadZone)
 	m_deadZoneTrigger = deadZone;
 }
 
+void XInputController::SetRumble(int controllerIndex, float intensity)
+{
+	XINPUT_VIBRATION vibration;
+	ZeroMemory(&vibration, sizeof(XINPUT_VIBRATION));
+	vibration.wLeftMotorSpeed = intensity; // use any value between 0-65535 here
+	vibration.wRightMotorSpeed = intensity / 2; // use any value between 0-65535 here
+	XInputSetState(controllerIndex, &vibration);
+	if (intensity != 0) isRumbling = true;
+}
+
+void XInputController::SetIsRumbling(bool rumbleState)
+{
+	isRumbling = rumbleState;
+}
+
 void XInputController::GetSticks(Stick sticks[2])
 {
 	///LEFT STICK///
-	float x = float(m_info.Gamepad.sThumbLX / 32768);
-	float y = float(m_info.Gamepad.sThumbLY / 32768);
+	float x = float(m_info.Gamepad.sThumbLX / 32768.f);
+	float y = float(m_info.Gamepad.sThumbLY / 32768.f);
 
 
 	///X///
@@ -134,9 +149,9 @@ void XInputController::GetSticks(Stick sticks[2])
 	if (sqrt(x * x + y * y) < m_deadZoneStick)
 		sticks[0].x = 0;
 	else if (m_info.Gamepad.sThumbLX < 0)
-		sticks[0].x = float(m_info.Gamepad.sThumbLX / 32768);
+		sticks[0].x = float(m_info.Gamepad.sThumbLX / 32768.f);
 	else
-		sticks[0].x = float(m_info.Gamepad.sThumbLX / 32767);
+		sticks[0].x = float(m_info.Gamepad.sThumbLX / 32767.f);
 
 	///Y///
 	//This checks basically 
@@ -149,13 +164,13 @@ void XInputController::GetSticks(Stick sticks[2])
 	if (sqrt(x * x + y * y) < m_deadZoneStick)
 		sticks[0].y = 0;
 	else if (m_info.Gamepad.sThumbLY < 0)
-		sticks[0].y = float(m_info.Gamepad.sThumbLY / 32768);
+		sticks[0].y = float(m_info.Gamepad.sThumbLY / 32768.f);
 	else
-		sticks[0].y = float(m_info.Gamepad.sThumbLY / 32767);
+		sticks[0].y = float(m_info.Gamepad.sThumbLY / 32767.f);
 
 	///RIGHT STICK///
-	x = float(m_info.Gamepad.sThumbRX / 32768);
-	y = float(m_info.Gamepad.sThumbRY / 32768);
+	x = float(m_info.Gamepad.sThumbRX / 32768.f);
+	y = float(m_info.Gamepad.sThumbRY / 32768.f);
 
 	///X///
 	//This checks basically 
@@ -166,11 +181,11 @@ void XInputController::GetSticks(Stick sticks[2])
 	//If the thumbstick movement value is greater than zero
 		//Move it into a value from 0 to 1
 	if (sqrt(x * x + y * y) < m_deadZoneStick)
-		sticks[0].x = 0;
+		sticks[1].x = 0;
 	else if (m_info.Gamepad.sThumbRX < 0)
-		sticks[0].x = float(m_info.Gamepad.sThumbRX / 32768);
+		sticks[1].x = float(m_info.Gamepad.sThumbRX / 32768.f);
 	else
-		sticks[0].x = float(m_info.Gamepad.sThumbRX / 32767);
+		sticks[1].x = float(m_info.Gamepad.sThumbRX / 32767.f);
 
 	///Y///
 	//This checks basically 
@@ -181,19 +196,19 @@ void XInputController::GetSticks(Stick sticks[2])
 	//If the thumbstick movement value is greater than zero
 		//Move it into a value from 0 to 1
 	if (sqrt(x * x + y * y) < m_deadZoneStick)
-		sticks[0].y = 0;
+		sticks[1].y = 0;
 	else if (m_info.Gamepad.sThumbRY < 0)
-		sticks[0].y = float(m_info.Gamepad.sThumbRY / 32768);
+		sticks[1].y = float(m_info.Gamepad.sThumbRY / 32768.f);
 	else
-		sticks[0].y = float(m_info.Gamepad.sThumbRY / 32767);
+		sticks[1].y = float(m_info.Gamepad.sThumbRY / 32767.f);
 }
 
-void XInputController::GetTriggers(Triggers & triggers)
+void XInputController::GetTriggers(Triggers& triggers)
 {
 	triggers =
 	{
-		float(m_info.Gamepad.bLeftTrigger / 255),
-		float(m_info.Gamepad.bRightTrigger / 255)
+		float(m_info.Gamepad.bLeftTrigger / 255.f),
+		float(m_info.Gamepad.bRightTrigger / 255.f)
 	};
 }
 
@@ -207,13 +222,18 @@ float XInputController::GetTriggerDeadZone()
 	return m_deadZoneTrigger;
 }
 
+bool XInputController::GetIsRumbling()
+{
+	return isRumbling;
+}
+
 XInputManager::XInputManager()
 {
 	//Starting index
 	int index = 0;
 	//For every controller within controllers variable
 	//Set the controller index for each controller 0-3
-	for (auto &controller : controllers)
+	for (auto& controller : controllers)
 		controller.SetControllerIndex(index++);
 }
 
@@ -228,7 +248,7 @@ bool XInputManager::ControllerConnected(int index)
 	return XInputGetState(index, &connected) == ERROR_SUCCESS;
 }
 
-XInputController * XInputManager::GetController(int index)
+XInputController* XInputManager::GetController(int index)
 {
 	//If the index passed is greater than or equal to
 	//0 and less than or equal to 3
@@ -238,6 +258,7 @@ XInputController * XInputManager::GetController(int index)
 		controllers[index].SetControllerIndex(index);
 		return &controllers[index];
 	}
+
 
 	//Otherwise, we just return nullptr
 	return nullptr;

@@ -2802,16 +2802,21 @@ void MainGame::GamepadStick(XInputController* con, int player)
 	PhysicsBody* tempPhysBod = &ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
 	if(player == 1) tempPhysBod = &ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
 
+	//crate a copy of the speedcap 
+	int speedcap = orangeSpeedCap; 
+	if (player == 1) speedcap = blueSpeedCap;
+
 	//create a pointer to the box2d body
 	b2Body* body = tempPhysBod->GetBody();
-	printf("lstick \t\t %f \n", sticks[0].x);
-	printf("rstick \t\t %f \n", sticks[1].x);
-	if (sticks[1].x < -0.1f) {
+	if (sticks[0].x < -0.1f && body->GetLinearVelocity().x > float32(-speedcap)) {
 		tempPhysBod->ApplyForce(-runforce);
-		printf("Left pointing\n");
+		if (player == 1) bright = false;
+		else oright = false; 
 	}
-	else if (sticks[1].x > 0.1f) {
+	else if (sticks[0].x > 0.1f && body->GetLinearVelocity().x < float32(speedcap)) {
 		tempPhysBod->ApplyForce(runforce);
+		if (player == 1) bright = true;
+		else oright = true;
 	}
 	else {
 		//so if she's still moving right, subtract from velocity from her motion

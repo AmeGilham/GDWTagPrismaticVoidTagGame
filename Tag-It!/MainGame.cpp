@@ -395,12 +395,10 @@ void MainGame::Update(){
 
 	//if Orange has run off the right of the screen, make him appear on the left 
 	if (orangetempPhysBod.GetPosition().x > 50.5) {
-		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(-50.5, orangebody->GetPosition().y), float32(0));
-	}
+		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(-50.5, orangebody->GetPosition().y), float32(0));}
 	//if Orange has run off the left of the screen, make him appear on the right
 	else if (orangetempPhysBod.GetPosition().x < -50.5) {
-		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(50.5, orangebody->GetPosition().y), float32(0));
-	}
+		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(50.5, orangebody->GetPosition().y), float32(0));}
 
 	//if blue has fallen off the bottom of the screen make her appear above the top 
 	if (bluetempPhysBod.GetPosition().y < -30) {
@@ -408,8 +406,7 @@ void MainGame::Update(){
 	}
 	//if orange has fallen off the bottom of the screen make him appear above the top 
 	if (orangetempPhysBod.GetPosition().y < -30) {
-		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(orangebody->GetPosition().x, 30), float32(0));
-	}
+		orangetempPhysBod.GetBody()->SetTransform(b2Vec2(orangebody->GetPosition().x, 30), float32(0));}
 
 	//TAGGING
 	if (timeSinceTagTriggered > 0.116f && tagExists) {
@@ -453,7 +450,7 @@ void MainGame::Update(){
 	//if the person whose it has changed
 	if (listener.GetItChange()) {
 		listener.SetItChange(false);
-		Sleep(500);
+		//Sleep(500);
 		//check if it was through the not it objective 
 		if (listener.GetNotItObjExists()) {
 			//if it was, set the not it objective to not exist
@@ -2226,16 +2223,13 @@ void MainGame::cam(){
 		if (camTime < 1.65f) {
 			inputs = false;
 			if (zoom.x != -9.f && zoom.z != -9.f) {
-				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).Zoom(1);
-			}
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).Zoom(1);}
 
 			if (camx < notitx) {
-				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx + 1, camy, camz));
-			}
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx + 1, camy, camz));}
 
 			if (camy < notity) {
-				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy + 1, camz));
-			}
+				ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy + 1, camz));}
 		}
 
 		//moves to blue 

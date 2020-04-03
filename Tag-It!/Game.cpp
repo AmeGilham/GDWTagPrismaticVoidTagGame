@@ -92,7 +92,9 @@ void Game::Update(){
 	//Update Physics System
 	PhysicsSystem::Update(m_register, m_activeScene->GetPhysicsWorld());
 	//Update the current scene 
-	//camTime += Timer::deltaTime / 3; was trying to use to pause inputs
+	if (currentScene == 2) {
+		camTime += Timer::deltaTime / 2;// was trying to use to pause inputs
+	}
 	m_activeScene->Update();
 
 }
@@ -127,16 +129,26 @@ void Game::CheckEvents(){
 		MouseWheel(BackEnd::GetWheelEvent());
 }
 
-void Game::AcceptInput()
-{
-	//Just calls all the other input functions 
-	KeyboardHold();
-	KeyboardDown();
-	KeyboardUp();
+void Game::AcceptInput(){
+	if (currentScene != 2) {
+		KeyboardHold();
+		KeyboardDown();
+		KeyboardUp();
 
-	//Resets the key flags
-	//Must be done once per frame for input to work
-	Input::ResetKeys();
+		//Resets the key flags
+		//Must be done once per frame for input to work
+		Input::ResetKeys();}
+
+	if (currentScene == 2 && camTime > 4.3f) {
+		//Just calls all the other input functions 
+		KeyboardHold();
+		KeyboardDown();
+		KeyboardUp();
+
+		//Resets the key flags
+		//Must be done once per frame for input to work
+		Input::ResetKeys();}
+	std::cout << camTime << std::endl;
 }
 
 void Game::KeyboardHold(){
@@ -145,24 +157,11 @@ void Game::KeyboardHold(){
 	float camz = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetPosition().z;
 	vec4 zoom = ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).GetOrthoSize();
 
-	/*float orangex = ECS::GetComponent<Transform>(EntityIdentifier::SecondPlayer()).GetPositionX();
-	float orangey = ECS::GetComponent<Transform>(EntityIdentifier::SecondPlayer()).GetPositionY();
-
-	float bluex = ECS::GetComponent<Transform>(EntityIdentifier::MainPlayer()).GetPositionX();
-	float bluey = ECS::GetComponent<Transform>(EntityIdentifier::MainPlayer()).GetPositionY();*/
-
 	//keyboard button held 
 	if (Input::GetKey(Key::Z)) {    //zoom in 
 		m_register->get<Camera>(EntityIdentifier::MainCamera()).Zoom(1);}
 	if (Input::GetKey(Key::X)) {    //zoom out 
 		m_register->get<Camera>(EntityIdentifier::MainCamera()).Zoom(-1);}
-
-	//if (Input::GetKey(Key::C)) {    //zoom in 
-	//	std::cout << bluex << std::endl;
-	//	std::cout << bluey << std::endl;
-	//	std::cout << orangex << std::endl;
-	//	std::cout << orangey << std::endl;
-	//}
 
 if (Input::GetKey(Key::V)) {    //zoom out 
 		ECS::GetComponent<Camera>(EntityIdentifier::MainCamera()).SetPosition(vec3(camx, camy+1, camz) );

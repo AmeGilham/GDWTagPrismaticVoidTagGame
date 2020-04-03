@@ -275,7 +275,7 @@ void Game::MouseClick(SDL_MouseButtonEvent evnt){
 	}
 
 	//if it's on the main menu, and they click the play button bring them to the level select menu
-	else if ((currentScene == 0) && (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 856.f && float(evnt.x) <= 1063.f) && (float(evnt.y) >= 492.f && float(evnt.y) <= 590.f)) {
+	else if ((currentScene == 0) && (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 856.f && float(evnt.x) <= 1063.f) && (float(evnt.y) >= 762.f && float(evnt.y) <= 860.f)) {
 		//unload the main menu scene
 		m_activeScene->Unload();
 		//set the scene to be the level select menu 
@@ -286,9 +286,14 @@ void Game::MouseClick(SDL_MouseButtonEvent evnt){
 		//set the register to be the correct scene
 		m_register = m_activeScene->GetScene();
 	}
+	//if it's on the main menu, and they click the quit button, close the program
+	else if ((currentScene == 0) && (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 856.f && float(evnt.x) <= 1063.f) && (float(evnt.y) >= 924.f && float(evnt.y) <= 1022.f)) {
+		//close the game
+		m_window->Close();
+	}
 
-	//if it's in a match but the match has ended and they click indacting they want to return to the level select menu
-	else if ((currentScene == 2) && m_activeScene->GetGameState() == 5 && (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 611.28 && float(evnt.x) <= 827.28) && (float(evnt.y) >= 756.f && float(evnt.y) <= 864.f)) {
+	//if it's in a match but the match has ended or is paused and they click indacting they want to return to the level select menu
+	else if ((currentScene == 2) && (m_activeScene->GetGameState() == 5 || m_activeScene->GetGameState() == 2) && (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 611.28 && float(evnt.x) <= 827.28) && (float(evnt.y) >= 756.f && float(evnt.y) <= 864.f)) {
 		//unload the game scene
 		m_activeScene->Unload();
 		//set the scene to be the level select menu
@@ -299,8 +304,8 @@ void Game::MouseClick(SDL_MouseButtonEvent evnt){
 		//set the register to be the correct scene
 		m_register = m_activeScene->GetScene();
 	}
-	//if it's in a match but the match has ended and they click indacting they want to return to the main menu
-	else if ((currentScene == 2) && m_activeScene->GetGameState() == 5 && (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 1092.72f && float(evnt.x) <= 1308.72f) && (float(evnt.y) >= 756.f && float(evnt.y) <= 864.f)) {
+	//if it's in a match but the match has ended or is paused and they click indacting they want to return to the main menu
+	else if ((currentScene == 2) && (m_activeScene->GetGameState() == 5 || m_activeScene->GetGameState() == 2) && (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 1092.72f && float(evnt.x) <= 1308.72f) && (float(evnt.y) >= 756.f && float(evnt.y) <= 864.f)) {
 		//unload the game scene
 		m_activeScene->Unload();
 		//set the scene to be the main menu
@@ -311,8 +316,8 @@ void Game::MouseClick(SDL_MouseButtonEvent evnt){
 		//set the register to be the correct scene
 		m_register = m_activeScene->GetScene();
 	}
-	//if it's in a match but the match has ended and they click indacting they want to close the game
-	else if ((currentScene == 2) && m_activeScene->GetGameState() == 5 && (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 1572.24 && float(evnt.x) <= 1788.24) && (float(evnt.y) >= 756.f && float(evnt.y) <= 864.f)) {
+	//if it's in a match but the match has ended or is paused and they click indacting they want to close the game
+	else if ((currentScene == 2) && (m_activeScene->GetGameState() == 5 || m_activeScene->GetGameState() == 2) && (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 1572.24 && float(evnt.x) <= 1788.24) && (float(evnt.y) >= 756.f && float(evnt.y) <= 864.f)) {
 		//close the game
 		m_window->Close();
 	}

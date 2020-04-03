@@ -132,6 +132,8 @@ private:
 	unsigned int bombs[3];
 	//Entities numbers for all the entities important to after the match has ended
 	unsigned int EndOfMatch[6];
+	//Entity number for the animated part of the waterfall in the first stage 
+	unsigned int falls;
 
 	//last player to trigger a tag, 1 is blue, 2 is orange
 	int  playerWhoTriggedTag = 0;
@@ -144,4 +146,9 @@ private:
 	//booleans to track if the movement input for each player has been registered this frame (used to balance input with both controller and keyboard) 
 	bool blueMoved = false; 
 	bool orangeMoved = false; 
+
+	//vectors to copy the velocity of the players and not it for when the game is paused
+	b2Vec2 blueVel;
+	b2Vec2 orangeVel;
+	b2Vec2 notItVel;
 };

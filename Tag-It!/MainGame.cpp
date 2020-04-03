@@ -230,7 +230,7 @@ void MainGame::InitScene(float windowWidth, float windowHeight, int level){
 		auto& tempPhsBody = ECS::GetComponent<PhysicsBody>(entity);
 
 		//calculate the area of the sprite that shouldn't have a physics body attached (empty space, etc.)
-		float shrinkX = tempSpr.GetWidth() / 4; //still off, adjust
+		float shrinkX = tempSpr.GetWidth() / 3; //still off, adjust
 		float shrinkY = 0;
 
 		//setup the static box2d physics body
@@ -238,7 +238,7 @@ void MainGame::InitScene(float windowWidth, float windowHeight, int level){
 		b2BodyDef tempDef;
 		tempDef.type = b2_dynamicBody;
 		//set the position
-		tempDef.position.Set(float32(0.f), float32(17.f));
+		tempDef.position.Set(float32(-0.5f), float32(17.f));
 
 		//add the physics body to box2D physics world simulator
 		tempBody = m_physicsWorld->CreateBody(&tempDef);
@@ -562,6 +562,11 @@ void MainGame::Update() {
 	//if the game is running, it's not paused, noone has been tagged recently, etc. then run the normal update code 
 	if (gameState == 1) {
 		UpdateMain();
+	}
+	
+	else if (gameState == 2) {
+		ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer()).GetBody()->SetLinearVelocity(b2Vec2(0.f, 0.f));
+		ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer()).GetBody()->SetLinearVelocity(b2Vec2(0.f, 0.f));
 	}
 
 	else if (gameState == 4 || gameState == 5) {
@@ -1215,6 +1220,7 @@ void MainGame::level1(float windowWidth, float windowHeight){
 		//Sets up the Identifier
 		unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit() | EntityIdentifier::AnimationBit();
 		ECS::SetUpIdentifier(entity, bitHolder, "backdrop (dynamic waterflow part");
+		falls = entity;
 	}
 
 
@@ -2471,6 +2477,106 @@ void MainGame::KeyboardDown(){
 			orangeSlide = true;
 			orangeAnimController.SetActiveAnim(13);
 		}
+
+		//pause the game
+		if (Input::GetKeyDown(Key::Escape)) {
+			//make the gameState 2 
+			gameState = 2;
+
+			printf("Pressed\n");
+			//create the overlay
+			{
+				//creates entity
+				auto entity = ECS::CreateEntity();
+
+				//adds components
+				ECS::AttachComponent<Sprite>(entity);
+				ECS::AttachComponent<Transform>(entity);
+
+				//load sprites and set up sprite component
+				std::string fileName = "end of match/bg.png";
+
+				//setup up sprite
+				ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 90, 50);
+				ECS::GetComponent<Sprite>(entity).SetTransparency(0.25f);
+				//Setup transform 
+				ECS::GetComponent<Transform>(entity).SetPosition(vec3(0.f, 0.f, 99.f));
+
+				//Setup indentifier 
+				unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
+				ECS::SetUpIdentifier(entity, bitHolder, "pause overlay");
+				EndOfMatch[1] = entity;
+			}
+
+			//create the buttons
+			for (int i = 2; i < 6; i++) {
+				//creates entity
+				auto entity = ECS::CreateEntity();
+
+				//adds components
+				ECS::AttachComponent<Sprite>(entity);
+				ECS::AttachComponent<Transform>(entity);
+
+				//load sprites and set up sprite component
+				std::string fileName;
+				if (i == 2) fileName = "unpause unselected.png";
+				else if (i == 3) fileName = "end of match/new stage unselected.png";
+				else if (i == 4) fileName = "end of match/main menu unselected.png";
+				else if (i == 5) fileName = "end of match/exit unselected.png";
+
+				//setup up sprite
+				ECS::GetComponent<Sprite>(entity).LoadSprite(fileName, 10, 5);
+				//Setup transform 
+				if (i == 2)ECS::GetComponent<Transform>(entity).SetPosition(vec3(-33.3f, -12.5f, 99.2f));
+				else if (i == 3)ECS::GetComponent<Transform>(entity).SetPosition(vec3(-11.1f, -12.5f, 99.21f));
+				else if (i == 4)ECS::GetComponent<Transform>(entity).SetPosition(vec3(11.1f, -12.5f, 99.22f));
+				else if (i == 5)ECS::GetComponent<Transform>(entity).SetPosition(vec3(33.3f, -12.5f, 99.23f));
+
+				//Setup indentifier 
+				unsigned int bitHolder = EntityIdentifier::SpriteBit() | EntityIdentifier::TransformBit();
+				ECS::SetUpIdentifier(entity, bitHolder, "button " + std::to_string(i - 1));
+				EndOfMatch[i] = entity;
+			}
+
+			//pause the player and burning animations
+			ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer()).Pause();
+			ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer()).Pause();
+			ECS::GetComponent<AnimationController>(bombs[2]).Pause();
+			if (stage == 1) ECS::GetComponent<AnimationController>(falls).Pause();
+
+			//copy their velocities
+			blueVel = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer()).GetBody()->GetLinearVelocity();
+			orangeVel = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer()).GetBody()->GetLinearVelocity();
+			if (listener.GetNotItObjExists()) notItVel = ECS::GetComponent<PhysicsBody>(notitEntity).GetBody()->GetLinearVelocity();
+
+			//set their velocities to zero
+			ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer()).GetBody()->SetLinearVelocity(b2Vec2(0.f, 0.f));
+			ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer()).GetBody()->SetLinearVelocity(b2Vec2(0.f, 0.f));
+			if (listener.GetNotItObjExists()) ECS::GetComponent<PhysicsBody>(notitEntity).GetBody()->SetLinearVelocity(b2Vec2(0.f, 0.f));
+		}
+	}
+	else if (gameState == 2) {
+		//unpause the game
+		if (Input::GetKeyDown(Key::Escape)) {
+			//make the gameState 1 
+			gameState = 1;
+
+			//delete all the pause menu entity
+			for (int i = 1; i < 6; i++) {
+				ECS::DestroyEntity(EndOfMatch[i]);
+			}
+
+			//unpause the player animations
+			ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer()).Unpause();
+			ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer()).Unpause();
+			ECS::GetComponent<AnimationController>(bombs[2]).Unpause();
+			if (stage == 1) ECS::GetComponent<AnimationController>(falls).Unpause();
+
+			//set their velocities to what they were before
+			ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer()).GetBody()->SetLinearVelocity(blueVel);
+			ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer()).GetBody()->SetLinearVelocity(orangeVel);
+			if (listener.GetNotItObjExists()) ECS::GetComponent<PhysicsBody>(notitEntity).GetBody()->SetLinearVelocity(notItVel);
+		}
 	}
 }
 
@@ -2494,7 +2600,8 @@ void MainGame::MouseMotion(SDL_MouseMotionEvent evnt)
 			std::string fileName = "end of match/play again unselected.png";
 			spr.LoadSprite(fileName, 10, 5);
 		}
-
+	}
+	if (gameState == 5 || gameState == 2) {
 		//new stage button
 		if ((float(evnt.x) >= 611.28 && float(evnt.x) <= 827.28) && (float(evnt.y) >= 756.f && float(evnt.y) <= 864.f)) {
 			auto& spr = ECS::GetComponent<Sprite>(EndOfMatch[3]);
@@ -2531,6 +2638,19 @@ void MainGame::MouseMotion(SDL_MouseMotionEvent evnt)
 			spr.LoadSprite(fileName, 10, 5);
 		}
 	}
+	if (gameState == 2) {
+		//unpause button
+		if ((float(evnt.x) >= 131.76f && float(evnt.x) <= 347.76f) && (float(evnt.y) >= 756.f && float(evnt.y) <= 864.f)) {
+			auto& spr = ECS::GetComponent<Sprite>(EndOfMatch[2]);
+			std::string fileName = "unpause selected.png";
+			spr.LoadSprite(fileName, 10, 5);
+		}
+		else {
+			auto& spr = ECS::GetComponent<Sprite>(EndOfMatch[2]);
+			std::string fileName = "unpause unselected.png";
+			spr.LoadSprite(fileName, 10, 5);
+		}
+	}
 }
 
 //mouse click input
@@ -2539,6 +2659,29 @@ void MainGame::MouseClick(SDL_MouseButtonEvent evnt)
 	//if the game has ended and the player has decided to play again, reset the scene to the start of the match 
 	if (gameState == 5) {
 		if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 131.76f && float(evnt.x) <= 347.76f) && (float(evnt.y) >= 756.f && float(evnt.y) <= 864.f)) ResetScene();
+	}
+
+	if (gameState == 2) {
+		if ((SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT)) && (float(evnt.x) >= 131.76f && float(evnt.x) <= 347.76f) && (float(evnt.y) >= 756.f && float(evnt.y) <= 864.f)) {
+			//make the gameState 1 
+			gameState = 1;
+
+			//delete all the pause menu entity
+			for (int i = 1; i < 6; i++) {
+				ECS::DestroyEntity(EndOfMatch[i]);
+			}
+
+			//unpause the player animations
+			ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer()).Unpause();
+			ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer()).Unpause();
+			ECS::GetComponent<AnimationController>(bombs[2]).Unpause();
+			if (stage == 1) ECS::GetComponent<AnimationController>(falls).Unpause();
+
+			//set their velocities to what they were before
+			ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer()).GetBody()->SetLinearVelocity(blueVel);
+			ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer()).GetBody()->SetLinearVelocity(orangeVel);
+			if (listener.GetNotItObjExists()) ECS::GetComponent<PhysicsBody>(notitEntity).GetBody()->SetLinearVelocity(notItVel);
+		}
 	}
 }
 
@@ -2791,58 +2934,60 @@ void MainGame::GamepadDown(XInputController* con, int player)
 //Gamepad stick input
 void MainGame::GamepadStick(XInputController* con, int player)
 {
-	//Gamepad stick stuff 
-	Stick sticks[2];
-	con->GetSticks(sticks);
+	if (gameState == 1) {
+		//Gamepad stick stuff 
+		Stick sticks[2];
+		con->GetSticks(sticks);
 
-	//vector with the force for the player's x movement
-	vec3 runforce = vec3(1000.f * 60.f * Timer::deltaTime, 0.f, 0.f);
+		//vector with the force for the player's x movement
+		vec3 runforce = vec3(1000.f * 60.f * Timer::deltaTime, 0.f, 0.f);
 
-	//grab a reference to the physics body
-	PhysicsBody* tempPhysBod = &ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
-	if(player == 1) tempPhysBod = &ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
+		//grab a reference to the physics body
+		PhysicsBody* tempPhysBod = &ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
+		if (player == 1) tempPhysBod = &ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
 
-	//crate a copy of the speedcap 
-	int speedcap = orangeSpeedCap; 
-	if (player == 1) speedcap = blueSpeedCap;
+		//crate a copy of the speedcap 
+		int speedcap = orangeSpeedCap;
+		if (player == 1) speedcap = blueSpeedCap;
 
-	//create a pointer to the box2d body
-	b2Body* body = tempPhysBod->GetBody();
-	if (sticks[0].x < -0.1f && body->GetLinearVelocity().x > float32(-speedcap)) {
-		tempPhysBod->ApplyForce(-runforce);
-		if (player == 1) bright = false;
-		else oright = false; 
-	}
-	else if (sticks[0].x > 0.1f && body->GetLinearVelocity().x < float32(speedcap)) {
-		tempPhysBod->ApplyForce(runforce);
-		if (player == 1) bright = true;
-		else oright = true;
-	}
-	else {
-		//so if she's still moving right, subtract from velocity from her motion
-		if (body->GetLinearVelocity().x > float32(0.f))
-		{
-			//if her velocity is above 5, subtract 5
-			if (body->GetLinearVelocity().x > float32(5.f)) {
-
-				body->SetLinearVelocity(b2Vec2(body->GetLinearVelocity().x - 5, body->GetLinearVelocity().y));
-			}
-			//otherwise it's between 0 and 5, so just set it to 0
-			else {
-				body->SetLinearVelocity(b2Vec2(0, body->GetLinearVelocity().y));
-			}
+		//create a pointer to the box2d body
+		b2Body* body = tempPhysBod->GetBody();
+		if (sticks[0].x < -0.1f && body->GetLinearVelocity().x > float32(-speedcap)) {
+			tempPhysBod->ApplyForce(-runforce);
+			if (player == 1) bright = false;
+			else oright = false;
 		}
-		//and if she's still moving left, add velocity to her motion (bringing her to 0 and thus not moving)
-		else if (body->GetLinearVelocity().x < float32(0.f))
-		{
-			//if her velocity is below -5, add 5
-			if (body->GetLinearVelocity().x < float32(-5.f)) {
+		else if (sticks[0].x > 0.1f && body->GetLinearVelocity().x < float32(speedcap)) {
+			tempPhysBod->ApplyForce(runforce);
+			if (player == 1) bright = true;
+			else oright = true;
+		}
+		else {
+			//so if she's still moving right, subtract from velocity from her motion
+			if (body->GetLinearVelocity().x > float32(0.f))
+			{
+				//if her velocity is above 5, subtract 5
+				if (body->GetLinearVelocity().x > float32(5.f)) {
 
-				body->SetLinearVelocity(b2Vec2(body->GetLinearVelocity().x + 5, body->GetLinearVelocity().y));
+					body->SetLinearVelocity(b2Vec2(body->GetLinearVelocity().x - 5, body->GetLinearVelocity().y));
+				}
+				//otherwise it's between 0 and 5, so just set it to 0
+				else {
+					body->SetLinearVelocity(b2Vec2(0, body->GetLinearVelocity().y));
+				}
 			}
-			//otherwise it's between -5 and 0, so just set it to 0
-			else {
-				body->SetLinearVelocity(b2Vec2(0, body->GetLinearVelocity().y));
+			//and if she's still moving left, add velocity to her motion (bringing her to 0 and thus not moving)
+			else if (body->GetLinearVelocity().x < float32(0.f))
+			{
+				//if her velocity is below -5, add 5
+				if (body->GetLinearVelocity().x < float32(-5.f)) {
+
+					body->SetLinearVelocity(b2Vec2(body->GetLinearVelocity().x + 5, body->GetLinearVelocity().y));
+				}
+				//otherwise it's between -5 and 0, so just set it to 0
+				else {
+					body->SetLinearVelocity(b2Vec2(0, body->GetLinearVelocity().y));
+				}
 			}
 		}
 	}
@@ -2851,117 +2996,119 @@ void MainGame::GamepadStick(XInputController* con, int player)
 //Gamepad trigger button input
 void MainGame::GamepadTrigger(XInputController* con, int player)
 {
-	Triggers triggers; 
-	con->GetTriggers(triggers);
 	if (gameState == 1) {
-		//Tagging blue
-		if (triggers.RT > 0.5f && player == 1 && listener.GetIt() == 1 && timeSinceTagTriggered > 0.166f && !blueSlide) { //player 1 blue tagging
-			createT(btag);
-			timeSinceTagTriggered = 0.f;
-		}
-		//Tagging orange
-		else if (triggers.RT > 0.5f && player == 2 && listener.GetIt() == 2 && timeSinceTagTriggered > 0.166f && !orangeSlide) { //player 2 orange tagging
-			createT(otag);
-			timeSinceTagTriggered = 0.f;
-		}
+		Triggers triggers;
+		con->GetTriggers(triggers);
+		if (gameState == 1) {
+			//Tagging blue
+			if (triggers.RT > 0.5f && player == 1 && listener.GetIt() == 1 && timeSinceTagTriggered > 0.166f && !blueSlide) { //player 1 blue tagging
+				createT(btag);
+				timeSinceTagTriggered = 0.f;
+			}
+			//Tagging orange
+			else if (triggers.RT > 0.5f && player == 2 && listener.GetIt() == 2 && timeSinceTagTriggered > 0.166f && !orangeSlide) { //player 2 orange tagging
+				createT(otag);
+				timeSinceTagTriggered = 0.f;
+			}
 
-		//SLIDING 
+			//SLIDING 
 
-		//grab a reference to blue's physics body
-		auto& tempPhysBodB = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
-		//create a pointer to Blue's box2d body
-		b2Body* bodyB = tempPhysBodB.GetBody();
+			//grab a reference to blue's physics body
+			auto& tempPhysBodB = ECS::GetComponent<PhysicsBody>(EntityIdentifier::MainPlayer());
+			//create a pointer to Blue's box2d body
+			b2Body* bodyB = tempPhysBodB.GetBody();
 
-		//grab a reference to orange's physics body
-		auto& tempPhysBodO = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
-		//create a pointer to Orange's box2d body
-		b2Body* bodyO = tempPhysBodO.GetBody();
+			//grab a reference to orange's physics body
+			auto& tempPhysBodO = ECS::GetComponent<PhysicsBody>(EntityIdentifier::SecondPlayer());
+			//create a pointer to Orange's box2d body
+			b2Body* bodyO = tempPhysBodO.GetBody();
 
-		//SLIDING MECHANIC CODE
-		//grab animation controller
-		auto& blueAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer());
-		auto& orangeAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer());
+			//SLIDING MECHANIC CODE
+			//grab animation controller
+			auto& blueAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::MainPlayer());
+			auto& orangeAnimController = ECS::GetComponent<AnimationController>(EntityIdentifier::SecondPlayer());
 
-		//blue slide
-		if (triggers.LT > 0.5f && player == 1 && !bright && timeSinceSlideB > 1.f) {
-			tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
-			tempPhysBodB.SetHeight(2.f);
+			//blue slide
+			if (triggers.LT > 0.5f && player == 1 && !bright && timeSinceSlideB > 1.f) {
+				tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
+				tempPhysBodB.SetHeight(2.f);
 
-			//recreating the box2d collision box
-			b2PolygonShape tempShape;
-			tempShape.SetAsBox(float32(tempPhysBodB.GetWidth() / 2.f), float32(tempPhysBodB.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
-			b2FixtureDef fix;
-			fix.shape = &tempShape;
-			fix.density = 0.08f;
-			fix.friction = 0.35f;//0.3f
-			bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
-			bodyB->CreateFixture(&fix); //recreates it with smaller hitbox
+				//recreating the box2d collision box
+				b2PolygonShape tempShape;
+				tempShape.SetAsBox(float32(tempPhysBodB.GetWidth() / 2.f), float32(tempPhysBodB.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
+				b2FixtureDef fix;
+				fix.shape = &tempShape;
+				fix.density = 0.08f;
+				fix.friction = 0.35f;//0.3f
+				bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
+				bodyB->CreateFixture(&fix); //recreates it with smaller hitbox
 
-			tempPhysBodB.ApplyForce(vec3(-6000.f, 0.f, 0.f));
-			timeSinceSlideB = 0.f;
-			blueSlide = true;
-			blueAnimController.SetActiveAnim(12);
+				tempPhysBodB.ApplyForce(vec3(-6000.f, 0.f, 0.f));
+				timeSinceSlideB = 0.f;
+				blueSlide = true;
+				blueAnimController.SetActiveAnim(12);
 
-		}
-		else if (triggers.LT > 0.5f && player == 1 && bright && timeSinceSlideB > 1.f) {
-			tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
-			tempPhysBodB.SetHeight(2.f);
+			}
+			else if (triggers.LT > 0.5f && player == 1 && bright && timeSinceSlideB > 1.f) {
+				tempPhysBodB.SetCenterOffset(vec2(0.f, -1.5f));
+				tempPhysBodB.SetHeight(2.f);
 
-			//recreating the box2d collision box
-			b2PolygonShape tempShape;
-			tempShape.SetAsBox(float32(tempPhysBodB.GetWidth() / 2.f), float32(tempPhysBodB.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
-			b2FixtureDef fix;
-			fix.shape = &tempShape;
-			fix.density = 0.08f;
-			fix.friction = 0.35f;//0.3f
-			bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
-			bodyB->CreateFixture(&fix); //recreates it with smaller hitbox
+				//recreating the box2d collision box
+				b2PolygonShape tempShape;
+				tempShape.SetAsBox(float32(tempPhysBodB.GetWidth() / 2.f), float32(tempPhysBodB.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodB.GetCenterOffset().x), float32(tempPhysBodB.GetCenterOffset().y)), float32(0.f));
+				b2FixtureDef fix;
+				fix.shape = &tempShape;
+				fix.density = 0.08f;
+				fix.friction = 0.35f;//0.3f
+				bodyB->DestroyFixture(bodyB->GetFixtureList()); //destroys body's fixture
+				bodyB->CreateFixture(&fix); //recreates it with smaller hitbox
 
-			tempPhysBodB.ApplyForce(vec3(6000.f, 0.f, 0.f));
-			blueSlide = true;
-			blueAnimController.SetActiveAnim(13);
-			timeSinceSlideB = 0.f;
-		}
+				tempPhysBodB.ApplyForce(vec3(6000.f, 0.f, 0.f));
+				blueSlide = true;
+				blueAnimController.SetActiveAnim(13);
+				timeSinceSlideB = 0.f;
+			}
 
-		//orange slide
-		if (triggers.LT > 0.5f && player == 2 && !oright && timeSinceSlideO > 1.f) {
-			tempPhysBodO.SetCenterOffset(vec2(0.f, -1.5f));
-			tempPhysBodO.SetHeight(2.f);
+			//orange slide
+			if (triggers.LT > 0.5f && player == 2 && !oright && timeSinceSlideO > 1.f) {
+				tempPhysBodO.SetCenterOffset(vec2(0.f, -1.5f));
+				tempPhysBodO.SetHeight(2.f);
 
-			//recreating the box2d collision box
-			b2PolygonShape tempShape;
-			tempShape.SetAsBox(float32(tempPhysBodO.GetWidth() / 2.f), float32(tempPhysBodO.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodO.GetCenterOffset().x), float32(tempPhysBodO.GetCenterOffset().y)), float32(0.f));
-			b2FixtureDef fix;
-			fix.shape = &tempShape;
-			fix.density = 0.08f;
-			fix.friction = 0.35f;//0.3f
-			bodyO->DestroyFixture(bodyO->GetFixtureList()); //destroys body's fixture
-			bodyO->CreateFixture(&fix); //recreates it with smaller hitbox
+				//recreating the box2d collision box
+				b2PolygonShape tempShape;
+				tempShape.SetAsBox(float32(tempPhysBodO.GetWidth() / 2.f), float32(tempPhysBodO.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodO.GetCenterOffset().x), float32(tempPhysBodO.GetCenterOffset().y)), float32(0.f));
+				b2FixtureDef fix;
+				fix.shape = &tempShape;
+				fix.density = 0.08f;
+				fix.friction = 0.35f;//0.3f
+				bodyO->DestroyFixture(bodyO->GetFixtureList()); //destroys body's fixture
+				bodyO->CreateFixture(&fix); //recreates it with smaller hitbox
 
-			tempPhysBodO.ApplyForce(vec3(-6000.f, 0.f, 0.f));
-			timeSinceSlideO = 0.f;
-			orangeSlide = true;
-			orangeAnimController.SetActiveAnim(12);
+				tempPhysBodO.ApplyForce(vec3(-6000.f, 0.f, 0.f));
+				timeSinceSlideO = 0.f;
+				orangeSlide = true;
+				orangeAnimController.SetActiveAnim(12);
 
-		}
-		else if (triggers.LT > 0.5f && player == 2 && oright && timeSinceSlideO > 1.f) {
-			tempPhysBodO.SetCenterOffset(vec2(0.f, -1.5f));
-			tempPhysBodO.SetHeight(2.f);
+			}
+			else if (triggers.LT > 0.5f && player == 2 && oright && timeSinceSlideO > 1.f) {
+				tempPhysBodO.SetCenterOffset(vec2(0.f, -1.5f));
+				tempPhysBodO.SetHeight(2.f);
 
-			//recreating the box2d collision box
-			b2PolygonShape tempShape;
-			tempShape.SetAsBox(float32(tempPhysBodO.GetWidth() / 2.f), float32(tempPhysBodO.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodO.GetCenterOffset().x), float32(tempPhysBodO.GetCenterOffset().y)), float32(0.f));
-			b2FixtureDef fix;
-			fix.shape = &tempShape;
-			fix.density = 0.08f;
-			fix.friction = 0.35f;//0.3f
-			bodyO->DestroyFixture(bodyO->GetFixtureList()); //destroys body's fixture
-			bodyO->CreateFixture(&fix); //recreates it with smaller hitbox
+				//recreating the box2d collision box
+				b2PolygonShape tempShape;
+				tempShape.SetAsBox(float32(tempPhysBodO.GetWidth() / 2.f), float32(tempPhysBodO.GetHeight() / 2.f), b2Vec2(float32(tempPhysBodO.GetCenterOffset().x), float32(tempPhysBodO.GetCenterOffset().y)), float32(0.f));
+				b2FixtureDef fix;
+				fix.shape = &tempShape;
+				fix.density = 0.08f;
+				fix.friction = 0.35f;//0.3f
+				bodyO->DestroyFixture(bodyO->GetFixtureList()); //destroys body's fixture
+				bodyO->CreateFixture(&fix); //recreates it with smaller hitbox
 
-			tempPhysBodO.ApplyForce(vec3(6000.f, 0.f, 0.f));
-			timeSinceSlideO = 0.f;
-			orangeSlide = true;
-			orangeAnimController.SetActiveAnim(13);
+				tempPhysBodO.ApplyForce(vec3(6000.f, 0.f, 0.f));
+				timeSinceSlideO = 0.f;
+				orangeSlide = true;
+				orangeAnimController.SetActiveAnim(13);
+			}
 		}
 	}
 }
